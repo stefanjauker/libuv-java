@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="libuv" default="build" basedir=".">
+
+    <property file="${user.home}/.avatar-js.properties"/>
+    <import file="${avatar-js.home}/common.xml"/>
+
+    <target name="setup" depends="init, copy-source-files"/>
+
+    <target name="build" depends="setup, jar"/>
+
+    <target name="init" depends="common-init">
+        <property name="product.name" value="libuv-java"/>
+        <property name="build.type" value="Debug"/>
+        <property name="src.java.dir" location="src/main/java"/>
+        <property name="test.java.dir" location="src/test/java"/>
+        <property name="javac.debug" value="true"/>
+        <property name="javac.debuglevel" value="lines"/>
+        <path id="javac.classpath.id"/>
+        <path id="javac.test.classpath.id"/>
+    </target>
+
+    <target name="javah" depends="compile">
+        <javah destdir="${native.build.dir}" classpath="${classes.dir}">
+            <class name="net.java.libuv.LibUV"/>
+            <class name="net.java.libuv.handles.Handle"/>
+            <class name="net.java.libuv.handles.LoopHandle"/>
+            <class name="net.java.libuv.handles.PipeHandle"/>
+            <class name="net.java.libuv.handles.ProcessHandle"/>
+            <class name="net.java.libuv.handles.StreamHandle"/>
+            <class name="net.java.libuv.handles.TCPHandle"/>
+            <class name="net.java.libuv.handles.TTYHandle"/>
+            <class name="net.java.libuv.handles.UDPHandle"/>
+        </javah>
+    </target>
+
+    <target name="copy-source-files">
+        <property name="native.build.dir" value="${basedir}/out/${build.type}/obj.target/${product.name}/"/>
+        <copy todir="${native.build.dir}">
+            <fileset dir="${source.home}/deps/uv" includes="**/*.c"/>
+            <fileset dir="${source.home}/deps/uv" includes="**/*.h"/>
+        </copy>
+    </target>
+
+    <target name="configure-unix" depends="config-gyp" if="isLinux">
+        <exec executable="python" dir="." failonerror="true">
+            <arg value="${source.home}/tools/gyp/gyp"/>
+            <arg value="--depth=."/>
+            <arg value="--format=make"/>
+            <arg value="-Dlibrary=shared_library"/>
+            <arg value="-Dtarget=${build.type}"/>
+            <arg value="${product.name}.gyp"/>
+            <arg value="-Dtarget_arch=x64"/>
+            <arg value="${source.home}/deps/uv/uv.gyp"/>
+            <arg value="-I${source.home}/deps/uv/common.gypi"/>
+            <arg value="-Iconfig.gypi"/>
+        </exec>
+    </target>
+
+    <target name="configure-mac" depends="config-gyp" if="isMacOSX">
+        <exec executable="python" dir="." failonerror="true">
+            <arg value="${source.home}/tools/gyp/gyp"/>
+            <arg value="--depth=."/>
+            <arg value="--format=make"/>
+            <arg value="-Dlibrary=shared_library"/>
+            <arg value="-Dtarget=${build.type}"/>
+            <arg value="${product.name}.gyp"/>
+            <arg value="-Dtarget_arch=x64"/>
+            <arg value="${source.home}/deps/uv/uv.gyp"/>
+            <arg value="-I${source.home}/deps/uv/common.gypi"/>
+            <arg value="-Iconfig.gypi"/>
+            <arg value="-Dlibrary=static_library"/>
+        </exec>
+    </target>
+
+    <target name="configure-windows" depends="config-gyp" if="isWindows">
+        <exec executable="python" dir="." failonerror="true">
+            <arg value="${source.home}/tools/gyp/gyp"/>
+            <arg value="--depth=."/>
+            <arg value="-Dlibrary=shared_library"/>
+            <arg value="-Dtarget=${build.type}"/>
+            <arg value="${product.name}.gyp"/>
+            <arg value="-Dtarget_arch=x64"/>
+            <arg value="${source.home}/deps/uv/uv.gyp"/>
+            <arg value="-I${source.home}/deps/uv/common.gypi"/>
+            <arg value="-Iconfig.gypi"/>
+            <arg value="--depth=${source.home}/deps/uv"/>
+        </exec>
+    </target>
+
+    <target name="jar" depends="setup, compile, make">
+        <property name="product.jar" value="${dist.dir}/${product.name}.jar"/>
+        <jar basedir="${classes.dir}" destfile="${product.jar}"/>
+    </target>
+
+</project>
