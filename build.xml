@@ -27,6 +27,7 @@
             <class name="net.java.libuv.handles.LoopHandle"/>
             <class name="net.java.libuv.handles.PipeHandle"/>
             <class name="net.java.libuv.handles.ProcessHandle"/>
+            <class name="net.java.libuv.handles.SignalHandle"/>
             <class name="net.java.libuv.handles.StreamHandle"/>
             <class name="net.java.libuv.handles.TCPHandle"/>
             <class name="net.java.libuv.handles.TTYHandle"/>
