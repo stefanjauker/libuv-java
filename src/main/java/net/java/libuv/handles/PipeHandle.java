@@ -25,6 +25,8 @@
 
 package net.java.libuv.handles;
 
+import net.java.libuv.LibUVPermission;
+
 public class PipeHandle extends StreamHandle {
 
     private final boolean ipc;
@@ -42,14 +44,17 @@ public class PipeHandle extends StreamHandle {
     }
 
     public int open(final int fd) {
+        LibUVPermission.checkPermission(LibUVPermission.PIPE_OPEN);
         return _open(pointer, fd);
     }
 
     public int bind(final String name) {
+        LibUVPermission.checkPermission(LibUVPermission.PIPE_BIND);
         return _bind(pointer, name);
     }
 
     public void connect(final String name) {
+        LibUVPermission.checkPermission(LibUVPermission.PIPE_CONNECT);
         _connect(pointer, name);
     }
 

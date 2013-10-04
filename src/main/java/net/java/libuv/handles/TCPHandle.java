@@ -24,9 +24,13 @@
  */
 
 package net.java.libuv.handles;
+import net.java.libuv.LibUVPermission;
+import net.java.libuv.LibUVPermission.AddressResolver;
 
 public class TCPHandle extends StreamHandle {
 
+    private int bindPort = 0;
+    
     public TCPHandle(final LoopHandle loop) {
         super(_new(loop.pointer()), loop);
     }
@@ -36,19 +40,48 @@ public class TCPHandle extends StreamHandle {
     }
 
     public int bind(final String address, final int port) {
+        bindPort = port;
+        LibUVPermission.checkBind(address, port);
         return _bind(pointer, address, port);
     }
 
     public int bind6(final String address, final int port) {
+        bindPort = port;
+        LibUVPermission.checkBind(address, port);
         return _bind6(pointer, address, port);
     }
 
     public int connect(final String address, final int port) {
+        LibUVPermission.checkConnect(address, port);
         return _connect(pointer, address, port);
     }
 
     public int connect6(final String address, final int port) {
+        LibUVPermission.checkConnect(address, port);
         return _connect6(pointer, address, port);
+    }
+
+    @Override
+    public int listen(final int backlog) {
+        LibUVPermission.checkListen(bindPort);      
+        return super.listen(backlog);
+    }
+
+    @Override
+    public int accept(final StreamHandle client) {
+        assert client instanceof TCPHandle;
+        final TCPHandle tcpClient = (TCPHandle) client;
+        int accepted = super.accept(client);
+        // Check once the native call has been done otherwise peerName is not available.
+        // If Accept becomes asynchronous, we will have to adapt the check to be done once
+        // the peerName is available.
+        LibUVPermission.checkAccept(new AddressResolver() {
+            @Override
+            public Address resolve() {
+                return tcpClient.getPeerName();
+            }
+        });
+        return accepted;
     }
 
     public Address getSocketName() {

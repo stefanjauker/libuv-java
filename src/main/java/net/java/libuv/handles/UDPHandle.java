@@ -28,6 +28,7 @@ package net.java.libuv.handles;
 import java.io.UnsupportedEncodingException;
 
 import net.java.libuv.UDPCallback;
+import net.java.libuv.LibUVPermission;
 
 public final class UDPHandle extends Handle {
 
@@ -83,10 +84,12 @@ public final class UDPHandle extends Handle {
     }
 
     public int bind(final int port, final String address) {
+        LibUVPermission.checkUDPBind(address, port);
         return _bind(pointer, port, address);
     }
 
     public int bind6(final int port, final String address) {
+        LibUVPermission.checkUDPBind(address, port);
         return _bind6(pointer, port, address);
     }
 
@@ -133,12 +136,14 @@ public final class UDPHandle extends Handle {
     public int send(final byte[] data,
                     final int port,
                     final String host) {
+        LibUVPermission.checkUDPSend(host, port);
         return _send(pointer, data, 0, data.length, port, host);
     }
 
     public int send6(final byte[] data,
                      final int port,
                      final String host) {
+        LibUVPermission.checkUDPSend(host, port);
         return _send6(pointer, data, 0, data.length, port, host);
     }
 
@@ -147,6 +152,7 @@ public final class UDPHandle extends Handle {
                     final int length,
                     final int port,
                     final String host) {
+        LibUVPermission.checkUDPSend(host, port);
         return _send(pointer, data, offset, length, port, host);
     }
 
@@ -155,6 +161,7 @@ public final class UDPHandle extends Handle {
                      final int length,
                      final int port,
                      final String host) {
+        LibUVPermission.checkUDPSend(host, port);
         return _send6(pointer, data, offset, length, port, host);
     }
 

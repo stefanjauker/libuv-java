@@ -25,6 +25,7 @@
 
 package net.java.libuv.handles;
 
+import net.java.libuv.LibUVPermission;
 import net.java.libuv.SignalCallback;
 
 public final class SignalHandle extends Handle {
@@ -45,6 +46,7 @@ public final class SignalHandle extends Handle {
     }
 
     public void start(final int signum) {
+        LibUVPermission.checkPermission(LibUVPermission.SIGNAL + signum);
         _start(pointer, signum);
     }
 
