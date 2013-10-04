@@ -27,8 +27,6 @@ package net.java.libuv.handles;
 
 import net.java.libuv.SignalCallback;
 
-import java.io.UnsupportedEncodingException;
-
 public final class SignalHandle extends Handle {
 
     private SignalCallback onSignal = null;
@@ -60,14 +58,9 @@ public final class SignalHandle extends Handle {
         super.finalize();
     }
 
-    private void callback(final Object arg) {
-        final Object[] args = {arg};
-        callback(args);
-    }
-
-    private void callback(final Object... args) {
+    private void callback(final int signum) {
         try {
-            onSignal.call(args);
+            onSignal.call(signum);
         } catch (final Exception ex) {
             loop.exceptionHandler.handle(ex);
         }

@@ -27,6 +27,6 @@ package net.java.libuv;
 
 public interface SignalCallback {
 
-    public void call(Object[] args) throws Exception;
+    public void call(int signum) throws Exception;
 
 }

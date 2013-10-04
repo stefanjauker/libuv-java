@@ -35,11 +35,9 @@
 
 class SignalCallbacks {
 private:
-  static jclass _integer_cid;
   static jclass _signal_handle_cid;
 
-  static jmethodID _integer_valueof_mid;
-  static jmethodID _callback_1arg_mid;
+  static jmethodID _callback_mid;
 
   static JNIEnv* _env;
 
@@ -56,11 +54,9 @@ public:
   void on_signal(int status);
 };
 
-jclass SignalCallbacks::_integer_cid = NULL;
 jclass SignalCallbacks::_signal_handle_cid = NULL;
 
-jmethodID SignalCallbacks::_integer_valueof_mid = NULL;
-jmethodID SignalCallbacks::_callback_1arg_mid = NULL;
+jmethodID SignalCallbacks::_callback_mid = NULL;
 
 JNIEnv* SignalCallbacks::_env = NULL;
 
@@ -68,19 +64,11 @@ void SignalCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _env = env;
   assert(_env);
 
-  _integer_cid = env->FindClass("java/lang/Integer");
-  assert(_integer_cid);
-  _integer_cid = (jclass) env->NewGlobalRef(_integer_cid);
-  assert(_integer_cid);
-
-  _integer_valueof_mid = env->GetStaticMethodID(_integer_cid, "valueOf", "(I)Ljava/lang/Integer;");
-  assert(_integer_valueof_mid);
-
   _signal_handle_cid = (jclass) env->NewGlobalRef(cls);
   assert(_signal_handle_cid);
 
-  _callback_1arg_mid = env->GetMethodID(_signal_handle_cid, "callback", "(Ljava/lang/Object;)V");
-  assert(_callback_1arg_mid);
+  _callback_mid = env->GetMethodID(_signal_handle_cid, "callback", "(I)V");
+  assert(_callback_mid);
 }
 
 void SignalCallbacks::initialize(jobject instance) {
@@ -98,12 +86,10 @@ SignalCallbacks::~SignalCallbacks() {
 
 void SignalCallbacks::on_signal(int signum) {
   assert(_env);
-  jobject arg = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, signum);
-  assert(arg);
   _env->CallVoidMethod(
       _instance,
-      _callback_1arg_mid,
-      arg);
+      _callback_mid,
+      signum);
 }
 
 static void _signal_cb(uv_signal_t* handle, int signum) {

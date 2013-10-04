@@ -22,9 +22,7 @@ public class SignalHandleTest {
         final SignalHandle handle = new SignalHandle(loop);
         handle.setSignalCallback(new SignalCallback() {
             @Override
-            public void call(Object[] args) throws Exception {
-                assert args.length == 1;
-                final int signum = (int) args[0];
+            public void call(int signum) throws Exception {
                 assert signum == 28;
                 System.out.println("received signal " + signum);
             }
