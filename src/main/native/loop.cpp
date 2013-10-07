@@ -23,19 +23,31 @@
  * questions.
  */
 
+#include <stdio.h>
+#include <string.h>
 #include <assert.h>
+#include <vector>
 
 #include "uv.h"
 #include "throw.h"
+#include "handle.h"
 #include "net_java_libuv_handles_LoopHandle.h"
+
+static jclass _string_cid = NULL;
 
 static void _close_cb(uv_handle_t* handle) {
 }
 
-static void _walk_cb(uv_handle_t* handle, void* arg) {
+static void _close_all_cb(uv_handle_t* handle, void* arg) {
   if (!uv_is_closing(handle)) {
     uv_close(handle, _close_cb);
   }
+}
+
+static void _list_cb(uv_handle_t* handle, void* arg) {
+    const char* s = handle_to_string(handle);
+    std::vector<const char*>* bag = static_cast<std::vector<const char*>*>(arg);
+    bag->push_back(s);
 }
 
 /*
@@ -45,6 +57,13 @@ static void _walk_cb(uv_handle_t* handle, void* arg) {
  */
 JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_LoopHandle__1new
   (JNIEnv *env, jclass cls) {
+
+  if (!_string_cid) {
+    _string_cid = env->FindClass("java/lang/String");
+    assert(_string_cid);
+    _string_cid = (jclass) env->NewGlobalRef(_string_cid);
+    assert(_string_cid);
+  }
 
   uv_loop_t* ptr = uv_loop_new();
   assert(ptr);
@@ -98,7 +117,27 @@ JNIEXPORT void JNICALL Java_net_java_libuv_handles_LoopHandle__1close_1all
 
   assert(ptr);
   uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(ptr);
-  uv_walk(loop, _walk_cb, NULL);
+  uv_walk(loop, _close_all_cb, NULL);
+}
+
+/*
+ * Class:     net_java_libuv_handles_LoopHandle
+ * Method:    _list
+ * Signature: (J)[Ljava/lang/String
+ */
+JNIEXPORT jobjectArray JNICALL Java_net_java_libuv_handles_LoopHandle__1list
+  (JNIEnv *env, jobject that, jlong ptr) {
+
+  assert(ptr);
+  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(ptr);
+  std::vector<const char*> bag;
+  uv_walk(loop, _list_cb, &bag);
+  jsize size = static_cast<jsize>(bag.size());
+  jobjectArray handles = env->NewObjectArray(size, _string_cid, 0);
+  for (int i=0; i < bag.size(); i++) {
+    env->SetObjectArrayElement(handles, i, env->NewStringUTF(bag[i]));
+  }
+  return handles;
 }
 
 /*

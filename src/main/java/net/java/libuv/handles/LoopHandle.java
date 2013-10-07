@@ -100,6 +100,10 @@ public final class LoopHandle {
         return _get_last_error(pointer);
     }
 
+    public String[] list() {
+        return _list(pointer);
+    }
+
     long pointer() {
         return pointer;
     }
@@ -121,6 +125,8 @@ public final class LoopHandle {
     private native void _destroy(final long ptr);
 
     private native void _close_all(final long ptr);
+
+    private native String[] _list(final long ptr);
 
     private native NativeException _get_last_error(final long ptr);
 

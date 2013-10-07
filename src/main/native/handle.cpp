@@ -27,7 +27,39 @@
 
 #include "uv.h"
 #include "throw.h"
+#include "handle.h"
 #include "net_java_libuv_handles_Handle.h"
+
+const char* handle_typeof(const uv_handle_t* handle) {
+    switch (handle->type) {
+        case UV_ASYNC: return "ASYNC";
+        case UV_CHECK: return "CHECK";
+        case UV_FS_EVENT: return "FS_EVENT";
+        case UV_FS_POLL: return "FS_POLL";
+        case UV_HANDLE: return "HANDLE";
+        case UV_IDLE: return "IDLE";
+        case UV_NAMED_PIPE: return "PIPE";
+        case UV_POLL: return "POLL";
+        case UV_PREPARE: return "PREPARE";
+        case UV_PROCESS: return "PROCESS";
+        case UV_STREAM: return "STREAM";
+        case UV_TCP: return "TCP";
+        case UV_TIMER: return "TIMER";
+        case UV_TTY: return "TTY";
+        case UV_UDP: return "UDP";
+        case UV_SIGNAL: return "SIGNAL";
+    }
+    return "<?>";
+}
+
+const char* handle_to_string(const uv_handle_t* handle) {
+    const char* type = handle_typeof(handle);
+    size_t size = strlen(type) + 32;
+    char* buffer = new char[size];
+    memset(buffer, 0, size);
+    sprintf(buffer, "%s.%lx", type, handle);
+    return buffer;
+}
 
 /*
  * Class:     net_java_libuv_handles_Handle
