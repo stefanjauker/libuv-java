@@ -24,6 +24,7 @@
  */
 
 #include <assert.h>
+#include <string.h>
 
 #include "uv.h"
 #include "throw.h"
@@ -57,10 +58,10 @@ const char* handle_typeof(const uv_handle_t* handle) {
 
 const char* handle_to_string(const uv_handle_t* handle) {
     const char* type = handle_typeof(handle);
-    size_t size = strlen(type) + 32;
+    const size_t size = strlen(type) + 16;
     char* buffer = new char[size];
     memset(buffer, 0, size);
-    sprintf(buffer, "%s.%lx", type, handle);
+    sprintf(buffer, "%s.%lx", type, reinterpret_cast<unsigned long>(handle));
     return buffer;
 }
 

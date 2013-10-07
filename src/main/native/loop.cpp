@@ -134,7 +134,7 @@ JNIEXPORT jobjectArray JNICALL Java_net_java_libuv_handles_LoopHandle__1list
   uv_walk(loop, _list_cb, &bag);
   jsize size = static_cast<jsize>(bag.size());
   jobjectArray handles = env->NewObjectArray(size, _string_cid, 0);
-  for (int i=0; i < bag.size(); i++) {
+  for (int i=0; i < size; i++) {
     env->SetObjectArrayElement(handles, i, env->NewStringUTF(bag[i]));
   }
   return handles;
