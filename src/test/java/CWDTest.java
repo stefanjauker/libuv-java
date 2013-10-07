@@ -26,13 +26,26 @@
 import net.java.libuv.LibUV;
 
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class CWDTest {
 
+    private String cwd;
+
+    @BeforeMethod
+    protected void before() {
+        cwd = LibUV.cwd();
+    }
+
+    @AfterMethod
+    public void after() {
+        LibUV.chdir(cwd);
+    }
+
     @Test
     public void testCWD() {
-        final String cwd = LibUV.cwd();
         System.out.println("user.dir is " + cwd);
         Assert.assertEquals(System.getProperty("user.dir"), cwd);
 
