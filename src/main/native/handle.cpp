@@ -34,6 +34,7 @@ const char* handle_typeof(const uv_handle_t* handle) {
     switch (handle->type) {
         case UV_ASYNC: return "ASYNC";
         case UV_CHECK: return "CHECK";
+        case UV_FILE: return "FILE";
         case UV_FS_EVENT: return "FS_EVENT";
         case UV_FS_POLL: return "FS_POLL";
         case UV_HANDLE: return "HANDLE";
@@ -48,6 +49,8 @@ const char* handle_typeof(const uv_handle_t* handle) {
         case UV_TTY: return "TTY";
         case UV_UDP: return "UDP";
         case UV_SIGNAL: return "SIGNAL";
+        case UV_UNKNOWN_HANDLE: return "UNKNOWN";
+        case UV_HANDLE_TYPE_MAX: assert(0);
     }
     return "<?>";
 }

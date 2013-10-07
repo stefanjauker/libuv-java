@@ -32,7 +32,12 @@ import net.java.libuv.handles.UDPHandle;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class LoopHandleTest {
+
+    private static final String DOT_SPLIT_REGEX = "\\.";
 
     static {
         // call a LibUV method just to ensure that the native lib is loaded
@@ -57,14 +62,23 @@ public class LoopHandleTest {
         System.out.println(tcp);
         System.out.println(udp);
 
+        final Set<String> pointers = new HashSet<>();
+        pointers.add(signal.toString().split(DOT_SPLIT_REGEX)[1]);
+        pointers.add(pipe.toString().split(DOT_SPLIT_REGEX)[1]);
+        pointers.add(tcp.toString().split(DOT_SPLIT_REGEX)[1]);
+        pointers.add(udp.toString().split(DOT_SPLIT_REGEX)[1]);
+
         String[] handles1 = loop.list();
 
         Assert.assertNotNull(handles1);
         Assert.assertEquals(handles1.length, 4);
-        for (String handle : handles1) {
+        for (final String handle : handles1) {
             System.out.println(handle);
             Assert.assertNotNull(handle);
+            final String pointer = handle.toString().split(DOT_SPLIT_REGEX)[1];
+            Assert.assertTrue(pointers.remove(pointer));
         }
+        Assert.assertTrue(pointers.isEmpty());
     }
 
     public static void main(final String[] args) throws Exception {
