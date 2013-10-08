@@ -23,6 +23,7 @@
     <target name="javah" depends="compile">
         <javah destdir="${native.build.dir}" classpath="${classes.dir}">
             <class name="net.java.libuv.LibUV"/>
+            <class name="net.java.libuv.handles.FileHandle"/>
             <class name="net.java.libuv.handles.Handle"/>
             <class name="net.java.libuv.handles.LoopHandle"/>
             <class name="net.java.libuv.handles.PipeHandle"/>

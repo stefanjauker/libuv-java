@@ -56,6 +56,7 @@
                 ['OS == "linux"', {
                     'sources': [
                         'child.cpp',
+                        'file.cpp',
                         'handle.cpp',
                         'loop.cpp',
                         'misc.cpp',
@@ -90,6 +91,7 @@
                 ['OS == "mac"', {
                     'sources': [
                         '<(LIBUV_PATH)/../obj.target/libuv-java/child.cpp',
+                        '<(LIBUV_PATH)/../obj.target/libuv-java/file.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/handle.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/loop.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/misc.cpp',
@@ -123,6 +125,7 @@
                     ],
                     'sources': [
                         '<(LIBUV_PATH)/../obj.target/libuv-java/child.cpp',
+                        '<(LIBUV_PATH)/../obj.target/libuv-java/file.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/handle.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/loop.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/misc.cpp',
