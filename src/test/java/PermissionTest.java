@@ -99,7 +99,7 @@ public class PermissionTest {
 
     @AfterMethod
     public void after() {
-        // testng broken a security manager, would have to grant all testng required 
+        // testng broken a security manager, would have to grant all testng required
         // permissions. Better to set it back to null. We are in a test....
         // So do unsafe stuff!
         System.setSecurityManager(null);
@@ -404,6 +404,10 @@ public class PermissionTest {
     @Test
     public void testConnection6NoAuth() {
 
+        if (!UDPHandleTest.isIPv6Enabled()) {
+            return;
+        }
+
         init(new Permissions());
 
         final LoopHandle lh = new LoopHandle();
@@ -457,7 +461,7 @@ public class PermissionTest {
         System.out.println("Security connection IPV6 NoAuth test passed");
     }
 
-    @Test
+    @Test(enabled = false) // TODO: test hangs on windows
     public void testConnectionAuth() throws Exception {
         final AtomicBoolean serverDone = new AtomicBoolean(false);
         final int port = getPort();
@@ -538,6 +542,10 @@ public class PermissionTest {
 
     @Test
     public void testConnection6Auth() throws Exception {
+        if (!UDPHandleTest.isIPv6Enabled()) {
+            return;
+        }
+
         final AtomicBoolean serverDone = new AtomicBoolean(false);
         final int port = getPort();
         final int port2 = getPort();
@@ -618,42 +626,42 @@ public class PermissionTest {
 
     @Test
     public void testSignalNoAuth() throws Exception {
-        
+
         init(new Permissions());
 
         final LoopHandle lh = new LoopHandle();
         final SignalHandle sh = new SignalHandle(lh);
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 sh.start(28);
             }
         });
-        
+
         System.out.println("Security signal No Auth test passed");
     }
-    
+
     @Test
     public void testSignalAuth() throws Exception {
         Permissions permissions = new Permissions();
         permissions.add(new LibUVPermission("libuv.signal.28"));
-        
+
         init(permissions);
 
         final LoopHandle lh = new LoopHandle();
         final SignalHandle sh = new SignalHandle(lh);
-        
+
         testSuccess(new Runnable() {
             @Override
             public void run() {
                 sh.start(28);
             }
         });
-        
+
         System.out.println("Security signal Auth test passed");
     }
-    
+
     private static void testFailure(Runnable r) {
         try {
             r.run();
