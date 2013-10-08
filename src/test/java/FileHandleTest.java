@@ -31,7 +31,6 @@ import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.handles.Stats;
 
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 

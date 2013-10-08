@@ -49,14 +49,12 @@ public class PipeHandleTest {
     @Test
     public void testConnection() throws Exception {
         final String PIPE_NAME;
-
         if (OS.startsWith("Windows")) {
-            PIPE_NAME = "\\\\.\\pipe\\uv-java-test-pipe";
+            PIPE_NAME = "\\\\.\\pipe\\libuv-java-pipe-handle-test-pipe";
         } else {
-            PIPE_NAME = "/tmp/uv-java-test-pipe";
+            PIPE_NAME = "/tmp/libuv-java-pipe-handle-test-pipe";
+            Files.deleteIfExists(FileSystems.getDefault().getPath(PIPE_NAME));
         }
-
-        Files.deleteIfExists(FileSystems.getDefault().getPath(PIPE_NAME));
 
         final AtomicInteger serverSendCount = new AtomicInteger(0);
         final AtomicInteger clientSendCount = new AtomicInteger(0);
@@ -126,7 +124,11 @@ public class PipeHandleTest {
                 } else {
                     clientRecvCount.incrementAndGet();
                     clientLoggingCallback.call(args);
-                    client.write("PONG " + clientSendCount.incrementAndGet());
+                    if (clientSendCount.incrementAndGet() < TIMES) {
+                        client.write("PONG " + clientSendCount.get());
+                    } else {
+                        client.close();
+                    }
                 }
             }
         });
@@ -139,13 +141,16 @@ public class PipeHandleTest {
         });
 
         server.bind(PIPE_NAME);
-        server.listen(1);
+        server.listen(0);
 
         client.connect(PIPE_NAME);
 
         while (!serverDone.get() && !clientDone.get()) {
-            loop.runNoWait();
+            loop.run();
         }
+
+        client.close();
+        server.close();
 
         Assert.assertEquals(serverSendCount.get(), TIMES);
         Assert.assertEquals(clientSendCount.get(), TIMES);
