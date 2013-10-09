@@ -70,8 +70,11 @@ public class UDPHandleTest {
         server.setRecvCallback(new UDPCallback() {
             @Override
             public void call(Object[] args) throws Exception {
-                serverRecvCount.incrementAndGet();
                 serverLoggingCallback.call(args);
+                if (serverRecvCount.incrementAndGet() >= TIMES) {
+                    server.close();
+                    serverDone.set(true);
+                }
             }
         });
 
@@ -85,8 +88,8 @@ public class UDPHandleTest {
         client.setSendCallback(new UDPCallback() {
             @Override
             public void call(final Object[] args) throws Exception {
-                if (clientSendCount.get() < TIMES) {
-                    client.send("PING." + clientSendCount.incrementAndGet(), PORT, HOST);
+                if (clientSendCount.incrementAndGet() < TIMES) {
+                    client.send("PING." + clientSendCount.get(), PORT, HOST);
                 } else {
                     client.close();
                     clientDone.set(true);
@@ -98,17 +101,14 @@ public class UDPHandleTest {
         server.recvStart();
 
         client.recvStart();
-        client.send("INIT." + clientSendCount.incrementAndGet(), PORT, HOST);
+        client.send("INIT." + clientSendCount.get(), PORT, HOST);
 
         while (!serverDone.get() && !clientDone.get()) {
-            loop.runNoWait();
+            loop.run();
         }
 
         Assert.assertEquals(clientSendCount.get(), TIMES);
-        // 9 or 10 are valid values -
-        // we receive 9 messages on a desktop, all 10 on a fast server
-        Assert.assertTrue(serverRecvCount.get() >= TIMES - 1);
-        Assert.assertTrue(serverRecvCount.get() < TIMES + 1);
+        Assert.assertEquals(serverRecvCount.get(), TIMES);
     }
 
     @Test
@@ -137,8 +137,11 @@ public class UDPHandleTest {
         server.setRecvCallback(new UDPCallback() {
             @Override
             public void call(Object[] args) throws Exception {
-                serverRecvCount.incrementAndGet();
                 serverLoggingCallback.call(args);
+                if (serverRecvCount.incrementAndGet() >= TIMES) {
+                    server.close();
+                    serverDone.set(true);
+                }
             }
         });
 
@@ -152,8 +155,8 @@ public class UDPHandleTest {
         client.setSendCallback(new UDPCallback() {
             @Override
             public void call(Object[] args) throws Exception {
-                if (clientSendCount.get() < TIMES) {
-                    client.send("PING." + clientSendCount.incrementAndGet(), PORT6, HOST6);
+                if (clientSendCount.incrementAndGet() < TIMES) {
+                    client.send("PING." + clientSendCount.get(), PORT6, HOST6);
                 } else {
                     client.close();
                     clientDone.set(true);
@@ -165,17 +168,14 @@ public class UDPHandleTest {
         server.recvStart();
 
         client.recvStart();
-        client.send6("INIT." + clientSendCount.incrementAndGet(), PORT6, HOST6);
+        client.send6("INIT." + clientSendCount.get(), PORT6, HOST6);
 
         while (!serverDone.get() && !clientDone.get()) {
-            loop.runNoWait();
+            loop.run();
         }
 
         Assert.assertEquals(clientSendCount.get(), TIMES);
-        // 9 or 10 are valid values -
-        // we receive 9 messages on a desktop, all 10 on a fast server
-        Assert.assertTrue(serverRecvCount.get() >= TIMES - 1);
-        Assert.assertTrue(serverRecvCount.get() < TIMES + 1);
+        Assert.assertEquals(serverRecvCount.get(), TIMES);
     }
 
     public static void main(final String[] args) throws Exception {
