@@ -26,10 +26,14 @@
 package net.java.libuv.handles;
 
 import net.java.libuv.CallbackExceptionHandler;
+import net.java.libuv.LibUVPermission;
 import net.java.libuv.NativeException;
 
 public final class LoopHandle {
 
+    // Track the number of created LoopHandles.
+    private static int createdLoopCount = 0;
+    
     protected final CallbackExceptionHandler exceptionHandler;
     private final long pointer;
     private Exception pendingException;
@@ -48,7 +52,14 @@ public final class LoopHandle {
         }
     }
 
+    private static synchronized void newLoop() {
+        LibUVPermission.checkHandle();
+        createdLoopCount += 1;
+        LibUVPermission.checkNewLoop(createdLoopCount);
+    }
+    
     public LoopHandle(final CallbackExceptionHandler exceptionHandler) {
+        newLoop();
         this.pointer = _new();
         assert pointer != 0;
         assert exceptionHandler != null;
@@ -56,6 +67,7 @@ public final class LoopHandle {
     }
 
     public LoopHandle() {
+        newLoop();
         this.pointer = _new();
         assert pointer != 0;
         this.exceptionHandler = new CallbackExceptionHandler() {

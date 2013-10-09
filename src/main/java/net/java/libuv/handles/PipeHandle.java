@@ -52,7 +52,13 @@ public class PipeHandle extends StreamHandle {
         LibUVPermission.checkPermission(LibUVPermission.PIPE_BIND);
         return _bind(pointer, name);
     }
-
+    
+    @Override
+    public int accept(final StreamHandle client) {
+        LibUVPermission.checkPermission(LibUVPermission.PIPE_ACCEPT);
+        return super.accept(client);
+    }
+    
     public void connect(final String name) {
         LibUVPermission.checkPermission(LibUVPermission.PIPE_CONNECT);
         _connect(pointer, name);

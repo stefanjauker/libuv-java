@@ -25,12 +25,15 @@
 
 package net.java.libuv.handles;
 
+import net.java.libuv.LibUVPermission;
+
 public abstract class Handle {
 
     protected final long pointer;
     protected final LoopHandle loop;
 
     protected Handle(final long pointer, final LoopHandle loop) {
+        LibUVPermission.checkHandle();
         assert pointer != 0;
         this.pointer = pointer;
         this.loop = loop;

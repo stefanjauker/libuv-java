@@ -25,6 +25,8 @@
 
 import java.io.FilePermission;
 import java.net.SocketPermission;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.security.AccessControlException;
 import java.security.Permission;
 import java.security.Permissions;
@@ -33,6 +35,7 @@ import java.security.ProtectionDomain;
 import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import net.java.libuv.LibUV;
 import net.java.libuv.LibUVPermission;
@@ -43,7 +46,9 @@ import net.java.libuv.handles.ProcessHandle;
 import net.java.libuv.handles.SignalHandle;
 import net.java.libuv.handles.StdioOptions;
 import net.java.libuv.handles.TCPHandle;
+import net.java.libuv.handles.TTYHandle;
 import net.java.libuv.handles.UDPHandle;
+import org.testng.Assert;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.AfterMethod;
@@ -82,6 +87,8 @@ public class PermissionTest {
             permissions.add(new RuntimePermission("setSecurityManager"));
             // Default java.policy grants listen to localhost
             permissions.add(new SocketPermission("localhost:1024-", "listen"));
+            // Tests create multiple loops
+            permissions.add(new LibUVPermission("libuv.loop.multi"));
         }
 
         @Override
@@ -186,37 +193,65 @@ public class PermissionTest {
     }
 
     @Test
-    public void testPipeNoAuth() {
-
+    public void testHandlesNoAuth() {
+        final LoopHandle lh = new LoopHandle();
+        
         init(new Permissions());
 
-        final LoopHandle lh = new LoopHandle();
-        final PipeHandle ph = new PipeHandle(lh, false);
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                new LoopHandle();
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                new PipeHandle(lh, false);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                new ProcessHandle(lh);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                new UDPHandle(lh);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                new TCPHandle(lh);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                new TTYHandle(lh, 0, true);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                new SignalHandle(lh);
+            }
+        });
 
-        testFailure(new Runnable() {
-            @Override
-            public void run() {
-                ph.bind("toto");
-            }
-        });
-        testFailure(new Runnable() {
-            @Override
-            public void run() {
-                ph.connect("toto");
-            }
-        });
-        testFailure(new Runnable() {
-            @Override
-            public void run() {
-                ph.open(2);
-            }
-        });
-
-        System.out.println("Security pipe NoAuth test passed");
+        System.out.println("Security handles NoAuth test passed");
     }
-
+    
     @Test
-    public void testPipeAuth() {
+    public void testPipeAuth() throws Exception {
         final String PIPE_NAME;
 
         if (OS.startsWith("Windows")) {
@@ -224,16 +259,23 @@ public class PermissionTest {
         } else {
             PIPE_NAME = "/tmp/uv-java-test-pipe";
         }
-
+        Files.deleteIfExists(FileSystems.getDefault().getPath(PIPE_NAME));
+        
+        final AtomicInteger serverRecvCount = new AtomicInteger(0);
+        
         Permissions permissions = new Permissions();
-        permissions.add(new LibUVPermission("libuv.pipe.*"));
-        permissions.add(new LibUVPermission("libuv.stream.*"));
+        permissions.add(new LibUVPermission("libuv.pipe.connect"));
+        permissions.add(new LibUVPermission("libuv.pipe.bind"));
+        permissions.add(new LibUVPermission("libuv.pipe.open"));
+        permissions.add(new LibUVPermission("libuv.pipe.accept"));
+        permissions.add(new LibUVPermission("libuv.handle"));
 
         init(permissions);
 
         final LoopHandle lh = new LoopHandle();
         final PipeHandle client = new PipeHandle(lh, false);
         final PipeHandle server = new PipeHandle(lh, false);
+        final PipeHandle peer = new PipeHandle(lh, false);
         final PipeHandle server2 = new PipeHandle(lh, false);
 
 
@@ -255,7 +297,27 @@ public class PermissionTest {
                 client.connect(PIPE_NAME);
             }
         });
+        
+        server.setConnectionCallback(new StreamCallback() {
+            @Override
+            public void call(final Object[] args) throws Exception {
+                testSuccess(new Runnable() {
+                    @Override
+                    public void run() {
+                        server.accept(peer);
+                    }
+                });
+                System.out.println("New Pipe connection");
+                serverRecvCount.incrementAndGet();
+                server.close();
+            }
+        });
+         while(serverRecvCount.get() == 0) {
+            lh.runNoWait();
+        }
 
+        Assert.assertEquals(serverRecvCount.get(), 1);
+        
         testSuccess(new Runnable() {
             @Override
             public void run() {
@@ -265,43 +327,13 @@ public class PermissionTest {
 
         System.out.println("Security pipe Auth test passed");
     }
-
-    @Test
-    public void testChildProcessNoAuth() {
-
-        init(new Permissions());
-
-        final LoopHandle lh = new LoopHandle();
-        final ProcessHandle process = new ProcessHandle(lh);
-
-        final String[] args = new String[2];
-        args[0] = "java";
-        args[1] = "-version";
-
-        final EnumSet<ProcessHandle.ProcessFlags> processFlags = EnumSet.noneOf(ProcessHandle.ProcessFlags.class);
-        processFlags.add(ProcessHandle.ProcessFlags.NONE);
-
-        final StdioOptions[] stdio = new StdioOptions[3];
-        stdio[0] = new StdioOptions(StdioOptions.StdioType.INHERIT_FD, null, 0);
-        stdio[1] = new StdioOptions(StdioOptions.StdioType.INHERIT_FD, null, 1);
-        stdio[2] = new StdioOptions(StdioOptions.StdioType.INHERIT_FD, null, 2);
-
-
-        testFailure(new Runnable() {
-            @Override
-            public void run() {
-                process.spawn(args[0], args, null, ".", processFlags, stdio, -1, -1);
-            }
-        });
-
-        System.out.println("Security child process NoAuth test passed");
-    }
+    
 
     @Test
     public void testChildProcessAuth() {
 
         Permissions permissions = new Permissions();
-        permissions.add(new LibUVPermission("libuv.spawn"));
+        permissions.add(new LibUVPermission("libuv.handle"));
         permissions.add(new FilePermission("<<ALL FILES>>", "execute"));
 
         init(permissions);
@@ -343,132 +375,13 @@ public class PermissionTest {
         System.out.println("Security child process Auth test passed");
     }
 
-    @Test
-    public void testConnectionNoAuth() {
-
-        init(new Permissions());
-
-        final LoopHandle lh = new LoopHandle();
-        final TCPHandle server = new TCPHandle(lh);
-        final TCPHandle client = new TCPHandle(lh);
-
-        final int port = getPort();
-
-        testFailure(new Runnable() {
-            @Override
-            public void run() {
-                server.bind(ADDRESS, port);
-            }
-        });
-        testFailure(new Runnable() {
-            @Override
-            public void run() {
-                server.listen(1);
-            }
-        });
-        testFailure(new Runnable() {
-            @Override
-            public void run() {
-                client.connect(ADDRESS, port);
-            }
-        });
-
-        final TCPHandle server2 = new TCPHandle(lh);
-        testFailure(new Runnable() {
-            @Override
-            public void run() {
-                server2.bind("toto", port);
-            }
-        });
-
-        final UDPHandle udpserver = new UDPHandle(lh);
-        final UDPHandle udpclient = new UDPHandle(lh);
-        final int port2 = getPort();
-
-        testFailure(new Runnable() {
-            @Override
-            public void run() {
-                udpserver.bind(port2, ADDRESS);
-            }
-        });
-        testFailure(new Runnable() {
-            @Override
-            public void run() {
-                udpclient.send("toto", port2, ADDRESS);
-            }
-        });
-
-        System.out.println("Security connection NoAuth test passed");
-    }
-
-    @Test
-    public void testConnection6NoAuth() {
-
-        if (!UDPHandleTest.isIPv6Enabled()) {
-            return;
-        }
-
-        init(new Permissions());
-
-        final LoopHandle lh = new LoopHandle();
-        final TCPHandle server = new TCPHandle(lh);
-        final TCPHandle client = new TCPHandle(lh);
-
-        final int port = getPort();
-        testFailure(new Runnable() {
-            @Override
-            public void run() {
-                server.bind6(ADDRESS6, port);
-            }
-        });
-        testFailure(new Runnable() {
-            @Override
-            public void run() {
-                server.listen(1);
-            }
-        });
-        testFailure(new Runnable() {
-            @Override
-            public void run() {
-                client.connect6(ADDRESS6, port);
-            }
-        });
-
-        final TCPHandle server2 = new TCPHandle(lh);
-        testFailure(new Runnable() {
-            @Override
-            public void run() {
-                server2.bind6("toto", port);
-            }
-        });
-
-        final UDPHandle udpserver = new UDPHandle(lh);
-        final UDPHandle udpclient = new UDPHandle(lh);
-        final int port2 = getPort();
-        testFailure(new Runnable() {
-            @Override
-            public void run() {
-                udpserver.bind6(port2, ADDRESS6);
-            }
-        });
-        testFailure(new Runnable() {
-            @Override
-            public void run() {
-                udpclient.send6("toto", port2, ADDRESS6);
-            }
-        });
-
-        System.out.println("Security connection IPV6 NoAuth test passed");
-    }
-
     @Test(enabled = false) // TODO: test hangs on windows
     public void testConnectionAuth() throws Exception {
         final AtomicBoolean serverDone = new AtomicBoolean(false);
         final int port = getPort();
         final int port2 = getPort();
         Permissions permissions = new Permissions();
-        permissions.add(new LibUVPermission("libuv.tcp"));
-        permissions.add(new LibUVPermission("libuv.udp"));
+        permissions.add(new LibUVPermission("libuv.handle"));
         permissions.add(new SocketPermission(ADDRESS + ":" + port, "listen"));
         permissions.add(new SocketPermission(ADDRESS + ":" + port, "connect"));
         permissions.add(new SocketPermission(ADDRESS + ":*", "accept"));
@@ -550,8 +463,7 @@ public class PermissionTest {
         final int port = getPort();
         final int port2 = getPort();
         Permissions permissions = new Permissions();
-        permissions.add(new LibUVPermission("libuv.tcp"));
-        permissions.add(new LibUVPermission("libuv.udp"));
+        permissions.add(new LibUVPermission("libuv.handle"));
         permissions.add(new SocketPermission("[" + ADDRESS6 + "]:" + port, "listen"));
         permissions.add(new SocketPermission("[" + ADDRESS6 + "]:" + port, "connect"));
         permissions.add(new SocketPermission("[" + ADDRESS6 + "]:*", "accept"));
@@ -625,26 +537,9 @@ public class PermissionTest {
     }
 
     @Test
-    public void testSignalNoAuth() throws Exception {
-
-        init(new Permissions());
-
-        final LoopHandle lh = new LoopHandle();
-        final SignalHandle sh = new SignalHandle(lh);
-
-        testFailure(new Runnable() {
-            @Override
-            public void run() {
-                sh.start(28);
-            }
-        });
-
-        System.out.println("Security signal No Auth test passed");
-    }
-
-    @Test
     public void testSignalAuth() throws Exception {
         Permissions permissions = new Permissions();
+        permissions.add(new LibUVPermission("libuv.handle"));
         permissions.add(new LibUVPermission("libuv.signal.28"));
 
         init(permissions);

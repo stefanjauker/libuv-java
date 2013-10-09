@@ -37,7 +37,8 @@ import net.java.libuv.handles.Address;
  * permission net.java.libuv.LibUVPermission "libuv.process.chdir";
  * permission net.java.libuv.LibUVPermission "libuv.pipe.*";
  * permission net.java.libuv.LibUVPermission "libuv.signal.9";
- * 
+ * permission net.java.libuv.LibUVPermission "libuv.handle"; 
+ * permission net.java.libuv.LibUVPermission "libuv.loop.multi"; 
  * - Child process spawning is authorized thanks to SecurityManager.checkExec. 
  * libuv.spawn permission is also required. 
  * - TCP/UDP are authorized thanks to calls to SecurityManager.checkConnect/checkListen/checkAccept
@@ -66,12 +67,13 @@ public final class LibUVPermission extends BasicPermission {
     public static final String PIPE_BIND = PIPE + "bind";
     public static final String PIPE_CONNECT = PIPE + "connect";
     public static final String PIPE_OPEN = PIPE + "open";
-    // tcp
-    private static final LibUVPermission TCP = new LibUVPermission(PREFIX + "tcp");
-    // udp
-    private static final LibUVPermission UDP = new LibUVPermission(PREFIX + "udp");
-    // spawn
-    private static final LibUVPermission SPAWN = new LibUVPermission(PREFIX + "spawn");
+    public static final String PIPE_ACCEPT = PIPE + "accept";    
+    
+    // handle
+    public static final LibUVPermission HANDLE = new LibUVPermission(PREFIX + "handle");
+
+    // loop
+    public static final LibUVPermission MULTI_LOOP = new LibUVPermission(PREFIX + "loop.multi");
     
     // signal
     public static final String SIGNAL = PREFIX + "signal.";
@@ -88,11 +90,24 @@ public final class LibUVPermission extends BasicPermission {
         }
     }
 
+    public static void checkHandle() {
+        SecurityManager sm = System.getSecurityManager();
+        if (System.getSecurityManager() != null) {
+            sm.checkPermission(HANDLE);
+        }
+    }
+    
+    public static void checkNewLoop(int count) {
+        SecurityManager sm = System.getSecurityManager();
+        if (count > 1 && System.getSecurityManager() != null) {
+            sm.checkPermission(MULTI_LOOP);
+        }
+    }
+    
     public static void checkSpawn(String cmd) {
         SecurityManager sm = System.getSecurityManager();
         if (System.getSecurityManager() != null) {
             sm.checkExec(cmd);
-            sm.checkPermission(SPAWN);
         }
     }
 
@@ -101,7 +116,6 @@ public final class LibUVPermission extends BasicPermission {
         if (sm != null) {
             // Side effect is to check permission to resolve host.
             new InetSocketAddress(host, port);
-            sm.checkPermission(TCP);
         }
     }
 
@@ -109,7 +123,6 @@ public final class LibUVPermission extends BasicPermission {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkConnect(host, port);
-            sm.checkPermission(TCP);
         }
     }
 
@@ -117,7 +130,6 @@ public final class LibUVPermission extends BasicPermission {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkListen(port);
-            sm.checkPermission(TCP);
         }
     }
 
@@ -127,7 +139,6 @@ public final class LibUVPermission extends BasicPermission {
             Address addr = resolver.resolve();
 
             sm.checkAccept(addr.getIp(), addr.getPort());
-            sm.checkPermission(TCP);
         }
     }
 
@@ -136,7 +147,6 @@ public final class LibUVPermission extends BasicPermission {
         if (sm != null) {
             checkBind(host, port);
             sm.checkListen(port);
-            sm.checkPermission(UDP);
         }
     }
 
@@ -152,7 +162,6 @@ public final class LibUVPermission extends BasicPermission {
                 throw new RuntimeException(ex);
             }
             sm.checkConnect(host, port);
-            sm.checkPermission(UDP);
         }
     }
 }
