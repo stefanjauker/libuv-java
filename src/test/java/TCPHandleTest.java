@@ -89,7 +89,12 @@ public class TCPHandleTest {
                 serverTimer.set(TIMER.scheduleWithFixedDelay(new Runnable() {
                     @Override
                     public void run() {
-                        peer.write("message " + serverSendCount.incrementAndGet() + " from server");
+                        if (serverSendCount.incrementAndGet() < TIMES) {
+                            peer.write("message " + serverSendCount.get() + " from server");
+                        } else {
+                            serverTimer.get().cancel(false);
+                            peer.close();
+                        }
                     }
                 }, 0, 100, TimeUnit.MILLISECONDS));
                 server.close(); // not expecting any more connections
@@ -104,18 +109,6 @@ public class TCPHandleTest {
                 } else {
                     serverRecvCount.incrementAndGet();
                     serverLoggingCallback.call(args);
-                }
-            }
-        });
-
-        peer.setWriteCallback(new StreamCallback() {
-            @Override
-            public void call(final Object[] args) throws Exception {
-                if (serverSendCount.get() > TIMES) {
-                    if (serverTimer.get() != null) {
-                        serverTimer.get().cancel(false);
-                    }
-                    peer.close();
                 }
             }
         });
@@ -180,14 +173,14 @@ public class TCPHandleTest {
         client.connect(ADDRESS, PORT);
 
         while (!serverDone.get() && !clientDone.get()) {
-            loop.runNoWait();
+            loop.run();
             Thread.sleep((long) (random.nextDouble() * 10));
         }
 
-        Assert.assertEquals(serverSendCount.get(), TIMES + 1);
-        Assert.assertEquals(clientSendCount.get(), TIMES + 1);
-        Assert.assertTrue(serverRecvCount.get() == TIMES || serverRecvCount.get() == TIMES + 1);
-        Assert.assertTrue(clientRecvCount.get() == TIMES || clientRecvCount.get() == TIMES + 1);
+        Assert.assertEquals(serverSendCount.get(), TIMES);
+        Assert.assertEquals(clientSendCount.get(), TIMES);
+        Assert.assertTrue(serverRecvCount.get() == TIMES);
+        Assert.assertTrue(clientRecvCount.get() == TIMES);
     }
 
     @Test
@@ -227,7 +220,12 @@ public class TCPHandleTest {
                 serverTimer.set(TIMER.scheduleWithFixedDelay(new Runnable() {
                     @Override
                     public void run() {
-                        peer.write("message " + serverSendCount.incrementAndGet() + " from server");
+                        if (serverSendCount.incrementAndGet() < TIMES) {
+                            peer.write("message " + serverSendCount.get() + " from server");
+                        } else {
+                            serverTimer.get().cancel(false);
+                            peer.close();
+                        }
                     }
                 }, 0, 100, TimeUnit.MILLISECONDS));
                 server.close(); // not expecting any more connections
@@ -242,18 +240,6 @@ public class TCPHandleTest {
                 } else {
                     serverRecvCount.incrementAndGet();
                     serverLoggingCallback.call(args);
-                }
-            }
-        });
-
-        peer.setWriteCallback(new StreamCallback() {
-            @Override
-            public void call(Object[] args) throws Exception {
-                if (serverSendCount.get() >= TIMES) {
-                    if (serverTimer.get() != null) {
-                        serverTimer.get().cancel(false);
-                    }
-                    peer.close();
                 }
             }
         });
@@ -320,14 +306,14 @@ public class TCPHandleTest {
         client.connect6(ADDRESS6, PORT6);
 
         while (!serverDone.get() && !clientDone.get()) {
-            loop.runNoWait();
+            loop.run();
             Thread.sleep((long) (random.nextDouble() * 10));
         }
 
         Assert.assertEquals(serverSendCount.get(), TIMES);
         Assert.assertEquals(clientSendCount.get(), TIMES);
-        Assert.assertTrue(serverRecvCount.get() == TIMES || serverRecvCount.get() == TIMES - 1);
-        Assert.assertTrue(clientRecvCount.get() == TIMES || clientRecvCount.get() == TIMES - 1);
+        Assert.assertTrue(serverRecvCount.get() == TIMES);
+        Assert.assertTrue(clientRecvCount.get() == TIMES);
     }
 
     public static void main(final String[] args) throws Exception {
