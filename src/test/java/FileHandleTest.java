@@ -23,6 +23,7 @@
  * questions.
  */
 
+import net.java.libuv.Constants;
 import net.java.libuv.FileCallback;
 import net.java.libuv.LibUV;
 import net.java.libuv.NativeException;
@@ -63,9 +64,8 @@ public class FileHandleTest {
         final byte[] b = "some data".getBytes();
         final LoopHandle loop = new LoopHandle();
         final FileHandle handle = new FileHandle(loop);
-        cleanupFiles(handle, filename);
 
-        final int fd = handle.open(filename, FileHandle.O_RDWR | FileHandle.O_CREAT, FileHandle.S_IRWXU | FileHandle.S_IRWXG | FileHandle.S_IRWXO);
+        final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
         Assert.assertTrue(fd >= 0);
         handle.write(fd, b, 0, b.length, 0);
         final byte[] bb = new byte[b.length];
@@ -89,8 +89,6 @@ public class FileHandleTest {
         final AtomicBoolean writeCallbackCalled = new AtomicBoolean(false);
         final AtomicBoolean readCallbackCalled = new AtomicBoolean(false);
         final AtomicBoolean closeCallbackCalled = new AtomicBoolean(false);
-
-        cleanupFiles(handle, filename);
 
         handle.setOpenCallback(new FileCallback() {
             @Override
@@ -133,7 +131,7 @@ public class FileHandleTest {
             }
         });
 
-        handle.open(filename, FileHandle.O_RDWR | FileHandle.O_CREAT, FileHandle.S_IRWXU | FileHandle.S_IRWXG | FileHandle.S_IRWXO, CALLBACK_ID);
+        handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO, CALLBACK_ID);
         loop.run();
         Assert.assertTrue(openCallbackCalled.get());
         Assert.assertTrue(writeCallbackCalled.get());
@@ -146,9 +144,8 @@ public class FileHandleTest {
         final String filename = testName + ".txt";
         final LoopHandle loop = new LoopHandle();
         final FileHandle handle = new FileHandle(loop);
-        cleanupFiles(handle, filename);
 
-        final int fd = handle.open(filename, FileHandle.O_RDWR | FileHandle.O_CREAT, FileHandle.S_IRWXU | FileHandle.S_IRWXG | FileHandle.S_IRWXO);
+        final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
         final int status = handle.unlink(filename);
         Assert.assertTrue(status == 0);
     }
@@ -159,7 +156,6 @@ public class FileHandleTest {
         final LoopHandle loop = new LoopHandle();
         final FileHandle handle = new FileHandle(loop);
         final AtomicBoolean unlinkCallbackCalled = new AtomicBoolean(false);
-        cleanupFiles(handle, filename);
 
         handle.setUnlinkCallback(new FileCallback() {
             @Override
@@ -170,7 +166,7 @@ public class FileHandleTest {
             }
         });
 
-        handle.open(filename, FileHandle.O_RDWR | FileHandle.O_CREAT, FileHandle.S_IRWXU | FileHandle.S_IRWXG | FileHandle.S_IRWXO);
+        handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
         handle.unlink(filename, CALLBACK_ID);
         loop.run();
         Assert.assertTrue(unlinkCallbackCalled.get());
@@ -181,15 +177,8 @@ public class FileHandleTest {
         final String dirname = testName;
         final LoopHandle loop = new LoopHandle();
         final FileHandle handle = new FileHandle(loop);
-        try {
-            handle.rmdir(dirname);
-        } catch(NativeException e) {
-            if (!"ENOENT".equals(e.errnoString())) {
-                throw e;
-            }
-        }
 
-        int status = handle.mkdir(dirname, FileHandle.S_IRWXU | FileHandle.S_IRWXG | FileHandle.S_IRWXO);
+        int status = handle.mkdir(dirname, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
         Assert.assertTrue(status == 0);
         status = handle.rmdir(dirname);
         Assert.assertTrue(status == 0);
@@ -202,14 +191,6 @@ public class FileHandleTest {
         final FileHandle handle = new FileHandle(loop);
         final AtomicBoolean mkdirCallbackCalled = new AtomicBoolean(false);
         final AtomicBoolean rmdirCallbackCalled = new AtomicBoolean(false);
-
-        try {
-            handle.rmdir(dirname);
-        } catch(NativeException e) {
-            if (!"ENOENT".equals(e.errnoString())) {
-                throw e;
-            }
-        }
 
         handle.setMkdirCallback( new FileCallback() {
             @Override
@@ -228,7 +209,7 @@ public class FileHandleTest {
             }
         });
 
-        final int status = handle.mkdir(dirname, FileHandle.S_IRWXU | FileHandle.S_IRWXG | FileHandle.S_IRWXO, CALLBACK_ID);
+        final int status = handle.mkdir(dirname, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO, CALLBACK_ID);
         Assert.assertTrue(status == 0);
         loop.run();
         Assert.assertTrue(mkdirCallbackCalled.get());
@@ -241,7 +222,7 @@ public class FileHandleTest {
         final LoopHandle loop = new LoopHandle();
         final FileHandle handle = new FileHandle(loop);
         final String filename = "src";
-        String[] names = handle.readdir(filename, FileHandle.O_RDONLY);
+        String[] names = handle.readdir(filename, Constants.O_RDONLY);
         Assert.assertEquals(names.length, 2);
     }
 
@@ -260,7 +241,7 @@ public class FileHandleTest {
             }
         });
 
-        String[] names = handle.readdir(filename, FileHandle.O_RDONLY, CALLBACK_ID);
+        String[] names = handle.readdir(filename, Constants.O_RDONLY, CALLBACK_ID);
         Assert.assertEquals(names, null);
         loop.run();
         Assert.assertTrue(readdirCallbackCalled.get());
@@ -272,12 +253,11 @@ public class FileHandleTest {
         final String newName = testName + testName + ".txt";
         final LoopHandle loop = new LoopHandle();
         final FileHandle handle = new FileHandle(loop);
-        cleanupFiles(handle, filename, newName);
 
-        final int fd = handle.open(filename, FileHandle.O_RDWR | FileHandle.O_CREAT, FileHandle.S_IRWXU | FileHandle.S_IRWXG | FileHandle.S_IRWXO);
+        final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
         handle.close(fd);
         handle.rename(filename, newName);
-        Assert.assertTrue (handle.open(newName, FileHandle.O_RDONLY, FileHandle.S_IRWXU | FileHandle.S_IRWXG | FileHandle.S_IRWXO) > 0);
+        Assert.assertTrue (handle.open(newName, Constants.O_RDONLY, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO) > 0);
         cleanupFiles(handle, newName);
     }
 
@@ -289,19 +269,18 @@ public class FileHandleTest {
         final LoopHandle loop = new LoopHandle();
         final FileHandle handle = new FileHandle(loop);
         final AtomicBoolean renameCallbackCalled = new AtomicBoolean(false);
-        cleanupFiles(handle, filename, newName);
 
         handle.setRenameCallback(new FileCallback() {
             @Override
             public void call(int id, Object[] args) throws Exception {
                 renameCallbackCalled.set(true);
                 checkCallbackArgs(args);
-                Assert.assertTrue (handle.open(newName, FileHandle.O_RDONLY, FileHandle.S_IRWXU | FileHandle.S_IRWXG | FileHandle.S_IRWXO) > 0);
+                Assert.assertTrue (handle.open(newName, Constants.O_RDONLY, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO) > 0);
                 cleanupFiles(handle, newName);
             }
         });
 
-        final int fd = handle.open(filename, FileHandle.O_RDWR | FileHandle.O_CREAT, FileHandle.S_IRWXU | FileHandle.S_IRWXG | FileHandle.S_IRWXO);
+        final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
         handle.close(fd);
         handle.rename(filename, newName, CALLBACK_ID);
         loop.run();
@@ -313,9 +292,8 @@ public class FileHandleTest {
         final String filename = testName + ".txt";
         final LoopHandle loop = new LoopHandle();
         final FileHandle handle = new FileHandle(loop);
-        cleanupFiles(handle, filename);
 
-        final int fd = handle.open(filename, FileHandle.O_RDWR | FileHandle.O_CREAT, FileHandle.S_IRWXU | FileHandle.S_IRWXG | FileHandle.S_IRWXO);
+        final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
         handle.ftruncate(fd, 1000);
         final Stats stats = handle.fstat(fd);
         Assert.assertEquals(stats.getSize(), 1000);
@@ -329,7 +307,6 @@ public class FileHandleTest {
         final FileHandle handle = new FileHandle(loop);
         final AtomicInteger fd = new AtomicInteger();
         final AtomicBoolean ftruncateCallbackCalled = new AtomicBoolean(false);
-        cleanupFiles(handle, filename);
 
         handle.setFTruncateCallback(new FileCallback() {
             @Override
@@ -342,7 +319,7 @@ public class FileHandleTest {
             }
         });
 
-        fd.set(handle.open(filename, FileHandle.O_RDWR | FileHandle.O_CREAT, FileHandle.S_IRWXU | FileHandle.S_IRWXG | FileHandle.S_IRWXO));
+        fd.set(handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO));
         handle.ftruncate(fd.get(), 1000, CALLBACK_ID);
         loop.run();
         Assert.assertTrue(ftruncateCallbackCalled.get());
@@ -354,9 +331,8 @@ public class FileHandleTest {
         final String filename2 = testName + "2.txt";
         final LoopHandle loop = new LoopHandle();
         final FileHandle handle = new FileHandle(loop);
-        cleanupFiles(handle, filename, filename2);
 
-        final int fd = handle.open(filename, FileHandle.O_RDWR | FileHandle.O_CREAT, FileHandle.S_IRWXU | FileHandle.S_IRWXG | FileHandle.S_IRWXO);
+        final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
         final byte[] b = "some data".getBytes();
         handle.write(fd, b, 0, b.length, 0);
         handle.close(fd);
@@ -374,7 +350,6 @@ public class FileHandleTest {
         final FileHandle handle = new FileHandle(loop);
         final AtomicBoolean linkCallbackCalled = new AtomicBoolean();
         final byte[] b = "some data".getBytes();
-        cleanupFiles(handle, filename, filename2);
 
         handle.setLinkCallback(new FileCallback() {
             @Override
@@ -386,7 +361,7 @@ public class FileHandleTest {
             }
         });
 
-        final int fd = handle.open(filename, FileHandle.O_RDWR | FileHandle.O_CREAT, FileHandle.S_IRWXU | FileHandle.S_IRWXG | FileHandle.S_IRWXO);
+        final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
         handle.write(fd, b, 0, b.length, 0);
         handle.close(fd);
         handle.link(filename, filename2, CALLBACK_ID);

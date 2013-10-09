@@ -56,6 +56,7 @@
                 ['OS == "linux"', {
                     'sources': [
                         'child.cpp',
+                        'constants.cpp',
                         'file.cpp',
                         'handle.cpp',
                         'loop.cpp',
@@ -77,7 +78,6 @@
                     ],
                     'defines': [
                         '__POSIX__',
-                        # 'NDEBUG',
                     ],
                     'cflags': [
                         '-fPIC',
@@ -91,6 +91,7 @@
                 ['OS == "mac"', {
                     'sources': [
                         '<(LIBUV_PATH)/../obj.target/libuv-java/child.cpp',
+                        '<(LIBUV_PATH)/../obj.target/libuv-java/constants.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/file.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/handle.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/loop.cpp',
@@ -110,7 +111,7 @@
                     ],
                     'defines': [
                         '__POSIX__',
-                        # 'NDEBUG',
+                        '__MACOS__'
                     ],
                     'include_dirs': [
                         '<(JAVA_HOME)/include/darwin',
@@ -125,6 +126,7 @@
                     ],
                     'sources': [
                         '<(LIBUV_PATH)/../obj.target/libuv-java/child.cpp',
+                        '<(LIBUV_PATH)/../obj.target/libuv-java/constants.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/file.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/handle.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/loop.cpp',
@@ -141,7 +143,6 @@
                     ],
                     'defines': [
                         '_WIN32',
-                        # 'NDEBUG',
                     ],
                     'cflags': [
                     ],

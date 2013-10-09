@@ -29,7 +29,6 @@ import net.java.libuv.FileCallback;
 
 public final class FileHandle extends Handle {
 
-    private static final boolean IS_WINDOWS = System.getProperty("os.name").startsWith("Windows");
     static {
         _static_initialize();
     }
@@ -64,46 +63,6 @@ public final class FileHandle extends Handle {
     public static final int UV_FS_READLINK  = 23;
     public static final int UV_FS_CHOWN     = 24;
     public static final int UV_FS_FCHOWN    = 25;
-
-    public static final int O_RDONLY        = 0x0000;
-    public static final int O_WRONLY        = 0x0001;
-    public static final int O_RDWR          = 0x0002;
-
-    public static final int O_APPEND        = 0x0008;
-    public static final int O_CREAT         = IS_WINDOWS ? 0x0100 : 0x0200;
-    public static final int O_TRUNC         = IS_WINDOWS ? 0x0200 : 0x0400;
-    public static final int O_EXCL          = IS_WINDOWS ? 0x0400 : 0x0800;
-    public static final int O_SYNC          = 0x2000;
-    public static final int O_NOCTTY        = 0x8000;
-
-    public static final int S_IRUSR         = 0000400;
-    public static final int S_IWUSR         = 0000200;
-    public static final int S_IXUSR         = 0000100;
-    public static final int S_IRWXU         = S_IRUSR | S_IWUSR | S_IXUSR;
-
-    public static final int S_IRGRP         = 0000040;
-    public static final int S_IWGRP         = 0000020;
-    public static final int S_IXGRP         = 0000010;
-    public static final int S_IRWXG         = S_IRGRP | S_IWGRP | S_IXGRP;
-
-    public static final int S_IROTH         = 0000004;
-    public static final int S_IWOTH         = 0000002;
-    public static final int S_IXOTH         = 0000001;
-    public static final int S_IRWXO         = S_IROTH | S_IWOTH | S_IXOTH;
-
-    public static final int S_IFMT          = 0170000;
-    public static final int S_IFIFO         = 0010000;
-    public static final int S_IFCHR         = 0020000;
-    public static final int S_IFDIR         = 0040000;
-    public static final int S_IFBLK         = 0060000;
-    public static final int S_IFREG         = 0100000;
-    public static final int S_IFLNK         = 0120000;
-    public static final int S_IFSOCK        = 0140000;
-    public static final int S_IFWHT         = 0160000;
-
-    public static final int S_ISUID         = 0004000;
-    public static final int S_ISGID         = 0002000;
-    public static final int S_ISVTX         = 0001000;
 
     private FileCallback onCustom = null;
     private FileCallback onOpen = null;
@@ -489,53 +448,53 @@ public final class FileHandle extends Handle {
 
     private native long _initialize();
 
-    private native int _close(final long ptr, final int fd, final int callbackId ); 
+    private native int _close(final long ptr, final int fd, final int callbackId); 
 
     private native int _open(final long ptr, final String path, final int flags, final int mode, final int callbackId); 
 
-    private native int _read(final long ptr, final int fd, final byte[] data, final long length, final long offset, final long position, final int callbackId ); 
+    private native int _read(final long ptr, final int fd, final byte[] data, final long length, final long offset, final long position, final int callbackId); 
 
-    private native int _unlink(final long ptr, final String path, final int callbackId ); 
+    private native int _unlink(final long ptr, final String path, final int callbackId); 
 
-    private native int _write(final long ptr, final int fd, final byte[] data, final long length, final long offset, final long position, final int callbackId ); 
+    private native int _write(final long ptr, final int fd, final byte[] data, final long length, final long offset, final long position, final int callbackId); 
 
-    private native int _mkdir(final long ptr, final String path, int mode, final int callbackId ); 
+    private native int _mkdir(final long ptr, final String path, int mode, final int callbackId); 
 
-    private native int _rmdir(final long ptr, final String path, final int callbackId ); 
+    private native int _rmdir(final long ptr, final String path, final int callbackId); 
 
-    private native String[] _readdir(final long ptr, final String path, int flags, final int callbackId ); 
+    private native String[] _readdir(final long ptr, final String path, int flags, final int callbackId); 
 
-    private native Stats _stat(final long ptr, final String path, final int callbackId ); 
+    private native Stats _stat(final long ptr, final String path, final int callbackId); 
 
-    private native Stats _fstat(final long ptr, final int fd, final int callbackId ); 
+    private native Stats _fstat(final long ptr, final int fd, final int callbackId); 
 
-    private native int _rename(final long ptr, final String path, final String newPath, final int callbackId ); 
+    private native int _rename(final long ptr, final String path, final String newPath, final int callbackId); 
 
-    private native int _fsync(final long ptr, final int fd, final int callbackId ); 
+    private native int _fsync(final long ptr, final int fd, final int callbackId); 
 
-    private native int _fdatasync(final long ptr, final int fd, final int callbackId ); 
+    private native int _fdatasync(final long ptr, final int fd, final int callbackId); 
 
-    private native int _ftruncate(final long ptr, final int fd, final long offset, final int callbackId ); 
+    private native int _ftruncate(final long ptr, final int fd, final long offset, final int callbackId); 
 
-    private native int _sendfile(final long ptr, final int outFd, final int inFd, final long offset, final long length, final int callbackId ); 
+    private native int _sendfile(final long ptr, final int outFd, final int inFd, final long offset, final long length, final int callbackId); 
 
-    private native int _chmod(final long ptr, final String path, final int mode, final int callbackId ); 
+    private native int _chmod(final long ptr, final String path, final int mode, final int callbackId); 
 
-    private native int _utime(final long ptr, final String path, final double atime, final double mtime, final int callbackId ); 
+    private native int _utime(final long ptr, final String path, final double atime, final double mtime, final int callbackId); 
 
-    private native int _futime(final long ptr, final int fd, final double atime, final double mtime, final int callbackId ); 
+    private native int _futime(final long ptr, final int fd, final double atime, final double mtime, final int callbackId); 
 
-    private native Stats _lstat(final long ptr, final String path, final int callbackId ); 
+    private native Stats _lstat(final long ptr, final String path, final int callbackId); 
 
-    private native int _link(final long ptr, final String path, final String newPath, final int callbackId ); 
+    private native int _link(final long ptr, final String path, final String newPath, final int callbackId); 
 
-    private native int _symlink(final long ptr, final String path, final String newPath, final int flags, final int callbackId ); 
+    private native int _symlink(final long ptr, final String path, final String newPath, final int flags, final int callbackId); 
 
-    private native String _readlink(final long ptr, final String path, final int callbackId ); 
+    private native String _readlink(final long ptr, final String path, final int callbackId); 
 
-    private native int _fchmod(final long ptr, final int fd, final int mode, final int callbackId ); 
+    private native int _fchmod(final long ptr, final int fd, final int mode, final int callbackId); 
 
-    private native int _chown(final long ptr, final String path, final int uid, final int gid, final int callbackId ); 
+    private native int _chown(final long ptr, final String path, final int uid, final int gid, final int callbackId); 
 
-    private native int _fchown(final long ptr, final int fd, final int uid, final int gid, final int callbackId ); 
+    private native int _fchown(final long ptr, final int fd, final int uid, final int gid, final int callbackId);
 }
