@@ -51,21 +51,6 @@ public final class Constants {
 
     static {
         Constants._get_field_values(FIELD_VALUES);
-        Map<String, Object> constants = new HashMap<>(FIELDS.length);
-        Map<Object, String> constantsString = new HashMap<>(FIELDS.length);
-        for (final Field f : FIELDS) {
-            if ((f.getModifiers() & MASK) == MASK) {
-                try {
-                    constants.put(f.getName(), f.get(null));
-                    constantsString.put(f.get(null), f.getName());
-                } catch (IllegalArgumentException | IllegalAccessException ex) {
-                    // Should never happen, ignore with msg
-                    ex.printStackTrace();
-                }
-            }
-        }
-        CONSTANTS = Collections.unmodifiableMap(constants);
-        CONSTANTS_STRING = Collections.unmodifiableMap(constantsString);
     }
 
     public static final int O_RDONLY        = FIELD_VALUES[0];
@@ -144,5 +129,23 @@ public final class Constants {
     public static final int SIGUNUSED       = FIELD_VALUES[66];
 
     private static native void _get_field_values(int[] values);
+
+    static {
+        Map<String, Object> constants = new HashMap<>(FIELDS.length);
+        Map<Object, String> constantsString = new HashMap<>(FIELDS.length);
+        for (final Field f : FIELDS) {
+            if ((f.getModifiers() & MASK) == MASK) {
+                try {
+                    constants.put(f.getName(), f.get(null));
+                    constantsString.put(f.get(null), f.getName());
+                } catch (IllegalArgumentException | IllegalAccessException ex) {
+                    // Should never happen, ignore with msg
+                    ex.printStackTrace();
+                }
+            }
+        }
+        CONSTANTS = Collections.unmodifiableMap(constants);
+        CONSTANTS_STRING = Collections.unmodifiableMap(constantsString);
+    }
 }
 
