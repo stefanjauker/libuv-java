@@ -185,7 +185,8 @@ public class TCPHandleTest {
 
     @Test
     public void testConnection6() throws Exception {
-        if (!UDPHandleTest.isIPv6Enabled()) {
+        final LoopHandle loop = new LoopHandle();
+        if (!UDPHandleTest.isIPv6Enabled(loop)) {
             return;
         }
         final AtomicReference<ScheduledFuture<?>> serverTimer = new AtomicReference<>();
@@ -200,7 +201,6 @@ public class TCPHandleTest {
         final AtomicBoolean serverDone = new AtomicBoolean(false);
         final AtomicBoolean clientDone = new AtomicBoolean(false);
 
-        final LoopHandle loop = new LoopHandle();
         final TCPHandle server = new TCPHandle(loop);
         final TCPHandle peer = new TCPHandle(loop);
         final TCPHandle client = new TCPHandle(loop);
@@ -319,9 +319,7 @@ public class TCPHandleTest {
     public static void main(final String[] args) throws Exception {
         final TCPHandleTest test = new TCPHandleTest();
         test.testConnection();
-        if (UDPHandleTest.isIPv6Enabled()) {
-            test.testConnection6();
-        }
+        test.testConnection6();
     }
 
 }

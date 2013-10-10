@@ -195,7 +195,7 @@ public class PermissionTest {
     @Test
     public void testHandlesNoAuth() {
         final LoopHandle lh = new LoopHandle();
-        
+
         init(new Permissions());
 
         testFailure(new Runnable() {
@@ -204,42 +204,42 @@ public class PermissionTest {
                 new LoopHandle();
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 new PipeHandle(lh, false);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 new ProcessHandle(lh);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 new UDPHandle(lh);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 new TCPHandle(lh);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 new TTYHandle(lh, 0, true);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
@@ -249,7 +249,7 @@ public class PermissionTest {
 
         System.out.println("Security handles NoAuth test passed");
     }
-    
+
     @Test
     public void testPipeAuth() throws Exception {
         final String PIPE_NAME;
@@ -260,9 +260,9 @@ public class PermissionTest {
             PIPE_NAME = "/tmp/uv-java-test-pipe";
         }
         Files.deleteIfExists(FileSystems.getDefault().getPath(PIPE_NAME));
-        
+
         final AtomicInteger serverRecvCount = new AtomicInteger(0);
-        
+
         Permissions permissions = new Permissions();
         permissions.add(new LibUVPermission("libuv.pipe.connect"));
         permissions.add(new LibUVPermission("libuv.pipe.bind"));
@@ -297,7 +297,7 @@ public class PermissionTest {
                 client.connect(PIPE_NAME);
             }
         });
-        
+
         server.setConnectionCallback(new StreamCallback() {
             @Override
             public void call(final Object[] args) throws Exception {
@@ -317,7 +317,7 @@ public class PermissionTest {
         }
 
         Assert.assertEquals(serverRecvCount.get(), 1);
-        
+
         testSuccess(new Runnable() {
             @Override
             public void run() {
@@ -327,7 +327,7 @@ public class PermissionTest {
 
         System.out.println("Security pipe Auth test passed");
     }
-    
+
 
     @Test
     public void testChildProcessAuth() {
@@ -455,7 +455,8 @@ public class PermissionTest {
 
     @Test
     public void testConnection6Auth() throws Exception {
-        if (!UDPHandleTest.isIPv6Enabled()) {
+        final LoopHandle lh = new LoopHandle();
+        if (!UDPHandleTest.isIPv6Enabled(lh)) {
             return;
         }
 
@@ -472,7 +473,6 @@ public class PermissionTest {
 
         init(permissions);
 
-        final LoopHandle lh = new LoopHandle();
         final TCPHandle server = new TCPHandle(lh);
         final TCPHandle client = new TCPHandle(lh);
         final TCPHandle peer = new TCPHandle(lh);

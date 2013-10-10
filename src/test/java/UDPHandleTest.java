@@ -113,7 +113,8 @@ public class UDPHandleTest {
 
     @Test
     public void testConnection6() throws Exception {
-        if (!isIPv6Enabled()) {
+        final LoopHandle loop = new LoopHandle();
+        if (!isIPv6Enabled(loop)) {
             return;
         }
         @SuppressWarnings("unused")
@@ -127,7 +128,6 @@ public class UDPHandleTest {
         final AtomicBoolean serverDone = new AtomicBoolean(false);
         final AtomicBoolean clientDone = new AtomicBoolean(false);
 
-        final LoopHandle loop = new LoopHandle();
         final UDPHandle server = new UDPHandle(loop);
         final UDPHandle client = new UDPHandle(loop);
 
@@ -181,19 +181,22 @@ public class UDPHandleTest {
     public static void main(final String[] args) throws Exception {
         final UDPHandleTest test = new UDPHandleTest();
         test.testConnection();
-        if (isIPv6Enabled()) {
-            test.testConnection6();
-        }
+        test.testConnection6();
     }
 
-    public static boolean isIPv6Enabled() {
+    public static boolean isIPv6Enabled(final LoopHandle loop) {
+        UDPHandle socket = null;
         try {
-            final UDPHandle socket = new UDPHandle(new LoopHandle());
+            socket = new UDPHandle(loop);
             socket.recvStart();
             socket.send6("", PORT6, HOST6);
         } catch(net.java.libuv.NativeException e) {
             if ("EAFNOSUPPORT".equals(e.errnoString())) {
                 return false;
+            }
+        } finally {
+            if (socket != null) {
+                socket.close();
             }
         }
         return true;
