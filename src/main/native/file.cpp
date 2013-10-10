@@ -347,7 +347,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1close
     uv_fs_t req;
     r = uv_fs_close(loop, &req, fd, NULL);
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_close");
     }
   }
@@ -410,7 +410,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1read
     env->SetByteArrayRegion(buffer, (jsize)offset, (jsize)length, base);
     uv_fs_req_cleanup(&req);
     delete base;
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_read");
     }
   }
@@ -438,7 +438,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1unlink
     uv_fs_t req;
     r = uv_fs_unlink(loop, &req, cpath, NULL);
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_unlink", NULL, cpath);
     }
   }
@@ -470,7 +470,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1write
     r = uv_fs_write(loop, &req, fd, base, length, position, NULL);
     uv_fs_req_cleanup(&req);
     delete base;
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_write");
     }
   }
@@ -498,7 +498,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1mkdir
     uv_fs_t req;
     r = uv_fs_mkdir(loop, &req, cpath, mode, NULL);
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_mkdir", NULL, cpath);
     }
   }
@@ -527,7 +527,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1rmdir
     uv_fs_t req;
     r = uv_fs_rmdir(loop, &req, cpath, NULL);
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_rmdir", NULL, cpath);
     }
   }
@@ -555,7 +555,7 @@ JNIEXPORT jobjectArray JNICALL Java_net_java_libuv_handles_FileHandle__1readdir
   } else {
     uv_fs_t req;
     int r = uv_fs_readdir(loop, &req, cpath, flags, NULL);
-    if (r == UV_OK) {
+    if (r >= 0) {
         char *namebuf = static_cast<char*>(req.ptr);
         int nnames = static_cast<int>(req.result);
         names = env->NewObjectArray(nnames, FileCallbacks::_object_cid, 0);
@@ -602,7 +602,7 @@ JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_FileHandle__1stat
     int r = uv_fs_stat(loop, &req, cpath, NULL);
     stats = FileCallbacks::build_stats(static_cast<uv_statbuf_t *>(req.ptr));
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_stat", NULL, cpath);
     }
   }
@@ -631,7 +631,7 @@ JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_FileHandle__1fstat
     int r = uv_fs_fstat(loop, &req, fd, NULL);
     stats = FileCallbacks::build_stats(static_cast<uv_statbuf_t*>(req.ptr));
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_fstat");
     }
   }
@@ -660,7 +660,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1rename
     uv_fs_t req;
     r = uv_fs_rename(loop, &req, src_path, dst_path, NULL);
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_rename", NULL, src_path);
     }
   }
@@ -689,7 +689,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1fsync
     uv_fs_t req;
     r = uv_fs_fsync(loop, &req, fd, NULL);
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_fsync");
     }
   }
@@ -716,7 +716,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1fdatasync
     uv_fs_t req;
     r = uv_fs_fdatasync(loop, &req, fd, NULL);
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_fdatasync");
     }
   }
@@ -743,7 +743,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1ftruncate
     uv_fs_t req;
     r = uv_fs_ftruncate(loop, &req, fd, offset, NULL);
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_ftruncate");
     }
   }
@@ -770,7 +770,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1sendfile
     uv_fs_t req;
     r = uv_fs_sendfile(loop, &req, out_fd, in_fd, offset, length, NULL);
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_sendfile");
     }
   }
@@ -798,7 +798,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1chmod
     uv_fs_t req;
     r = uv_fs_chmod(loop, &req, cpath, mode, NULL);
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_chmod", NULL, cpath);
     }
   }
@@ -827,7 +827,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1utime
     uv_fs_t req;
     r = uv_fs_utime(loop, &req, cpath, atime, mtime, NULL);
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_utime", NULL, cpath);
     }
   }
@@ -855,7 +855,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1futime
     uv_fs_t req;
     r = uv_fs_futime(loop, &req, fd, atime, mtime, NULL);
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_futime");
     }
   }
@@ -884,7 +884,7 @@ JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_FileHandle__1lstat
     int r = uv_fs_lstat(loop, &req, cpath, NULL);
     stats = FileCallbacks::build_stats(static_cast<uv_statbuf_t*>(req.ptr));
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_lstat", NULL, cpath);
     }
   }
@@ -914,7 +914,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1link
     uv_fs_t req;
     r = uv_fs_link(loop, &req, src_path, dst_path, NULL);
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_link", NULL, src_path);
     }
   }
@@ -945,7 +945,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1symlink
     uv_fs_t req;
     r = uv_fs_symlink(loop, &req, src_path, dst_path, flags, NULL);
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_symlink", NULL, src_path);
     }
   }
@@ -976,7 +976,7 @@ JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_FileHandle__1readlink
     int r = uv_fs_readlink(loop, &req, cpath, NULL);
     link = env->NewStringUTF(static_cast<char*>(req.ptr));
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_readklink", NULL, cpath);
     }
   }
@@ -1004,7 +1004,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1fchmod
     uv_fs_t req;
     r = uv_fs_fchmod(loop, &req, fd, mode, NULL);
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_fchmod");
     }
   }
@@ -1032,7 +1032,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1chown
     uv_fs_t req;
     r = uv_fs_chown(loop, &req, cpath, (uv_uid_t)uid, (uv_gid_t)gid, NULL);
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_chown", NULL, cpath);
     }
   }
@@ -1060,7 +1060,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1fchown
     uv_fs_t req;
     r = uv_fs_fchown(loop, &req, fd, (uv_uid_t)uid, (uv_gid_t)gid, NULL);
     uv_fs_req_cleanup(&req);
-    if (r != UV_OK) {
+    if (r < 0) {
       ThrowException(env, uv_last_error(loop).code, "uv_fs_fchown");
     }
   }
