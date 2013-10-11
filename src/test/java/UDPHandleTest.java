@@ -49,13 +49,8 @@ public class UDPHandleTest {
 
     @Test
     public void testConnection() throws Exception {
-        @SuppressWarnings("unused")
-        final AtomicInteger serverSendCount = new AtomicInteger(0);
         final AtomicInteger clientSendCount = new AtomicInteger(0);
-
         final AtomicInteger serverRecvCount = new AtomicInteger(0);
-        @SuppressWarnings("unused")
-        final AtomicInteger clientRecvCount = new AtomicInteger(0);
 
         final AtomicBoolean serverDone = new AtomicBoolean(false);
         final AtomicBoolean clientDone = new AtomicBoolean(false);
@@ -65,23 +60,16 @@ public class UDPHandleTest {
         final UDPHandle client = new UDPHandle(loop);
 
         final UDPCallback serverLoggingCallback = new LoggingCallback("s: ");
-        final UDPCallback clientLoggingCallback = new LoggingCallback("c: ");
 
         server.setRecvCallback(new UDPCallback() {
             @Override
             public void call(Object[] args) throws Exception {
-                serverLoggingCallback.call(args);
-                if (serverRecvCount.incrementAndGet() >= TIMES) {
+                if (serverRecvCount.incrementAndGet() < TIMES) {
+                    serverLoggingCallback.call(args);
+                } else {
                     server.close();
                     serverDone.set(true);
                 }
-            }
-        });
-
-        client.setRecvCallback(new UDPCallback() {
-            @Override
-            public void call(final Object[] args) throws Exception {
-                clientLoggingCallback.call(args);
             }
         });
 
@@ -89,7 +77,6 @@ public class UDPHandleTest {
             @Override
             public void call(final Object[] args) throws Exception {
                 if (clientSendCount.incrementAndGet() < TIMES) {
-                    client.send("PING." + clientSendCount.get(), PORT, HOST);
                 } else {
                     client.close();
                     clientDone.set(true);
@@ -100,10 +87,12 @@ public class UDPHandleTest {
         server.bind(PORT, HOST);
         server.recvStart();
 
-        client.recvStart();
-        client.send("INIT." + clientSendCount.get(), PORT, HOST);
+        for (int i=0; i < TIMES; i++) {
+            client.send("PING." + i, PORT, HOST);
+        }
+        client.close();
 
-        while (!serverDone.get() && !clientDone.get()) {
+        while (!serverDone.get()) {
             loop.run();
         }
 
@@ -117,13 +106,8 @@ public class UDPHandleTest {
         if (!isIPv6Enabled(loop)) {
             return;
         }
-        @SuppressWarnings("unused")
-        final AtomicInteger serverSendCount = new AtomicInteger(0);
         final AtomicInteger clientSendCount = new AtomicInteger(0);
-
         final AtomicInteger serverRecvCount = new AtomicInteger(0);
-        @SuppressWarnings("unused")
-        final AtomicInteger clientRecvCount = new AtomicInteger(0);
 
         final AtomicBoolean serverDone = new AtomicBoolean(false);
         final AtomicBoolean clientDone = new AtomicBoolean(false);
@@ -131,24 +115,17 @@ public class UDPHandleTest {
         final UDPHandle server = new UDPHandle(loop);
         final UDPHandle client = new UDPHandle(loop);
 
-        final UDPCallback serverLoggingCallback = new LoggingCallback("s: ");
-        final UDPCallback clientLoggingCallback = new LoggingCallback("c: ");
+        final UDPCallback serverLoggingCallback = new LoggingCallback("s6: ");
 
         server.setRecvCallback(new UDPCallback() {
             @Override
             public void call(Object[] args) throws Exception {
-                serverLoggingCallback.call(args);
-                if (serverRecvCount.incrementAndGet() >= TIMES) {
+                if (serverRecvCount.incrementAndGet() < TIMES) {
+                    serverLoggingCallback.call(args);
+                } else {
                     server.close();
                     serverDone.set(true);
                 }
-            }
-        });
-
-        client.setRecvCallback(new UDPCallback() {
-            @Override
-            public void call(Object[] args) throws Exception {
-                clientLoggingCallback.call(args);
             }
         });
 
@@ -156,7 +133,6 @@ public class UDPHandleTest {
             @Override
             public void call(Object[] args) throws Exception {
                 if (clientSendCount.incrementAndGet() < TIMES) {
-                    client.send("PING." + clientSendCount.get(), PORT6, HOST6);
                 } else {
                     client.close();
                     clientDone.set(true);
@@ -167,10 +143,12 @@ public class UDPHandleTest {
         server.bind6(PORT6, HOST6);
         server.recvStart();
 
-        client.recvStart();
-        client.send6("INIT." + clientSendCount.get(), PORT6, HOST6);
+        for (int i=0; i < TIMES; i++) {
+            client.send6("PING." + i, PORT6, HOST6);
+        }
+        client.close();
 
-        while (!serverDone.get() && !clientDone.get()) {
+        while (!serverDone.get()) {
             loop.run();
         }
 
