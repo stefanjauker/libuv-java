@@ -46,6 +46,7 @@ public class UDPHandleTest {
     private static final int PORT = 34567;
     private static final int PORT6 = 45678;
     private static final int TIMES = 10;
+    private static final int TIMEOUT = 5000;
 
     @Test
     public void testConnection() throws Exception {
@@ -92,7 +93,11 @@ public class UDPHandleTest {
         }
         client.close();
 
+        final long start = System.currentTimeMillis();
         while (!serverDone.get()) {
+            if (System.currentTimeMillis() - start > TIMEOUT) {
+                Assert.fail("timeout");
+            }
             loop.run();
         }
 
@@ -148,7 +153,11 @@ public class UDPHandleTest {
         }
         client.close();
 
+        final long start = System.currentTimeMillis();
         while (!serverDone.get()) {
+            if (System.currentTimeMillis() - start > TIMEOUT) {
+                Assert.fail("timeout");
+            }
             loop.run();
         }
 
