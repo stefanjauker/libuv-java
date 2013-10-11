@@ -98,7 +98,7 @@ public class UDPHandleTest {
             if (System.currentTimeMillis() - start > TIMEOUT) {
                 Assert.fail("timeout");
             }
-            loop.run();
+            loop.runNoWait();
         }
 
         Assert.assertEquals(clientSendCount.get(), TIMES);
@@ -158,7 +158,7 @@ public class UDPHandleTest {
             if (System.currentTimeMillis() - start > TIMEOUT) {
                 Assert.fail("timeout");
             }
-            loop.run();
+            loop.runNoWait();
         }
 
         Assert.assertEquals(clientSendCount.get(), TIMES);
