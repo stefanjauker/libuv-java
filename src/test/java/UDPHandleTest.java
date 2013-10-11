@@ -91,7 +91,10 @@ public class UDPHandleTest {
         for (int i=0; i < TIMES; i++) {
             client.send("PING." + i, PORT, HOST);
         }
-        client.close();
+        
+        // On Mac, server never receives the message if closed before messages
+        // are sent.
+        //client.close();
 
         final long start = System.currentTimeMillis();
         while (!serverDone.get()) {
@@ -151,7 +154,10 @@ public class UDPHandleTest {
         for (int i=0; i < TIMES; i++) {
             client.send6("PING." + i, PORT6, HOST6);
         }
-        client.close();
+        
+        // On Mac, server never receives the message if closed before messages
+        // are sent.
+        //client.close();
 
         final long start = System.currentTimeMillis();
         while (!serverDone.get()) {
