@@ -33,19 +33,18 @@ import java.util.Map;
 
 public final class Constants {
 
-    private static final boolean IS_WINDOWS = System.getProperty("os.name").startsWith("Windows");
     private static final Field[] FIELDS = Constants.class.getDeclaredFields();
     private static final int MASK = Modifier.PUBLIC | Modifier.STATIC | Modifier.FINAL;
     private static final int[] FIELD_VALUES = new int[FIELDS.length];
 
-    private static final Map<String, Object> CONSTANTS;
-    private static final Map<Object, String> CONSTANTS_STRING;
+    private static final Map<String, Integer> CONSTANTS;
+    private static final Map<Integer, String> CONSTANTS_STRING;
 
-    public static Map<String, Object> getConstants() {
+    public static Map<String, Integer> getConstants() {
         return CONSTANTS;
     }
 
-    public static Map<Object, String> getConstantsString() {
+    public static Map<Integer, String> getConstantsString() {
         return CONSTANTS_STRING;
     }
 
@@ -131,13 +130,13 @@ public final class Constants {
     private static native void _get_field_values(int[] values);
 
     static {
-        Map<String, Object> constants = new HashMap<>(FIELDS.length);
-        Map<Object, String> constantsString = new HashMap<>(FIELDS.length);
+        Map<String, Integer> constants = new HashMap<>(FIELDS.length);
+        Map<Integer, String> constantsString = new HashMap<>(FIELDS.length);
         for (final Field f : FIELDS) {
             if ((f.getModifiers() & MASK) == MASK) {
                 try {
-                    constants.put(f.getName(), f.get(null));
-                    constantsString.put(f.get(null), f.getName());
+                    constants.put(f.getName(), (Integer) f.get(null));
+                    constantsString.put((Integer) f.get(null), f.getName());
                 } catch (IllegalArgumentException | IllegalAccessException ex) {
                     // Should never happen, ignore with msg
                     ex.printStackTrace();

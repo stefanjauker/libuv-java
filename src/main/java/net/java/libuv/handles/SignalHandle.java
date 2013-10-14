@@ -25,6 +25,7 @@
 
 package net.java.libuv.handles;
 
+import net.java.libuv.Constants;
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.SignalCallback;
 
@@ -43,6 +44,10 @@ public final class SignalHandle extends Handle {
     public SignalHandle(final LoopHandle loop) {
         super(_new(loop.pointer()), loop);
         _initialize(pointer);
+    }
+
+    public void start(final String signal) {
+        start(Constants.getConstants().get(signal));
     }
 
     public void start(final int signum) {
