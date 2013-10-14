@@ -31,6 +31,16 @@
 #include "throw.h"
 #include "net_java_libuv_handles_FileHandle.h"
 
+#ifdef __MACOS__
+#include <sys/fcntl.h>
+#endif
+
+#ifdef _WIN32
+#include <io.h>
+#include <Shlwapi.h>
+#include <tchar.h>
+#endif
+
 class FileCallbacks {
 private:
   static jclass _int_cid;
@@ -1065,4 +1075,99 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1fchown
     }
   }
   return r;
+}
+
+/*
+ * Class:     net_java_libuv_handles_FileHandle
+ * Method:    _get_path
+ * Signature: (JI)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_FileHandle__1get_1path
+  (JNIEnv *env, jobject that, jlong loop_ptr, jint fd) {
+  assert(loop_ptr);
+#ifdef __MACOS__
+  char pathbuf[PATH_MAX];
+  if (fcntl(fd, F_GETPATH, pathbuf) >= 0) {
+    // pathbuf now contains *a* path to the open file descriptor
+    jstring path = env->NewStringUTF(static_cast<char*>(pathbuf));
+    return path;
+  } else {
+    ThrowException(env, errno, "fcntl");
+    return NULL;
+  }
+#elif _WIN32
+  HANDLE handle = (HANDLE) _get_osfhandle(fd);
+  PFILE_NAME_INFO filename_info = (PFILE_NAME_INFO)HeapAlloc(GetProcessHeap(), 0, MAX_PATH);
+  LPBY_HANDLE_FILE_INFORMATION file_info = (LPBY_HANDLE_FILE_INFORMATION)HeapAlloc(GetProcessHeap(), 0, sizeof(BY_HANDLE_FILE_INFORMATION));
+
+  // Get the filename
+  if (!GetFileInformationByHandleEx(handle, FileNameInfo, filename_info, MAX_PATH)) {
+    HeapFree(GetProcessHeap(), 0, filename_info);
+    ThrowException(env, GetLastError(), "GetFileInformationByHandleEx");
+    return NULL;
+  }
+
+  // Get the volume serial number
+  if (!GetFileInformationByHandle(handle, file_info)) {
+    HeapFree(GetProcessHeap(), 0, file_info);
+    ThrowException(env, GetLastError(), "GetFileInformationByHandle");
+    return NULL;
+  }
+
+  // Get the buffer size needed to hold the drive strings
+  DWORD buffer_len = GetLogicalDriveStrings(0, NULL) * sizeof(TCHAR);
+  LPTSTR drives = (LPTSTR)malloc(buffer_len);
+  assert(drives);
+
+  // Find all the drives
+  DWORD r = GetLogicalDriveStrings(buffer_len, drives);
+  if (r < 0) {
+    free(drives);
+    ThrowException(env, GetLastError(), "GetLogicalDriveStrings");
+    return NULL;
+  }
+
+  LPTSTR single_drive = drives;
+  while(*single_drive) {
+    DWORD serial_number;
+    if (GetVolumeInformation(single_drive, NULL, NULL, &serial_number, NULL, NULL, NULL, 0)) {
+      if (serial_number == file_info->dwVolumeSerialNumber) {
+        break;
+      }
+    } else {
+      free(drives);
+      ThrowException(env, GetLastError(), "GetVolumeInformation");
+      return NULL;
+    }
+    single_drive += _tcslen(single_drive) + 1;
+  }
+
+  size_t drive_len = _tcslen(single_drive) + 1;
+  size_t filename_len = wcslen(filename_info->FileName);
+  size_t total_len = drive_len + filename_len;
+  wchar_t* wpath = (wchar_t*)malloc(sizeof(wchar_t) * total_len);
+  assert(wpath);
+
+  _snwprintf(wpath, total_len, TEXT("%s%s"), single_drive, filename_info->FileName);
+  jstring path = env->NewString((jchar*)wpath, (jsize)total_len);
+
+  free(wpath);
+  free(drives);
+  HeapFree(GetProcessHeap(), 0, file_info);
+  HeapFree(GetProcessHeap(), 0, filename_info);
+  return path;
+#else /* POSIX */
+  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  char proc_path[sizeof("/proc/self/fd/") + 3 * sizeof(int)];
+  snprintf(proc_path, sizeof(proc_path), "/proc/self/fd/%d", fd);
+  uv_fs_t req;
+  int r = uv_fs_readlink(loop, &req, proc_path, NULL);
+  jstring path = env->NewStringUTF(static_cast<char*>(req.ptr));
+  uv_fs_req_cleanup(&req);
+  if (r < 0) {
+    ThrowException(env, uv_last_error(loop).code, "uv_fs_readlink");
+    return NULL;
+  }
+  return path;
+#endif
 }

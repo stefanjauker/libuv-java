@@ -399,6 +399,10 @@ public final class FileHandle extends Handle {
         return _fchown(pointer, fd, uid, gid, callbackId);
     }
 
+    public String getPath(final int fd) {
+        return _get_path(pointer, fd);
+    }
+
     private void callback(final int type, final int callbackId, final Object arg) {
         final Object[] args = {arg};
         callback(type, callbackId, args);
@@ -497,4 +501,6 @@ public final class FileHandle extends Handle {
     private native int _chown(final long ptr, final String path, final int uid, final int gid, final int callbackId); 
 
     private native int _fchown(final long ptr, final int fd, final int uid, final int gid, final int callbackId);
+
+    private native String _get_path(final long ptr, final int fd);
 }
