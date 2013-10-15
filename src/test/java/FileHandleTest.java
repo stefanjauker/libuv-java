@@ -392,19 +392,33 @@ public class FileHandleTest {
 
     public static void main(final String[] args) throws Exception {
         FileHandleTest test = new FileHandleTest();
+        test.testName = "testOpenWriteReadAndCloseSync";
         test.testOpenWriteReadAndCloseSync();
+        test.testName = "testOpenWriteReadAndCloseAsync";
         test.testOpenWriteReadAndCloseAsync();
+        test.testName = "testUnlinkSync";
         test.testUnlinkSync();
+        test.testName = "testUnlinkAsync";
         test.testUnlinkAsync();
+        test.testName = "testMkdirRmdirSync";
         test.testMkdirRmdirSync();
+        test.testName = "testMkdirRmdirAsync";
         test.testMkdirRmdirAsync();
+        test.testName = "testReaddirSync";
         test.testReaddirSync();
+        test.testName = "testReaddirAsync";
         test.testReaddirAsync();
+        test.testName = "testRenameSync";
         test.testRenameSync();
+        test.testName = "testRenameAsync";
         test.testRenameAsync();
+        test.testName = "testFtruncateSync";
         test.testFtruncateSync();
+        test.testName = "testFtruncateAsync";
         test.testFtruncateAsync();
+        test.testName = "testLinkSync";
         test.testLinkSync();
+        test.testName = "testLinkAsync";
         test.testLinkAsync();
     }
 }

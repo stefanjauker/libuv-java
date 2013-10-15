@@ -1092,7 +1092,8 @@ JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_FileHandle__1get_1path
     jstring path = env->NewStringUTF(static_cast<char*>(pathbuf));
     return path;
   } else {
-    ThrowException(env, errno, "fcntl");
+    uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+    ThrowException(env, uv_last_error(loop).code, "fcntl");
     return NULL;
   }
 #elif _WIN32

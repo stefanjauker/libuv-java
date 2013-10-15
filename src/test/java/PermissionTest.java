@@ -23,10 +23,12 @@
  * questions.
  */
 
+import java.io.File;
 import java.io.FilePermission;
 import java.net.SocketPermission;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.LinkPermission;
 import java.security.AccessControlException;
 import java.security.Permission;
 import java.security.Permissions;
@@ -36,14 +38,18 @@ import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import net.java.libuv.Constants;
 
 import net.java.libuv.LibUV;
 import net.java.libuv.LibUVPermission;
+import net.java.libuv.NativeException;
 import net.java.libuv.StreamCallback;
+import net.java.libuv.handles.FileHandle;
 import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.handles.PipeHandle;
 import net.java.libuv.handles.ProcessHandle;
 import net.java.libuv.handles.SignalHandle;
+import net.java.libuv.handles.Stats;
 import net.java.libuv.handles.StdioOptions;
 import net.java.libuv.handles.TCPHandle;
 import net.java.libuv.handles.TTYHandle;
@@ -230,6 +236,13 @@ public class PermissionTest {
             @Override
             public void run() {
                 new TCPHandle(lh);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                new FileHandle(lh);
             }
         });
 
@@ -555,6 +568,386 @@ public class PermissionTest {
         });
 
         System.out.println("Security signal Auth test passed");
+    }
+
+    @Test
+    public void testFileAuth() throws Exception {
+        Permissions permissions = new Permissions();
+        permissions.add(new LibUVPermission("libuv.handle"));
+        permissions.add(new FilePermission("testOpenWriteReadAndCloseSync.txt", "write"));
+        permissions.add(new FilePermission("testOpenWriteReadAndCloseSync.txt", "read"));
+        permissions.add(new FilePermission("testOpenWriteReadAndCloseSync.txt", "delete"));
+        permissions.add(new FilePermission("testOpenWriteReadAndCloseAsync.txt", "write"));
+        permissions.add(new FilePermission("testOpenWriteReadAndCloseAsync.txt", "read"));
+        permissions.add(new FilePermission("testUnlinkSync.txt", "write"));
+        permissions.add(new FilePermission("testUnlinkSync.txt", "read"));
+        permissions.add(new FilePermission("testUnlinkSync.txt", "delete"));
+        permissions.add(new FilePermission("testUnlinkAsync.txt", "write"));
+        permissions.add(new FilePermission("testUnlinkAsync.txt", "read"));
+        permissions.add(new FilePermission("testUnlinkAsync.txt", "delete"));
+        permissions.add(new FilePermission("testMkdirRmdirSync", "write"));
+        permissions.add(new FilePermission("testMkdirRmdirSync", "delete"));
+        permissions.add(new FilePermission("testMkdirRmdirAsync", "write"));
+        permissions.add(new FilePermission("testMkdirRmdirAsync", "delete"));
+        permissions.add(new FilePermission("src", "read"));
+        permissions.add(new FilePermission("testRenameSync.txt", "write"));
+        permissions.add(new FilePermission("testRenameSync.txt", "read"));
+        permissions.add(new FilePermission("testRenameSynctestRenameSync.txt", "write"));
+        permissions.add(new FilePermission("testRenameSynctestRenameSync.txt", "read"));
+        permissions.add(new FilePermission("testRenameSynctestRenameSync.txt", "delete"));
+        permissions.add(new FilePermission("testRenameAsync.txt", "write"));
+        permissions.add(new FilePermission("testRenameAsync.txt", "read"));
+        permissions.add(new FilePermission("testRenameAsynctestRenameAsync.txt", "write"));
+        permissions.add(new FilePermission("testFtruncateSync.txt", "write"));
+        permissions.add(new FilePermission("testFtruncateSync.txt", "read"));
+        permissions.add(new FilePermission("testFtruncateSync.txt", "delete"));
+        permissions.add(new FilePermission("testFtruncateAsync.txt", "write"));
+        permissions.add(new FilePermission("testFtruncateAsync.txt", "read"));
+        permissions.add(new FilePermission("testLinkSync.txt", "write"));
+        permissions.add(new FilePermission("testLinkSync.txt", "read"));
+        permissions.add(new LinkPermission("hard"));
+        permissions.add(new FilePermission("testLinkSync2.txt", "write"));
+        permissions.add(new FilePermission("testLinkSync2.txt", "read"));
+        permissions.add(new FilePermission("testLinkSync.txt", "delete"));
+        permissions.add(new FilePermission("testLinkSync2.txt", "delete"));
+        permissions.add(new FilePermission("testLinkAsync.txt", "write"));
+        permissions.add(new FilePermission("testLinkAsync.txt", "read"));
+        permissions.add(new FilePermission("testLinkAsync2.txt", "write"));
+        
+        init(permissions);
+        FileHandleTest.main(null);
+
+        System.out.println("Security File Auth test passed");
+    }
+    
+    @Test
+    public void testFileReaOnly() throws Exception {
+        Permissions permissions = new Permissions();
+        final String fileName = "testFileReaOnly.txt";
+        permissions.add(new LibUVPermission("libuv.handle"));
+        permissions.add(new FilePermission(fileName, "read"));
+        permissions.add(new FilePermission(fileName, "delete"));
+        File f = new File(fileName);
+        f.createNewFile();
+        
+        init(permissions);
+        final LoopHandle loop = new LoopHandle();
+        final FileHandle handle = new FileHandle(loop);
+        final int fd = handle.open(fileName, Constants.O_RDONLY, Constants.S_IRWXU);
+        
+        handle.read(fd, new byte[5], 0, 0, 0);
+        Stats s = handle.fstat(fd);
+        if (s == null) {
+           throw new Exception("Stats is null"); 
+        }
+        handle.fdatasync(fd);
+        handle.fsync(fd);
+        
+        try {
+            handle.write(fd, "Hello".getBytes(), 0, 2, 0);
+            throw new Exception("Write should have failed");
+        }catch(NativeException ex){
+            // XXX OK.
+        }
+        
+        try {
+            handle.ftruncate(fd, 1);
+            throw new Exception("Write should have failed");
+        }catch(NativeException ex){
+            // XXX OK.
+        }
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.futime(fd, 999, 999999);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.fchmod(fd, Constants.S_IRWXU);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.fchown(fd, 01, 01);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.futime(fd, 999, 99999);
+            }
+        });
+        
+        handle.unlink(fileName);
+    }
+    
+    @Test
+    public void testFileNoAuth() throws Exception {
+        Permissions permissions = new Permissions();
+        permissions.add(new LibUVPermission("libuv.handle"));
+        init(permissions);
+        final LoopHandle loop = new LoopHandle();
+        final FileHandle handle = new FileHandle(loop);
+        final String fileName = "testFileNoAuth.txt";
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.open(fileName, Constants.O_CREAT, Constants.S_IRWXU);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.open(fileName, Constants.O_CREAT, Constants.S_IRWXU, 1);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.open(fileName, Constants.O_RDONLY, Constants.S_IRWXU);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.open(fileName, Constants.O_RDONLY, Constants.S_IRWXU, 1);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.open(fileName, Constants.O_RDWR, Constants.S_IRWXU);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.open(fileName, Constants.O_RDWR, Constants.S_IRWXU, 1);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.open(fileName, Constants.O_WRONLY, Constants.S_IRWXU);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.open(fileName, Constants.O_WRONLY, Constants.S_IRWXU, 1);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.chmod(fileName, Constants.S_IRWXU);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.chmod(fileName, Constants.S_IRWXU, 1);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.chown(fileName, 1, 2);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.chown(fileName, 1, 2, 1);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.readdir(fileName, Constants.O_RDWR);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.readdir(fileName, Constants.O_RDWR, 1);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.link(fileName, fileName);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.link(fileName, fileName, 1);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.symlink(fileName, fileName, Constants.O_RDWR);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.symlink(fileName, fileName, Constants.O_RDWR, 1);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.lstat(fileName);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.lstat(fileName, 1);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.mkdir(fileName, Constants.S_IRWXU);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.mkdir(fileName, Constants.S_IRWXU, 1);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.readlink(fileName);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.readlink(fileName, 1);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.rename(fileName, fileName);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.rename(fileName, fileName, 1);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.rmdir(fileName);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.rmdir(fileName, 1);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.stat(fileName);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.stat(fileName, 1);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.symlink(fileName, fileName, Constants.O_RDWR);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.symlink(fileName, fileName, Constants.O_RDWR, 1);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.unlink(fileName);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.unlink(fileName, 1);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.utime(fileName, 999, 99999);
+            }
+        });
+        
+        testFailure(new Runnable() {
+            @Override
+            public void run() {
+                handle.utime(fileName, 999, 99999, 1);
+            }
+        });
+        System.out.println("Security File No Auth test passed");
     }
 
     private static void testFailure(Runnable r) {

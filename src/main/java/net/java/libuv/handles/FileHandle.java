@@ -26,6 +26,7 @@
 package net.java.libuv.handles;
 
 import net.java.libuv.FileCallback;
+import net.java.libuv.LibUVPermission;
 
 public final class FileHandle extends Handle {
 
@@ -208,198 +209,249 @@ public final class FileHandle extends Handle {
     }
 
     public int open(final String path, final int flags, final int mode) {
+        LibUVPermission.checkOpenFile(path, flags);
         return _open(pointer, path, flags, mode, SYNC_MODE);
     }
 
     public int open(final String path, final int flags, final int mode, final int callbackId) {
+        LibUVPermission.checkOpenFile(path, flags);
         return _open(pointer, path, flags, mode, callbackId); 
     }
 
     public int read(final int fd, final byte[] buffer, final long offset, final long length, final long position) {
+        // Open has checked that fd is readable.
         return _read(pointer, fd, buffer, length, offset, position, SYNC_MODE);
     }
 
     public int read(final int fd, final byte[] buffer, final long offset, final long length, final long position, final int callbackId) {
+        // Open has checked that fd is readable.
         return _read(pointer, fd, buffer, length, offset, position, callbackId);
     }
 
     public int unlink(final String path) {
+        LibUVPermission.checkDeleteFile(path);
         return _unlink(pointer, path, SYNC_MODE);
     }
 
     public int unlink(final String path, final int callbackId) {
+        LibUVPermission.checkDeleteFile(path);
         return _unlink(pointer, path, callbackId);
     }
 
     public int write(final int fd, final byte[] buffer, final long offset, final long length, final long position) {
+        // Open has checked that fd is writable.
         return _write(pointer, fd, buffer, length, offset, position, SYNC_MODE);
     }
 
     public int write(final int fd, final byte[] buffer, final long offset, final long length, final long position, final int callbackId) {
+        // Open has checked that fd is writable.
         return _write(pointer, fd, buffer, length, offset, position, callbackId);
     }
 
     public int mkdir(final String path, int mode) {
+        LibUVPermission.checkWriteFile(path);
         return _mkdir(pointer, path, mode, SYNC_MODE);
     }
 
     public int mkdir(final String path, int mode, final int callbackId) {
+        LibUVPermission.checkWriteFile(path);
         return _mkdir(pointer, path, mode, callbackId);
     }
 
     public int rmdir(final String path) {
+        LibUVPermission.checkDeleteFile(path);
         return _rmdir(pointer, path, SYNC_MODE);
     }
 
     public int rmdir(final String path, final int callbackId) {
+        LibUVPermission.checkDeleteFile(path);
         return _rmdir(pointer, path, callbackId);
     }
 
     public String[] readdir(final String path, int flags) {
+        LibUVPermission.checkReadFile(path);
         return _readdir(pointer, path, flags, SYNC_MODE);
     }
 
     public String[] readdir(final String path, int flags, final int callbackId) {
+        LibUVPermission.checkReadFile(path);
         return _readdir(pointer, path, flags, callbackId);
     }
 
     public Stats stat(final String path) {
+        LibUVPermission.checkReadFile(path);
         return _stat(pointer, path, SYNC_MODE);
     }
 
     public Stats stat(final String path, final int callbackId) {
+        LibUVPermission.checkReadFile(path);
         return _stat(pointer, path, callbackId);
     }
 
     public Stats fstat(final int fd) {
+        LibUVPermission.checkReadFile(fd, this);
         return _fstat(pointer, fd, SYNC_MODE);
     }
 
     public Stats fstat(final int fd, final int callbackId) {
+        LibUVPermission.checkReadFile(fd, this);
         return _fstat(pointer, fd, callbackId);
     }
 
     public int rename(final String path, final String newPath) {
+        LibUVPermission.checkWriteFile(path);
+        LibUVPermission.checkWriteFile(newPath);
         return _rename(pointer, path, newPath, SYNC_MODE);
     }
 
     public int rename(final String path, final String newPath, final int callbackId) {
+        LibUVPermission.checkWriteFile(path);
+        LibUVPermission.checkWriteFile(newPath);
         return _rename(pointer, path, newPath, callbackId);
     }
 
     public int fsync(final int fd) {
+        // If a file is open, it can be synced, no security check.
         return _fsync(pointer, fd, SYNC_MODE);
     }
 
     public int fsync(final int fd, final int callbackId) {
+        // If a file is open, it can be synced, no security check.
         return _fsync(pointer, fd, callbackId);
     }
 
     public int fdatasync(final int fd) {
+        // If a file is open, it can be synced, no security check.
         return _fdatasync(pointer, fd, SYNC_MODE);
     }
 
     public int fdatasync(final int fd, final int callbackId) {
+        // If a file is open, it can be synced, no security check.
         return _fdatasync(pointer, fd, callbackId);
     }
 
     public int ftruncate(final int fd, final long offset) {
+        // Open has checked that fd is writable.
         return _ftruncate(pointer, fd, offset, SYNC_MODE);
     }
 
     public int ftruncate(final int fd, final long offset, final int callbackId) {
+        // Open has checked that fd is writable.
         return _ftruncate(pointer, fd, offset, callbackId);
     }
 
     public int sendfile(final int outFd, final int inFd, long offset, long length) {
+        // No security check required.
         return _sendfile(pointer, outFd, inFd, offset, length, SYNC_MODE);
     }
 
     public int sendfile(final int outFd, final int inFd, long offset, long length, final int callbackId) {
+        // No security check required.
         return _sendfile(pointer, outFd, inFd, offset, length, callbackId); 
     }
 
     public int chmod(final String path, int mode) {
+        LibUVPermission.checkWriteFile(path);
         return _chmod(pointer, path, mode, SYNC_MODE);
     }
 
     public int chmod(final String path, int mode, final int callbackId) {
+        LibUVPermission.checkWriteFile(path);
         return _chmod(pointer, path, mode, callbackId);
     }
 
     public int utime(final String path, double atime, double mtime) {
+        LibUVPermission.checkWriteFile(path);
         return _utime(pointer, path, atime, mtime, SYNC_MODE);
     }
 
     public int utime(final String path, double atime, double mtime, final int callbackId) {
+        LibUVPermission.checkWriteFile(path);
         return _utime(pointer, path, atime, mtime, callbackId);
     }
 
     public int futime(final int fd, double atime, double mtime) {
+        LibUVPermission.checkWriteFile(fd, this);
         return _futime(pointer, fd, atime, mtime, SYNC_MODE);
     }
 
     public int futime(final int fd, double atime, double mtime, final int callbackId) {
+        LibUVPermission.checkWriteFile(fd, this);
         return _futime(pointer, fd, atime, mtime, callbackId); 
     }
 
     public Stats lstat(final String path) {
+        LibUVPermission.checkReadFile(path);
         return _lstat(pointer, path, SYNC_MODE);
     }
 
     public Stats lstat(final String path, final int callbackId) {
+        LibUVPermission.checkReadFile(path);
         return _lstat(pointer, path, callbackId);
     }
 
     public int link(final String path, final String newPath) {
+        LibUVPermission.checkHardLink(path, newPath);
         return _link(pointer, path, newPath, SYNC_MODE);
     }
 
     public int link(final String path, final String newPath, final int callbackId) {
+        LibUVPermission.checkHardLink(path, newPath);
         return _link(pointer, path, newPath, callbackId);
     }
 
     public int symlink(final String path, final String newPath, final int flags) {
+        LibUVPermission.checkSymbolicLink(path, newPath);
         return _symlink(pointer, path, newPath, flags, SYNC_MODE);
     }
 
     public int symlink(final String path, final String newPath, final int flags, final int callbackId) {
+        LibUVPermission.checkSymbolicLink(path, newPath);
         return _symlink(pointer, path, newPath, flags, callbackId);
     }
 
     public String readlink(final String path) {
+        LibUVPermission.checkReadFile(path);
         return _readlink(pointer, path, SYNC_MODE);
     }
 
     public String readlink(final String path, final int callbackId) {
+        LibUVPermission.checkReadFile(path);
         return _readlink(pointer, path, callbackId);
     }
 
     public int fchmod(final int fd, final int mode) {
+        LibUVPermission.checkWriteFile(fd, this);
         return _fchmod(pointer, fd, mode, SYNC_MODE);
     }
 
     public int fchmod(final int fd, final int mode, final int callbackId) {
+        LibUVPermission.checkWriteFile(fd, this);
         return _fchmod(pointer, fd, mode, callbackId);
     }
 
     public int chown(final String path, final int uid, final int gid) {
+        LibUVPermission.checkWriteFile(path);
         return _chown(pointer, path, uid, gid, SYNC_MODE);
     }
 
     public int chown(final String path, final int uid, final int gid, final int callbackId) {
+        LibUVPermission.checkWriteFile(path);
         return _chown(pointer, path, uid, gid, callbackId);
     }
 
     public int fchown(final int fd, final int uid, final int gid) {
+        LibUVPermission.checkWriteFile(fd, this);
         return _fchown(pointer, fd, uid, gid, SYNC_MODE);
     }
 
     public int fchown(final int fd, final int uid, final int gid, final int callbackId) {
+        LibUVPermission.checkWriteFile(fd, this);
         return _fchown(pointer, fd, uid, gid, callbackId);
     }
 
     public String getPath(final int fd) {
+        // No security check, can retrieve path of an opened fd.
         return _get_path(pointer, fd);
     }
 

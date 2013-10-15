@@ -26,9 +26,11 @@ package net.java.libuv;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.nio.file.LinkPermission;
 import java.security.BasicPermission;
 
 import net.java.libuv.handles.Address;
+import net.java.libuv.handles.FileHandle;
 
 /**
  * Permissions specific to LibUV. 
@@ -162,6 +164,85 @@ public final class LibUVPermission extends BasicPermission {
                 throw new RuntimeException(ex);
             }
             sm.checkConnect(host, port);
+        }
+    }
+    
+    /*
+     * Files
+     */
+    private static boolean isFlag(int mask, int flag) {
+        return (mask & flag) == flag;
+    }
+    
+    public static void checkOpenFile(String path, int mask) {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            // write
+            if (isFlag(mask, Constants.O_CREAT) || 
+                isFlag(mask, Constants.O_WRONLY)||
+                isFlag(mask, Constants.O_RDWR) ||
+                isFlag(mask, Constants.O_TRUNC)) {
+                sm.checkWrite(path);
+            }
+            
+            // read
+            if (isFlag(mask, Constants.O_RDONLY) || 
+                isFlag(mask, Constants.O_RDWR)) {
+                sm.checkRead(path);
+            }
+        }
+    }
+    
+    public static void checkReadFile(String path) {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkRead(path);
+        }
+    }
+    
+    public static void checkWriteFile(String path) {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkWrite(path);
+        }
+    }
+    
+    public static void checkReadFile(int fd, FileHandle fh) {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkRead(fh.getPath(fd));
+        }
+    }
+    
+    public static void checkWriteFile(int fd, FileHandle fh) {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkWrite(fh.getPath(fd));
+        }
+    }
+    
+    public static void checkDeleteFile(String path) {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkDelete(path);
+        }
+    }
+    
+    public static void checkHardLink(String existing, String link) {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkPermission(new LinkPermission("hard"));
+            sm.checkWrite(existing);
+            sm.checkWrite(link);
+        }
+    }
+    
+    public static void checkSymbolicLink(String existing, String link) {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkPermission(new LinkPermission("symbolic"));
+            sm.checkWrite(existing);
+            sm.checkWrite(link);
         }
     }
 }
