@@ -72,7 +72,7 @@
                         'udp.cpp',
                     ],
                     'libraries': [
-                        '-Wl,-soname,libuv.so.0.5',
+                        '-Wl,-soname,libuv-java.so.0.10',
                         '-L<(LIBUV_PATH)',
                         '-luv',
                     ],
