@@ -46,7 +46,7 @@ import java.util.regex.Pattern;
 public class TestRunner {
 
     private static final String START_DIR = "test-classes";
-    private static final Pattern PATTERN = Pattern.compile("(^" + START_DIR + "\\\\)(\\w+Test)\\.class$");
+    private static final Pattern PATTERN = Pattern.compile("(^" + START_DIR + "[\\\\|/])(\\w+Test)\\.class$");
 
     public static void main(String[] args) throws Exception {
         final Path cwd = Paths.get(START_DIR);
