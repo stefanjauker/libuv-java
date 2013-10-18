@@ -18,6 +18,7 @@
         <property name="javac.debuglevel" value="lines"/>
         <path id="javac.classpath.id"/>
         <path id="javac.test.classpath.id"/>
+        <mkdir dir="test-reports"/>
     </target>
 
     <target name="javah" depends="compile">
@@ -96,34 +97,49 @@
         <jar basedir="${classes.dir}" destfile="${product.jar}"/>
     </target>
 
-    <target name="test" depends="compile-tests">
-        <macrodef name="test-runner">
-            <attribute name="tests"/>
-            <sequential>
-                <java fork="true" failonerror="true" classname="TestRunner">
-                    <classpath path="${classes.dir}"/>
-                    <classpath path="${test.classes.dir}"/>
-                    <classpath path="${testng.jar}"/>
-                    <jvmarg value="-Xverify:all"/>
-                    <jvmarg value="-Xcheck:jni"/>
-                    <jvmarg value="-Xmx1g"/>
-                    <jvmarg value="-Xms1g"/>
-                    <jvmarg value="-ea"/>
-                    <sysproperty key="java.library.path" value="${dist.dir}"/>
-                    <arg value="@{tests}"/>
-                </java>
-            </sequential>
-        </macrodef>
+    <macrodef name="test-runner">
+        <attribute name="tests" default=""/>
+        <element name="args" optional="true"/>
+        <sequential>
+            <java fork="true" failonerror="true" classname="TestRunner">
+                <classpath path="${classes.dir}"/>
+                <classpath path="${test.classes.dir}"/>
+                <classpath path="${testng.jar}"/>
+                <jvmarg value="-Xverify:all"/>
+                <jvmarg value="-Xcheck:jni"/>
+                <jvmarg value="-Xmx1g"/>
+                <jvmarg value="-Xms1g"/>
+                <jvmarg value="-ea"/>
+                <sysproperty key="java.library.path" value="${dist.dir}"/>
+                <args/>
+                <arg value="@{tests}"/>
+            </java>
+        </sequential>
+    </macrodef>
 
-        <mkdir dir="test-reports"/>
+    <target name="test" depends="compile-tests, permission-test, single-test, all-tests"/>
 
-        <fileset id="permission.test.id" dir="${test.java.dir}" includes="**/PermissionTest.java"/>
-        <property name="permission.test" refid="permission.test.id"/>
-        <test-runner tests="${permission.test}"/>
+    <!-- use 'ant -Dtest=fooTest test' to run that single test -->
+    <target name="single-test" depends="compile-tests" if="test">
+        <test-runner>
+            <args>
+                <sysproperty key="test" value="${test}"/>
+            </args>
+        </test-runner>
+    </target>
 
+    <!-- do not run all tests if a single test was specified -->
+    <target name="all-tests" depends="compile-tests" unless="test">
         <fileset id="test.list.id" dir="${test.java.dir}" includes="**/*Test.java" excludes="**/PermissionTest.java"/>
         <property name="test.list" refid="test.list.id"/>
         <test-runner tests="${test.list}"/>
+    </target>
+
+    <!-- do not run permission test if running a single test -->
+    <target name="permission-test" depends="compile-tests" unless="test">
+        <fileset id="permission.test.id" dir="${test.java.dir}" includes="**/PermissionTest.java"/>
+        <property name="permission.test" refid="permission.test.id"/>
+        <test-runner tests="${permission.test}"/>
     </target>
 
 </project>

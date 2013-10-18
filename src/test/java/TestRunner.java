@@ -30,6 +30,7 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -41,22 +42,32 @@ public class TestRunner {
     private static final String TEST_REPORTS_DIR = "test-reports";
 
     public static void main(String[] args) throws Exception {
+        final String test = System.getProperty("test");
+        if (test != null) {
+            runATest(test);
+            System.exit(0);
+        }
+
         for (final String arg : args) {
             final String[] files = arg.split(";");
             for (final String file : files) {
                 final String className = file.replaceAll(".java", "");
-                final PrintStream out = new PrintStream(TEST_REPORTS_DIR + File.separator + className + ".txt");
-                System.setOut(out);
-                try {
-                    runTest(className);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    System.exit(1);
-                } finally {
-                    out.close();
-                }
+                runATest(className);
             }
             System.exit(0);
+        }
+    }
+
+    private static void runATest(final String testClassName) throws FileNotFoundException {
+        final PrintStream out = new PrintStream(TEST_REPORTS_DIR + File.separator + testClassName + ".txt");
+        System.setOut(out);
+        try {
+            runTest(testClassName);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            System.exit(1);
+        } finally {
+            out.close();
         }
     }
 
@@ -89,7 +100,7 @@ public class TestRunner {
         }
         try {
             for (final Method test : tests) {
-                System.err.printf("-- %s.%s\n", testClassName, test.getName());
+                System.err.printf("   %s.%s\n", testClassName, test.getName());
                 callSetupMethod(beforeMethod, instance, test);
                 try {
                     test.invoke(instance);
