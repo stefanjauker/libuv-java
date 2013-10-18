@@ -72,6 +72,11 @@ public class PermissionTest {
     private static final String ADDRESS6 = "::1";
     private static int p = 49152;
 
+    static {
+        // call a LibUV method just to ensure that the native lib is loaded
+        System.out.println(PermissionTest.class.getSimpleName() + " in " + LibUV.cwd());
+    }
+
     private static int getPort() {
         return ++p;
     }
