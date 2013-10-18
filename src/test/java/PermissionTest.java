@@ -592,12 +592,12 @@ public class PermissionTest extends TestBase {
         permissions.add(new FilePermission("src", "read"));
         permissions.add(new FilePermission("testRenameSync.txt", "write"));
         permissions.add(new FilePermission("testRenameSync.txt", "read"));
-        permissions.add(new FilePermission("testRenameSynctestRenameSync.txt", "write"));
-        permissions.add(new FilePermission("testRenameSynctestRenameSync.txt", "read"));
-        permissions.add(new FilePermission("testRenameSynctestRenameSync.txt", "delete"));
+        permissions.add(new FilePermission("testRenameSync-new.txt", "write"));
+        permissions.add(new FilePermission("testRenameSync-new.txt", "read"));
+        permissions.add(new FilePermission("testRenameSync-new.txt", "delete"));
         permissions.add(new FilePermission("testRenameAsync.txt", "write"));
         permissions.add(new FilePermission("testRenameAsync.txt", "read"));
-        permissions.add(new FilePermission("testRenameAsynctestRenameAsync.txt", "write"));
+        permissions.add(new FilePermission("testRenameAsync-new.txt", "write"));
         permissions.add(new FilePermission("testFtruncateSync.txt", "write"));
         permissions.add(new FilePermission("testFtruncateSync.txt", "read"));
         permissions.add(new FilePermission("testFtruncateSync.txt", "delete"));

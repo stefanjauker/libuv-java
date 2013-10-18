@@ -34,6 +34,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.File;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -46,7 +47,7 @@ public class FileHandleTest extends TestBase {
 
     @BeforeMethod
     protected void startSession(Method method) throws Exception {
-        testName = method.getName();
+        testName = System.getProperty("java.io.tmpdir") + File.separator + method.getName();
     }
 
     @Test
@@ -241,7 +242,7 @@ public class FileHandleTest extends TestBase {
     @Test
     public void testRenameSync() {
         final String filename = testName + ".txt";
-        final String newName = testName + testName + ".txt";
+        final String newName = testName + "-new" + ".txt";
         final LoopHandle loop = new LoopHandle();
         final FileHandle handle = new FileHandle(loop);
 
@@ -256,7 +257,7 @@ public class FileHandleTest extends TestBase {
     @Test
     public void testRenameAsync() throws Exception {
         final String filename = testName + ".txt";
-        final String newName = testName + testName + ".txt";
+        final String newName = testName + "-new" + ".txt";
         final LoopHandle loop = new LoopHandle();
         final FileHandle handle = new FileHandle(loop);
         final AtomicBoolean renameCallbackCalled = new AtomicBoolean(false);
