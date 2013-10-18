@@ -62,11 +62,20 @@ public class TestRunner {
             }
         });
         for (final String test : tests) {
-            runTest(test);
+            try {
+                runTest(test);
+            } catch (Exception ex) {
+                System.out.flush();
+                System.err.flush();
+                ex.printStackTrace();
+                System.exit(1);
+            }
         }
     }
 
     private static void runTest(final String testClassName) throws Exception {
+        System.out.flush();
+        System.err.printf("++ %s\n", testClassName);
         final Class<?> testClass = Class.forName(testClassName);
         Method beforeTest = null;
         Method afterTest = null;
@@ -93,7 +102,8 @@ public class TestRunner {
             beforeTest.invoke(instance);
         }
         for (final Method test : tests) {
-            System.out.printf("-- %s.%s\n", testClassName, test.getName());
+            System.out.flush();
+            System.err.printf("-- %s.%s\n", testClassName, test.getName());
             if (beforeMethod != null) {
                 if (beforeMethod.getParameterCount() == 0) {
                     beforeMethod.invoke(instance);
