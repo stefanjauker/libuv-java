@@ -101,27 +101,33 @@ public class TestRunner {
         if (beforeTest != null) {
             beforeTest.invoke(instance);
         }
-        for (final Method test : tests) {
-            System.out.flush();
-            System.err.printf("-- %s.%s\n", testClassName, test.getName());
-            if (beforeMethod != null) {
-                if (beforeMethod.getParameterCount() == 0) {
-                    beforeMethod.invoke(instance);
-                } else {
-                    beforeMethod.invoke(instance, test);
+        try {
+            for (final Method test : tests) {
+                System.out.flush();
+                System.err.printf("-- %s.%s\n", testClassName, test.getName());
+                callSetupMethod(beforeMethod, instance, test);
+                try {
+                    test.invoke(instance);
+                } finally {
+                    callSetupMethod(afterMethod, instance, test);
                 }
             }
-            test.invoke(instance);
-            if (afterMethod != null) {
-                if (afterMethod.getParameterCount() == 0) {
-                    afterMethod.invoke(instance);
-                } else {
-                    afterMethod.invoke(instance, test);
-                }
+        } finally {
+            if (afterTest != null) {
+                afterTest.invoke(instance);
             }
         }
-        if (afterTest != null) {
-            afterTest.invoke(instance);
+    }
+
+    private static void callSetupMethod(final Method method,
+                                        final Object instance,
+                                        final Object... args) throws Exception {
+        if (method != null) {
+            if (method.getParameterCount() == 0) {
+                method.invoke(instance);
+            } else {
+                method.invoke(instance, args);
+            }
         }
     }
 
