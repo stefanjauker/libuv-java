@@ -26,7 +26,6 @@
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import net.java.libuv.LibUV;
 import net.java.libuv.UDPCallback;
 import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.handles.UDPHandle;
@@ -35,11 +34,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class UDPHandleTest {
-
-    static {
-        // call a LibUV method just to ensure that the native lib is loaded
-        System.out.println(UDPHandleTest.class.getSimpleName() + " in " + LibUV.cwd());
-    }
 
     private static final String HOST = "127.0.0.1";
     private static final String HOST6 = "::1";

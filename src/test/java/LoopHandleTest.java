@@ -23,7 +23,6 @@
  * questions.
  */
 
-import net.java.libuv.LibUV;
 import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.handles.PipeHandle;
 import net.java.libuv.handles.SignalHandle;
@@ -35,14 +34,9 @@ import org.testng.annotations.Test;
 import java.util.HashSet;
 import java.util.Set;
 
-public class LoopHandleTest {
+public class LoopHandleTest extends TestBase {
 
     private static final String DOT_SPLIT_REGEX = "\\.";
-
-    static {
-        // call a LibUV method just to ensure that the native lib is loaded
-        System.out.println(LoopHandleTest.class.getSimpleName() + " in " + LibUV.cwd());
-    }
 
     @Test
     public void testList() throws Exception {

@@ -23,7 +23,6 @@
  * questions.
  */
 
-import net.java.libuv.LibUV;
 import net.java.libuv.NativeException;
 import net.java.libuv.StreamCallback;
 import net.java.libuv.handles.LoopHandle;
@@ -34,12 +33,7 @@ import java.nio.ByteBuffer;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class TTYHandleTest {
-
-    static {
-        // call a LibUV method just to ensure that the native lib is loaded
-        System.out.println(TTYHandleTest.class.getSimpleName() + " in " + LibUV.cwd());
-    }
+public class TTYHandleTest extends TestBase {
 
     private TTYHandle newTTY(final LoopHandle loop, final int fd, final boolean readable) {
         final TTYHandle tty;

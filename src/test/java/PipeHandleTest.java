@@ -28,7 +28,6 @@ import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import net.java.libuv.LibUV;
 import net.java.libuv.StreamCallback;
 import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.handles.PipeHandle;
@@ -36,12 +35,7 @@ import net.java.libuv.handles.PipeHandle;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class PipeHandleTest {
-
-    static {
-        // call a LibUV method just to ensure that the native lib is loaded
-        System.out.println(PipeHandleTest.class.getSimpleName() + " in " + LibUV.cwd());
-    }
+public class PipeHandleTest extends TestBase {
 
     private static final String OS = System.getProperty("os.name");
     private static final int TIMES = 10;

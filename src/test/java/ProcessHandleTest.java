@@ -23,7 +23,6 @@
  * questions.
  */
 
-import net.java.libuv.LibUV;
 import net.java.libuv.ProcessCallback;
 import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.handles.ProcessHandle;
@@ -34,12 +33,7 @@ import org.testng.annotations.Test;
 import java.util.EnumSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ProcessHandleTest {
-
-    static {
-        // call a LibUV method just to ensure that the native lib is loaded
-        System.out.println(ProcessHandleTest.class.getSimpleName() + " in " + LibUV.cwd());
-    }
+public class ProcessHandleTest extends TestBase {
 
     @Test
     public void testExitCode() throws Exception {

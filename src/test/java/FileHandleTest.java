@@ -25,7 +25,6 @@
 
 import net.java.libuv.Constants;
 import net.java.libuv.FileCallback;
-import net.java.libuv.LibUV;
 import net.java.libuv.NativeException;
 import net.java.libuv.handles.FileHandle;
 import net.java.libuv.handles.LoopHandle;
@@ -35,20 +34,12 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.lang.Exception;
 import java.lang.reflect.Method;
-import java.lang.Object;
-import java.lang.Override;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-public class FileHandleTest {
-
-    static {
-        // call a LibUV method just to ensure that the native lib is loaded
-        System.out.println(FileHandleTest.class.getSimpleName() + " in " + LibUV.cwd());
-    }
+public class FileHandleTest extends TestBase {
 
     private String testName;
     private static final int CALLBACK_ID = 1;

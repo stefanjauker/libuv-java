@@ -25,23 +25,11 @@
 
 import net.java.libuv.LibUV;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
+class TestBase {
 
-public class VersionTest extends TestBase {
-
-    @Test
-    public void testVersion() {
-        final String version = LibUV.version();
-        System.out.println("libuv version is " + version);
-        Assert.assertEquals(version, "0.10.15");
-    }
-
-    @Test
-    public void testExePath() {
-        final String exe = LibUV.exePath();
-        System.out.println("exe is " + exe);
-        Assert.assertNotNull(exe);
+    static {
+        // call an idempotent LibUV method just to ensure that the native lib is loaded
+        LibUV.cwd();
     }
 
 }

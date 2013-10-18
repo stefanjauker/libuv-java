@@ -97,17 +97,33 @@
     </target>
 
     <target name="test" depends="compile-tests">
-        <java fork="true" classname="TestRunner">
-            <classpath path="${classes.dir}"/>
-            <classpath path="${test.classes.dir}"/>
-            <classpath path="${testng.jar}"/>
-            <jvmarg value="-Xverify:all"/>
-            <jvmarg value="-Xcheck:jni"/>
-            <jvmarg value="-Xmx1g"/>
-            <jvmarg value="-Xms1g"/>
-            <jvmarg value="-ea"/>
-            <sysproperty key="java.library.path" value="${dist.dir}"/>
-        </java>
+        <macrodef name="test-runner">
+            <attribute name="tests"/>
+            <sequential>
+                <java fork="true" failonerror="true" classname="TestRunner">
+                    <classpath path="${classes.dir}"/>
+                    <classpath path="${test.classes.dir}"/>
+                    <classpath path="${testng.jar}"/>
+                    <jvmarg value="-Xverify:all"/>
+                    <jvmarg value="-Xcheck:jni"/>
+                    <jvmarg value="-Xmx1g"/>
+                    <jvmarg value="-Xms1g"/>
+                    <jvmarg value="-ea"/>
+                    <sysproperty key="java.library.path" value="${dist.dir}"/>
+                    <arg value="@{tests}"/>
+                </java>
+            </sequential>
+        </macrodef>
+
+        <mkdir dir="test-reports"/>
+
+        <fileset id="permission.test.id" dir="${test.java.dir}" includes="**/PermissionTest.java"/>
+        <property name="permission.test" refid="permission.test.id"/>
+        <test-runner tests="${permission.test}"/>
+
+        <fileset id="test.list.id" dir="${test.java.dir}" includes="**/*Test.java" excludes="**/PermissionTest.java"/>
+        <property name="test.list" refid="test.list.id"/>
+        <test-runner tests="${test.list}"/>
     </target>
 
 </project>

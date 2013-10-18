@@ -32,7 +32,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import net.java.libuv.LibUV;
 import net.java.libuv.StreamCallback;
 import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.handles.TCPHandle;
@@ -40,12 +39,7 @@ import net.java.libuv.handles.TCPHandle;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class TCPHandleTest {
-
-    static {
-        // call a LibUV method just to ensure that the native lib is loaded
-        System.out.println(TCPHandleTest.class.getSimpleName() + " in " + LibUV.cwd());
-    }
+public class TCPHandleTest extends TestBase {
 
     private static final String ADDRESS = "127.0.0.1";
     private static final String ADDRESS6 = "::1";

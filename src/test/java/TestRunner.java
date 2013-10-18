@@ -29,52 +29,37 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
+import java.io.File;
+import java.io.PrintStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class TestRunner {
 
-    private static final String START_DIR = "test-classes";
-    private static final Pattern PATTERN = Pattern.compile("(^" + START_DIR + "[\\\\|/])(\\w+Test)\\.class$");
+    private static final String TEST_REPORTS_DIR = "test-reports";
 
     public static void main(String[] args) throws Exception {
-        final Path cwd = Paths.get(START_DIR);
-        final List<String> tests = new ArrayList<>(16);
-        Files.walkFileTree(cwd, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                final Matcher matcher = PATTERN.matcher(file.toString());
-                if (matcher.matches()) {
-                    tests.add(matcher.group(2));
+        for (final String arg : args) {
+            final String[] files = arg.split(";");
+            for (final String file : files) {
+                final String className = file.replaceAll(".java", "");
+                final PrintStream out = new PrintStream(TEST_REPORTS_DIR + File.separator + className + ".txt");
+                System.setOut(out);
+                try {
+                    runTest(className);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    System.exit(1);
+                } finally {
+                    out.close();
                 }
-                return FileVisitResult.CONTINUE;
-            }
-        });
-        for (final String test : tests) {
-            try {
-                runTest(test);
-            } catch (Exception ex) {
-                System.out.flush();
-                System.err.flush();
-                ex.printStackTrace();
-                System.exit(1);
             }
         }
     }
 
     private static void runTest(final String testClassName) throws Exception {
-        System.out.flush();
         System.err.printf("++ %s\n", testClassName);
         final Class<?> testClass = Class.forName(testClassName);
         Method beforeTest = null;
@@ -103,7 +88,6 @@ public class TestRunner {
         }
         try {
             for (final Method test : tests) {
-                System.out.flush();
                 System.err.printf("-- %s.%s\n", testClassName, test.getName());
                 callSetupMethod(beforeMethod, instance, test);
                 try {

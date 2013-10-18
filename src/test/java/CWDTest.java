@@ -30,7 +30,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class CWDTest {
+public class CWDTest extends TestBase {
 
     private String cwd;
 

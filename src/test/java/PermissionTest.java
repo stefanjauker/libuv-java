@@ -65,17 +65,12 @@ import org.testng.annotations.Test;
  * are configured in each test.
  *
  */
-public class PermissionTest {
+public class PermissionTest extends TestBase {
 
     private static final String OS = System.getProperty("os.name");
     private static final String ADDRESS = "127.0.0.1";
     private static final String ADDRESS6 = "::1";
     private static int p = 49152;
-
-    static {
-        // call a LibUV method just to ensure that the native lib is loaded
-        System.out.println(PermissionTest.class.getSimpleName() + " in " + LibUV.cwd());
-    }
 
     private static int getPort() {
         return ++p;
