@@ -58,7 +58,7 @@ public class TestRunner {
         }
     }
 
-    private static void runATest(final String testClassName) throws FileNotFoundException {
+    public static void runATest(final String testClassName) throws FileNotFoundException {
         final PrintStream out = new PrintStream(TEST_REPORTS_DIR + File.separator + testClassName + ".txt");
         System.setOut(out);
         try {
