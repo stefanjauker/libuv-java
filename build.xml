@@ -96,4 +96,18 @@
         <jar basedir="${classes.dir}" destfile="${product.jar}"/>
     </target>
 
+    <target name="test" depends="compile-tests">
+        <java fork="true" classname="TestRunner">
+            <classpath path="${classes.dir}"/>
+            <classpath path="${test.classes.dir}"/>
+            <classpath path="${testng.jar}"/>
+            <jvmarg value="-Xverify:all"/>
+            <jvmarg value="-Xcheck:jni"/>
+            <jvmarg value="-Xmx1g"/>
+            <jvmarg value="-Xms1g"/>
+            <jvmarg value="-ea"/>
+            <sysproperty key="java.library.path" value="${dist.dir}"/>
+        </java>
+    </target>
+
 </project>
