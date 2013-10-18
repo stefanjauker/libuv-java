@@ -32,7 +32,6 @@ import net.java.libuv.handles.TTYHandle;
 import java.nio.ByteBuffer;
 
 import org.testng.Assert;
-import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 public class TTYHandleTest {
@@ -40,23 +39,6 @@ public class TTYHandleTest {
     static {
         // call a LibUV method just to ensure that the native lib is loaded
         System.out.println(TTYHandleTest.class.getSimpleName() + " in " + LibUV.cwd());
-    }
-
-    @DataProvider
-    public Object[][] stdOutErrProvider() {
-        final Object[][] fds = {
-            {"stdout", 1},
-            {"stderr", 2}
-        };
-        return fds;
-    }
-
-    @DataProvider
-    public Object[][] stdInProvider() {
-        final Object[][] fds = {
-                {"stdin", 0}
-        };
-        return fds;
     }
 
     private TTYHandle newTTY(final LoopHandle loop, final int fd, final boolean readable) {
@@ -78,20 +60,25 @@ public class TTYHandleTest {
         return tty;
     }
 
-    @Test(dataProvider = "stdOutErrProvider")
-    public void testStdOutErrWindowSize(String name, int fd) {
+    @Test
+    public void testStdOutErrWindowSize() {
+        testStdOutErrWindowSize("stdout", 1);
+        testStdOutErrWindowSize("stderr", 2);
+    }
+
+    private void testStdOutErrWindowSize(String name, int fd) {
         final LoopHandle loop = new LoopHandle();
         final TTYHandle tty = newTTY(loop, fd, false);
         if (tty == null) return;
         testWindowSize(name, tty);
     }
 
-    @Test(dataProvider = "stdInProvider")
-    public void testStdinWindowSize(String name, int fd) {
+    @Test
+    public void testStdinWindowSize() {
         final LoopHandle loop = new LoopHandle();
-        final TTYHandle tty = newTTY(loop, fd, true);
+        final TTYHandle tty = newTTY(loop, 0, true);
         if (tty == null) return;
-        testWindowSize(name, tty);
+        testWindowSize("stdin", tty);
     }
 
     private void testWindowSize(final String name, final TTYHandle tty) {
@@ -105,8 +92,13 @@ public class TTYHandleTest {
         System.out.println("tty " + name + " window size: " + windowSize[0] + " : " + windowSize[1]);
     }
 
-    @Test(dataProvider = "stdOutErrProvider")
-    public void testWrite(String name, int fd) throws Exception {
+    @Test
+    public void testWrite() throws Exception {
+        testWrite("stdout", 1);
+        testWrite("stderr", 2);
+    }
+
+    private void testWrite(String name, int fd) throws Exception {
         final LoopHandle loop = new LoopHandle();
         final TTYHandle tty = newTTY(loop, fd, false);
         if (tty == null) return;
@@ -120,10 +112,10 @@ public class TTYHandleTest {
         loop.run();
     }
 
-    @Test(dataProvider = "stdInProvider")
-    public void testRead(String name, int fd) throws Exception {
+    @Test
+    public void testRead() throws Exception {
         final LoopHandle loop = new LoopHandle();
-        final TTYHandle tty = newTTY(loop, fd, true);
+        final TTYHandle tty = newTTY(loop, 0, true);
         if (tty == null) return;
         final String prompt = "\ntype something (^D to exit) > ";
         tty.setReadCallback(new StreamCallback() {
@@ -145,15 +137,10 @@ public class TTYHandleTest {
 
     public static void main(final String[] args) throws Exception {
         final TTYHandleTest test = new TTYHandleTest();
-        final Object[][] ofds = test.stdOutErrProvider();
-        for (Object[] fd : ofds) {
-            test.testWrite((String) fd[0], (Integer) fd[1]);
-            test.testStdOutErrWindowSize((String) fd[0], (Integer) fd[1]);
-        }
-        final Object[][] ifds = test.stdInProvider();
-        for (Object[] fd : ifds) {
-            test.testRead((String) fd[0], (Integer) fd[1]);
-            test.testStdinWindowSize((String) fd[0], (Integer) fd[1]);
-        }
+        test.testWrite();
+        test.testStdOutErrWindowSize();
+
+        test.testRead();
+        test.testStdinWindowSize();
     }
 }
