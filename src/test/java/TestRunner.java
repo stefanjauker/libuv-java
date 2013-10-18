@@ -56,6 +56,7 @@ public class TestRunner {
                     out.close();
                 }
             }
+            System.exit(0);
         }
     }
 
