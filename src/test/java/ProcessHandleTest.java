@@ -23,10 +23,17 @@
  * questions.
  */
 
+import java.nio.ByteBuffer;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+
 import net.java.libuv.ProcessCallback;
+import net.java.libuv.StreamCallback;
 import net.java.libuv.handles.LoopHandle;
+import net.java.libuv.handles.PipeHandle;
 import net.java.libuv.handles.ProcessHandle;
 import net.java.libuv.handles.StdioOptions;
+import net.java.libuv.handles.StreamHandle;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -35,17 +42,62 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ProcessHandleTest extends TestBase {
 
+    private static final String OS = System.getProperty("os.name");
+
     @Test
     public void testExitCode() throws Exception {
+        final String MESSAGE = "TEST";
+        final String PIPE_NAME;
+        if (OS.startsWith("Windows")) {
+            PIPE_NAME = "\\\\.\\pipe\\libuv-java-pipe-handle-test-pipe";
+        } else {
+            PIPE_NAME = "/tmp/libuv-java-pipe-handle-test-pipe";
+            Files.deleteIfExists(FileSystems.getDefault().getPath(PIPE_NAME));
+        }
+
+
         final AtomicBoolean exitCalled = new AtomicBoolean(false);
         final AtomicBoolean closeCalled = new AtomicBoolean(false);
         final LoopHandle loop = new LoopHandle();
         final ProcessHandle process = new ProcessHandle(loop);
+        final PipeHandle parent = new PipeHandle(loop, false);
+        final PipeHandle peer = new PipeHandle(loop, false);
+        final PipeHandle child = new PipeHandle(loop, false);
+
+        peer.setReadCallback(new StreamCallback() {
+            @Override
+            public void call(final Object[] args) throws Exception {
+                Assert.assertEquals(args.length, 1);
+                final byte[] bytes = ((ByteBuffer) args[0]).array();
+                String s = new String(bytes, "utf-8");
+                Assert.assertEquals(s, MESSAGE);
+                peer.close();
+                process.close();
+            }
+        });
+
+        parent.setConnectionCallback(new StreamCallback() {
+            @Override
+            public void call(final Object[] args) throws Exception {
+                parent.accept(peer);
+                peer.readStart();
+                parent.close();
+            }
+        });
+
+        child.setConnectCallback(new StreamCallback() {
+            @Override
+            public void call(final Object[] args) throws Exception {
+                child.write(MESSAGE);
+                child.close();
+            }
+        });
 
         process.setExitCallback(new ProcessCallback() {
             @Override
             public void call(Object[] args) throws Exception {
                 System.out.println("status " + args[0] + ", signal " + args[1]);
+                child.connect(PIPE_NAME);
                 exitCalled.set(true);
             }
         });
@@ -69,13 +121,14 @@ public class ProcessHandleTest extends TestBase {
         stdio[1] = new StdioOptions(StdioOptions.StdioType.INHERIT_FD, null, 1);
         stdio[2] = new StdioOptions(StdioOptions.StdioType.INHERIT_FD, null, 2);
 
-        process.spawn(args[0], args, null, ".", processFlags, stdio, -1, -1);
-        loop.run();
-        Assert.assertTrue(exitCalled.get());
+        parent.bind(PIPE_NAME);
+        parent.listen(0);
 
-        process.close();
-        loop.run();
-        Assert.assertTrue(closeCalled.get());
+        process.spawn(args[0], args, null, ".", processFlags, stdio, -1, -1);
+
+        while (!exitCalled.get() && !closeCalled.get()) {
+            loop.run();
+        }
     }
 
     public static void main(final String[] args) throws Exception {
