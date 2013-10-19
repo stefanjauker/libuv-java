@@ -1240,6 +1240,7 @@ JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_FileHandle__1get_1path
   if (filename[0] == '\\') {
     // Since the drive letter ends with a \ we can remove the leading one from the filename.
     filename = filename_info->FileName + 1;
+    total_len -= sizeof(wchar_t);
   }
 
   _snwprintf(wpath, total_len, TEXT("%s%s"), single_drive, filename);

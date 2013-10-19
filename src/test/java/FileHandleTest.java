@@ -34,7 +34,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.File;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -47,10 +46,10 @@ public class FileHandleTest extends TestBase {
 
     @BeforeMethod
     protected void startSession(Method method) throws Exception {
-        testName = System.getProperty("java.io.tmpdir") + File.separator + method.getName();
+        testName = System.getProperty("java.io.tmpdir") + method.getName();
     }
 
-    // @Test TODO https://java.net/jira/browse/AVATAR_JS-29
+    @Test
     public void testGetPath() {
         final String filename = testName + ".txt";
         final LoopHandle loop = new LoopHandle();
@@ -291,7 +290,7 @@ public class FileHandleTest extends TestBase {
         Assert.assertTrue(renameCallbackCalled.get());
     }
 
-    // @Test TODO https://java.net/jira/browse/AVATAR_JS-29
+    @Test
     public void testFtruncateSync() {
         final String filename = testName + ".txt";
         final LoopHandle loop = new LoopHandle();

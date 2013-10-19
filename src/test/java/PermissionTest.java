@@ -576,6 +576,9 @@ public class PermissionTest extends TestBase {
         final String TMPDIR = System.getProperty("java.io.tmpdir") + File.separator;
         Permissions permissions = new Permissions();
         permissions.add(new LibUVPermission("libuv.handle"));
+        permissions.add(new FilePermission(TMPDIR + "testGetPath.txt", "read"));
+        permissions.add(new FilePermission(TMPDIR + "testGetPath.txt", "write"));
+        permissions.add(new FilePermission(TMPDIR + "testGetPath.txt", "delete"));
         permissions.add(new FilePermission(TMPDIR + "testOpenWriteReadAndCloseSync.txt", "write"));
         permissions.add(new FilePermission(TMPDIR + "testOpenWriteReadAndCloseSync.txt", "read"));
         permissions.add(new FilePermission(TMPDIR + "testOpenWriteReadAndCloseSync.txt", "delete"));
