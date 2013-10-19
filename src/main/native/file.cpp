@@ -1236,7 +1236,13 @@ JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_FileHandle__1get_1path
   wchar_t* wpath = (wchar_t*)malloc(sizeof(wchar_t) * total_len);
   assert(wpath);
 
-  _snwprintf(wpath, total_len, TEXT("%s%s"), single_drive, filename_info->FileName);
+  wchar_t* filename = filename_info->FileName;
+  if (filename[0] == '\\') {
+    // Since the drive letter ends with a \ we can remove the leading one from the filename.
+    filename = filename_info->FileName + 1;
+  }
+
+  _snwprintf(wpath, total_len, TEXT("%s%s"), single_drive, filename);
   jstring path = env->NewString((jchar*)wpath, (jsize)total_len);
 
   free(wpath);
