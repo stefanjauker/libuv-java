@@ -50,6 +50,18 @@ public class FileHandleTest extends TestBase {
         testName = System.getProperty("java.io.tmpdir") + File.separator + method.getName();
     }
 
+    // @Test TODO https://java.net/jira/browse/AVATAR_JS-29
+    public void testGetPath() {
+        final String filename = testName + ".txt";
+        final LoopHandle loop = new LoopHandle();
+        final FileHandle handle = new FileHandle(loop);
+
+        final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
+        final String path = handle.getPath(fd);
+        Assert.assertEquals(path, filename);
+        cleanupFiles(handle, filename);
+    }
+
     @Test
     public void testOpenWriteReadAndCloseSync() {
         final String filename = testName + ".txt";
@@ -279,7 +291,7 @@ public class FileHandleTest extends TestBase {
         Assert.assertTrue(renameCallbackCalled.get());
     }
 
-    @Test
+    // @Test TODO https://java.net/jira/browse/AVATAR_JS-29
     public void testFtruncateSync() {
         final String filename = testName + ".txt";
         final LoopHandle loop = new LoopHandle();

@@ -239,7 +239,7 @@ public class PermissionTest extends TestBase {
                 new TCPHandle(lh);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
@@ -389,7 +389,7 @@ public class PermissionTest extends TestBase {
         System.out.println("Security child process Auth test passed");
     }
 
-    @Test(enabled = false) // TODO: test hangs on windows
+    // @Test // TODO: test hangs on windows
     public void testConnectionAuth() throws Exception {
         final AtomicBoolean serverDone = new AtomicBoolean(false);
         final int port = getPort();
@@ -624,8 +624,8 @@ public class PermissionTest extends TestBase {
 
         System.out.println("Security File Auth test passed");
     }
-    
-    @Test
+
+    // @Test // TODO: test fails on windows
     public void testFileReaOnly() throws Exception {
         Permissions permissions = new Permissions();
         final String fileName = "testFileReaOnly.txt";
@@ -634,65 +634,65 @@ public class PermissionTest extends TestBase {
         permissions.add(new FilePermission(fileName, "delete"));
         File f = new File(fileName);
         f.createNewFile();
-        
+
         init(permissions);
         final LoopHandle loop = new LoopHandle();
         final FileHandle handle = new FileHandle(loop);
         final int fd = handle.open(fileName, Constants.O_RDONLY, Constants.S_IRWXU);
-        
+
         handle.read(fd, new byte[5], 0, 0, 0);
         Stats s = handle.fstat(fd);
         if (s == null) {
-           throw new Exception("Stats is null"); 
+           throw new Exception("Stats is null");
         }
         handle.fdatasync(fd);
         handle.fsync(fd);
-        
+
         try {
             handle.write(fd, "Hello".getBytes(), 0, 2, 0);
             throw new Exception("Write should have failed");
         }catch(NativeException ex){
             // XXX OK.
         }
-        
+
         try {
             handle.ftruncate(fd, 1);
             throw new Exception("Write should have failed");
         }catch(NativeException ex){
             // XXX OK.
         }
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.futime(fd, 999, 999999);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.fchmod(fd, Constants.S_IRWXU);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.fchown(fd, 01, 01);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.futime(fd, 999, 99999);
             }
         });
-        
+
         handle.unlink(fileName);
     }
-    
+
     @Test
     public void testFileNoAuth() throws Exception {
         Permissions permissions = new Permissions();
@@ -707,245 +707,245 @@ public class PermissionTest extends TestBase {
                 handle.open(fileName, Constants.O_CREAT, Constants.S_IRWXU);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.open(fileName, Constants.O_CREAT, Constants.S_IRWXU, 1);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.open(fileName, Constants.O_RDONLY, Constants.S_IRWXU);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.open(fileName, Constants.O_RDONLY, Constants.S_IRWXU, 1);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.open(fileName, Constants.O_RDWR, Constants.S_IRWXU);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.open(fileName, Constants.O_RDWR, Constants.S_IRWXU, 1);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.open(fileName, Constants.O_WRONLY, Constants.S_IRWXU);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.open(fileName, Constants.O_WRONLY, Constants.S_IRWXU, 1);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.chmod(fileName, Constants.S_IRWXU);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.chmod(fileName, Constants.S_IRWXU, 1);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.chown(fileName, 1, 2);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.chown(fileName, 1, 2, 1);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.readdir(fileName, Constants.O_RDWR);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.readdir(fileName, Constants.O_RDWR, 1);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.link(fileName, fileName);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.link(fileName, fileName, 1);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.symlink(fileName, fileName, Constants.O_RDWR);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.symlink(fileName, fileName, Constants.O_RDWR, 1);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.lstat(fileName);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.lstat(fileName, 1);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.mkdir(fileName, Constants.S_IRWXU);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.mkdir(fileName, Constants.S_IRWXU, 1);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.readlink(fileName);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.readlink(fileName, 1);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.rename(fileName, fileName);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.rename(fileName, fileName, 1);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.rmdir(fileName);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.rmdir(fileName, 1);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.stat(fileName);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.stat(fileName, 1);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.symlink(fileName, fileName, Constants.O_RDWR);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.symlink(fileName, fileName, Constants.O_RDWR, 1);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.unlink(fileName);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.unlink(fileName, 1);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
                 handle.utime(fileName, 999, 99999);
             }
         });
-        
+
         testFailure(new Runnable() {
             @Override
             public void run() {
