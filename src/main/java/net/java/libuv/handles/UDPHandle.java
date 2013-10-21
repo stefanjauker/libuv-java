@@ -216,7 +216,7 @@ public final class UDPHandle extends Handle {
     }
 
     private void call(final UDPCallback callback, final Object... args) {
-       loop.callbackHandler.handleUDPCallback(onRecv, args);
+       loop.callbackHandler.handleUDPCallback(callback, args);
     }
 
     private static native long _new(final long loop);
