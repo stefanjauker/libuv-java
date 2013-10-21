@@ -283,6 +283,7 @@ public class PermissionTest extends TestBase {
         permissions.add(new LibUVPermission("libuv.pipe.open"));
         permissions.add(new LibUVPermission("libuv.pipe.accept"));
         permissions.add(new LibUVPermission("libuv.handle"));
+        permissions.add(new FilePermission(PIPE_NAME, "delete"));
 
         init(permissions);
 
@@ -291,7 +292,6 @@ public class PermissionTest extends TestBase {
         final PipeHandle server = new PipeHandle(lh, false);
         final PipeHandle peer = new PipeHandle(lh, false);
         final PipeHandle server2 = new PipeHandle(lh, false);
-
 
         testSuccess(new Runnable() {
             @Override
@@ -326,9 +326,11 @@ public class PermissionTest extends TestBase {
                 server.close();
             }
         });
-         while(serverRecvCount.get() == 0) {
+
+        while (serverRecvCount.get() == 0) {
             lh.runNoWait();
         }
+        Files.deleteIfExists(FileSystems.getDefault().getPath(PIPE_NAME));
 
         Assert.assertEquals(serverRecvCount.get(), 1);
 
