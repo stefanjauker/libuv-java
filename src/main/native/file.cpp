@@ -1185,8 +1185,7 @@ JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_FileHandle__1get_1path
   }
 #elif _WIN32
   HANDLE handle = (HANDLE) _get_osfhandle(fd);
-  PFILE_NAME_INFO filename_info = (PFILE_NAME_INFO)HeapAlloc(GetProcessHeap(), 0, MAX_PATH);
-  LPBY_HANDLE_FILE_INFORMATION file_info = (LPBY_HANDLE_FILE_INFORMATION)HeapAlloc(GetProcessHeap(), 0, sizeof(BY_HANDLE_FILE_INFORMATION));
+  PFILE_NAME_INFO filename_info = (PFILE_NAME_INFO) HeapAlloc(GetProcessHeap(), 0, sizeof(FILE_NAME_INFO) + MAX_PATH);
 
   // Get the filename
   if (!GetFileInformationByHandleEx(handle, FileNameInfo, filename_info, MAX_PATH)) {
@@ -1196,7 +1195,9 @@ JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_FileHandle__1get_1path
   }
 
   // Get the volume serial number
+  LPBY_HANDLE_FILE_INFORMATION file_info = (LPBY_HANDLE_FILE_INFORMATION) HeapAlloc(GetProcessHeap(), 0, sizeof(BY_HANDLE_FILE_INFORMATION));
   if (!GetFileInformationByHandle(handle, file_info)) {
+    HeapFree(GetProcessHeap(), 0, filename_info);
     HeapFree(GetProcessHeap(), 0, file_info);
     ThrowException(env, GetLastError(), "GetFileInformationByHandle");
     return NULL;
@@ -1204,19 +1205,27 @@ JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_FileHandle__1get_1path
 
   // Get the buffer size needed to hold the drive strings
   DWORD buffer_len = GetLogicalDriveStrings(0, NULL) * sizeof(TCHAR);
-  LPTSTR drives = (LPTSTR)malloc(buffer_len);
+  if (buffer_len == 0) {
+    HeapFree(GetProcessHeap(), 0, filename_info);
+    HeapFree(GetProcessHeap(), 0, file_info);
+    ThrowException(env, GetLastError(), "GetLogicalDriveStrings");
+    return NULL;
+  }
+  LPTSTR drives = (LPTSTR) malloc((buffer_len + 1) * sizeof(TCHAR));
   assert(drives);
 
   // Find all the drives
   DWORD r = GetLogicalDriveStrings(buffer_len, drives);
-  if (r < 0) {
+  if (r == 0) {
     free(drives);
+    HeapFree(GetProcessHeap(), 0, filename_info);
+    HeapFree(GetProcessHeap(), 0, file_info);
     ThrowException(env, GetLastError(), "GetLogicalDriveStrings");
     return NULL;
   }
 
   LPTSTR single_drive = drives;
-  while(*single_drive) {
+  while (*single_drive) {
     DWORD serial_number;
     if (GetVolumeInformation(single_drive, NULL, NULL, &serial_number, NULL, NULL, NULL, 0)) {
       if (serial_number == file_info->dwVolumeSerialNumber) {
@@ -1224,16 +1233,18 @@ JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_FileHandle__1get_1path
       }
     } else {
       free(drives);
+      HeapFree(GetProcessHeap(), 0, filename_info);
+      HeapFree(GetProcessHeap(), 0, file_info);
       ThrowException(env, GetLastError(), "GetVolumeInformation");
       return NULL;
     }
     single_drive += _tcslen(single_drive) + 1;
   }
 
-  size_t drive_len = _tcslen(single_drive) + 1;
-  size_t filename_len = wcslen(filename_info->FileName);
-  size_t total_len = drive_len + filename_len;
-  wchar_t* wpath = (wchar_t*)malloc(sizeof(wchar_t) * total_len);
+  size_t drive_len = _tcslen(single_drive);
+  size_t filename_len = filename_info->FileNameLength / sizeof(wchar_t); // FileNameLength is in bytes
+  size_t total_len = drive_len + filename_len + 1;
+  wchar_t* wpath = (wchar_t*) malloc(sizeof(wchar_t) * total_len);
   assert(wpath);
 
   wchar_t* filename = filename_info->FileName;
@@ -1244,7 +1255,7 @@ JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_FileHandle__1get_1path
   }
 
   _snwprintf(wpath, total_len, TEXT("%s%s"), single_drive, filename);
-  jstring path = env->NewString((jchar*)wpath, (jsize)total_len);
+  jstring path = env->NewString((jchar*) wpath, (jsize) total_len);
 
   free(wpath);
   free(drives);
