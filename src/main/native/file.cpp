@@ -555,15 +555,16 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1write
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    jlong buffer_size = length - offset;
-    FileRequest* request = new_request(env, callback_ptr, callback, NULL, buffer_size, 0);
-    jbyte* base = request->get_bytes_from_array_region(data, (jsize)length, (jsize)offset);
+    jsize buffer_size = env->GetArrayLength(data);
+    FileRequest* request = new_request(env, callback_ptr, callback, NULL, (jlong) buffer_size, 0);
+    jbyte* base = request->get_bytes_from_array_region(data, buffer_size - offset, (jsize) offset);
     req->data = request;
     r = uv_fs_write(loop, req, fd, base, length, position, _fs_cb);
   } else {
     uv_fs_t req;
-    jbyte* base = new jbyte[length - offset];
-    env->GetByteArrayRegion(data, (jsize)offset, (jsize)length, base);
+    jsize buffer_size = env->GetArrayLength(data);
+    jbyte* base = new jbyte[buffer_size];
+    env->GetByteArrayRegion(data, (jsize) offset, buffer_size - offset, base);
     r = uv_fs_write(loop, &req, fd, base, length, position, NULL);
     uv_fs_req_cleanup(&req);
     delete base;

@@ -242,11 +242,15 @@ public final class FileHandle extends Handle {
 
     public int write(final int fd, final byte[] buffer, final long offset, final long length, final long position) {
         // Open has checked that fd is writable.
+        assert(offset < buffer.length);
+        assert(offset + length <= buffer.length);
         return _write(loop.pointer(), fd, buffer, length, offset, position, SYNC_MODE, pointer);
     }
 
     public int write(final int fd, final byte[] buffer, final long offset, final long length, final long position, final int callbackId) {
         // Open has checked that fd is writable.
+        assert(offset < buffer.length);
+        assert(offset + length <= buffer.length);
         return _write(loop.pointer(), fd, buffer, length, offset, position, callbackId, pointer);
     }
 
