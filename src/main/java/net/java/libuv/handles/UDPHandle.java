@@ -216,11 +216,7 @@ public final class UDPHandle extends Handle {
     }
 
     private void call(final UDPCallback callback, final Object... args) {
-        try {
-            callback.call(args);
-        } catch (final Exception ex) {
-            loop.exceptionHandler.handle(ex);
-        }
+       loop.callbackHandler.handle(onRecv, args);
     }
 
     private static native long _new(final long loop);

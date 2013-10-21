@@ -25,6 +25,7 @@
 
 package net.java.libuv.handles;
 
+import java.util.concurrent.Callable;
 import net.java.libuv.Constants;
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.SignalCallback;
@@ -66,11 +67,7 @@ public final class SignalHandle extends Handle {
     }
 
     private void callback(final int signum) {
-        try {
-            onSignal.call(signum);
-        } catch (final Exception ex) {
-            loop.exceptionHandler.handle(ex);
-        }
+       loop.callbackHandler.handle(onSignal, signum);
     }
 
     private static native long _new(final long loop);

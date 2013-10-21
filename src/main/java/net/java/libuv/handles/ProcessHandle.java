@@ -26,6 +26,7 @@
 package net.java.libuv.handles;
 
 import java.util.EnumSet;
+import java.util.concurrent.Callable;
 
 import net.java.libuv.ProcessCallback;
 import net.java.libuv.LibUVPermission;
@@ -159,11 +160,7 @@ public final class ProcessHandle extends Handle {
     }
 
     private void call(final ProcessCallback callback, final Object... args) {
-        try {
-            callback.call(args);
-        } catch (final Exception ex) {
-            loop.exceptionHandler.handle(ex);
-        }
+       loop.callbackHandler.handle(callback, args);
     }
 
     private static native long _new(final long loop);

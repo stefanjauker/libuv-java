@@ -25,6 +25,7 @@
 
 package net.java.libuv.handles;
 
+import java.util.concurrent.Callable;
 import net.java.libuv.FileCallback;
 import net.java.libuv.LibUVPermission;
 
@@ -494,11 +495,7 @@ public final class FileHandle extends Handle {
     }
 
     private void call(final FileCallback callback, final int callbackId, final Object... args) {
-        try {
-            callback.call(callbackId, args);
-        } catch (final Exception ex) {
-            loop.exceptionHandler.handle(ex);
-        }
+       loop.callbackHandler.handle(callback, callbackId, args);
     }
 
     private static native void _static_initialize();

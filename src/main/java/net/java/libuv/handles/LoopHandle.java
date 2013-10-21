@@ -25,9 +25,16 @@
 
 package net.java.libuv.handles;
 
+import java.util.concurrent.Callable;
 import net.java.libuv.CallbackExceptionHandler;
+import net.java.libuv.CallbackHandler;
+import net.java.libuv.FileCallback;
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.NativeException;
+import net.java.libuv.ProcessCallback;
+import net.java.libuv.SignalCallback;
+import net.java.libuv.StreamCallback;
+import net.java.libuv.UDPCallback;
 
 public final class LoopHandle {
 
@@ -35,6 +42,7 @@ public final class LoopHandle {
     private static int createdLoopCount = 0;
     
     protected final CallbackExceptionHandler exceptionHandler;
+    protected final CallbackHandler callbackHandler;
     private final long pointer;
     private Exception pendingException;
 
@@ -58,12 +66,14 @@ public final class LoopHandle {
         LibUVPermission.checkNewLoop(createdLoopCount);
     }
     
-    public LoopHandle(final CallbackExceptionHandler exceptionHandler) {
+    public LoopHandle(final CallbackExceptionHandler exceptionHandler,
+            final CallbackHandler callbackHandler) {
         newLoop();
         this.pointer = _new();
         assert pointer != 0;
         assert exceptionHandler != null;
         this.exceptionHandler = exceptionHandler;
+        this.callbackHandler = callbackHandler;
     }
 
     public LoopHandle() {
@@ -71,11 +81,58 @@ public final class LoopHandle {
         this.pointer = _new();
         assert pointer != 0;
         this.exceptionHandler = new CallbackExceptionHandler() {
+            @Override
             public void handle(final Exception ex) {
                 if (pendingException == null) {
                     pendingException = ex;
                 } else {
                     pendingException.addSuppressed(ex);
+                }
+            }
+        };
+        this.callbackHandler = new CallbackHandler() {
+            @Override
+            public void handle(ProcessCallback cb, Object[] args) {
+                try {
+                    cb.call(args);
+                } catch (Exception ex) {
+                    exceptionHandler.handle(ex);
+                }
+            }
+
+            @Override
+            public void handle(SignalCallback cb, int signum) {
+                try {
+                    cb.call(signum);
+                } catch (Exception ex) {
+                    exceptionHandler.handle(ex);
+                }
+            }
+
+            @Override
+            public void handle(StreamCallback cb, Object[] args) {
+                try {
+                    cb.call(args);
+                } catch (Exception ex) {
+                    exceptionHandler.handle(ex);
+                }
+            }
+
+            @Override
+            public void handle(FileCallback cb, int id, Object[] args) {
+                try {
+                    cb.call(id, args);
+                } catch (Exception ex) {
+                    exceptionHandler.handle(ex);
+                }
+            }
+
+            @Override
+            public void handle(UDPCallback cb, Object[] args) {
+                try {
+                    cb.call(args);
+                } catch (Exception ex) {
+                    exceptionHandler.handle(ex);
                 }
             }
         };
