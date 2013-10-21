@@ -137,6 +137,14 @@ public final class LoopHandle {
         };
     }
 
+    public CallbackExceptionHandler getExceptionHandler() {
+        return exceptionHandler;
+    }
+
+    public CallbackHandler getCallbackHandler() {
+        return callbackHandler;
+    }
+
     public boolean runNoWait() throws Exception {
         throwPendingException();
         return _run(pointer, RunMode.NOWAIT.value) != 0;
