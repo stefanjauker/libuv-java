@@ -34,6 +34,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.File;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -46,7 +47,8 @@ public class FileHandleTest extends TestBase {
 
     @BeforeMethod
     protected void startSession(Method method) throws Exception {
-        testName = System.getProperty("java.io.tmpdir") + method.getName();
+        final String tmp = System.getProperty("java.io.tmpdir");
+        testName = (tmp.endsWith(File.separator) ? tmp : tmp + File.separator) + method.getName();
     }
 
     @Test
