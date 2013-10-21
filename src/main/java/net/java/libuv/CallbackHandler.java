@@ -1,7 +1,3 @@
-package net.java.libuv;
-
-import java.util.concurrent.Callable;
-
 /*
  * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -27,10 +23,12 @@ import java.util.concurrent.Callable;
  * questions.
  */
 
+package net.java.libuv;
+
 public interface CallbackHandler {
-    public void handle(ProcessCallback cb, Object[] args);
-    public void handle(SignalCallback cb, int signum);
-    public void handle(StreamCallback cb, Object[] args);
-    public void handle(FileCallback cb, int id, Object[] args);
-    public void handle(UDPCallback cb, Object[] args);
+    public void handleProcessCallback(ProcessCallback cb, Object[] args);
+    public void handleSignalCallback(SignalCallback cb, int signum);
+    public void handleStreamCallback(StreamCallback cb, Object[] args);
+    public void handleFileCallback(FileCallback cb, int id, Object[] args);
+    public void handleUDPCallback(UDPCallback cb, Object[] args);
 }

@@ -26,7 +26,6 @@
 package net.java.libuv.handles;
 
 import java.util.EnumSet;
-import java.util.concurrent.Callable;
 
 import net.java.libuv.ProcessCallback;
 import net.java.libuv.LibUVPermission;
@@ -113,9 +112,9 @@ public final class ProcessHandle extends Handle {
         if (flags.contains(ProcessFlags.DETACHED)) {
             processFlags |= ProcessFlags.DETACHED.value;
         }
-        
+
         LibUVPermission.checkSpawn(arguments[0]);
-        
+
         return _spawn(pointer,
                 arguments[0],
                 arguments,
@@ -160,7 +159,7 @@ public final class ProcessHandle extends Handle {
     }
 
     private void call(final ProcessCallback callback, final Object... args) {
-       loop.callbackHandler.handle(callback, args);
+       loop.callbackHandler.handleProcessCallback(callback, args);
     }
 
     private static native long _new(final long loop);

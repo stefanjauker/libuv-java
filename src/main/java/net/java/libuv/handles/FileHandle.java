@@ -495,7 +495,7 @@ public final class FileHandle extends Handle {
     }
 
     private void call(final FileCallback callback, final int callbackId, final Object... args) {
-       loop.callbackHandler.handle(callback, callbackId, args);
+       loop.callbackHandler.handleFileCallback(callback, callbackId, args);
     }
 
     private static native void _static_initialize();

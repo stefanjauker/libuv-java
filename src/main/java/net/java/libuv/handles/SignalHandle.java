@@ -67,7 +67,7 @@ public final class SignalHandle extends Handle {
     }
 
     private void callback(final int signum) {
-       loop.callbackHandler.handle(onSignal, signum);
+       loop.callbackHandler.handleSignalCallback(onSignal, signum);
     }
 
     private static native long _new(final long loop);

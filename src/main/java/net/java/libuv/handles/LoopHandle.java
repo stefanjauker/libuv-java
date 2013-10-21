@@ -25,7 +25,6 @@
 
 package net.java.libuv.handles;
 
-import java.util.concurrent.Callable;
 import net.java.libuv.CallbackExceptionHandler;
 import net.java.libuv.CallbackHandler;
 import net.java.libuv.FileCallback;
@@ -40,7 +39,7 @@ public final class LoopHandle {
 
     // Track the number of created LoopHandles.
     private static int createdLoopCount = 0;
-    
+
     protected final CallbackExceptionHandler exceptionHandler;
     protected final CallbackHandler callbackHandler;
     private final long pointer;
@@ -65,7 +64,7 @@ public final class LoopHandle {
         createdLoopCount += 1;
         LibUVPermission.checkNewLoop(createdLoopCount);
     }
-    
+
     public LoopHandle(final CallbackExceptionHandler exceptionHandler,
             final CallbackHandler callbackHandler) {
         newLoop();
@@ -92,7 +91,7 @@ public final class LoopHandle {
         };
         this.callbackHandler = new CallbackHandler() {
             @Override
-            public void handle(ProcessCallback cb, Object[] args) {
+            public void handleProcessCallback(ProcessCallback cb, Object[] args) {
                 try {
                     cb.call(args);
                 } catch (Exception ex) {
@@ -101,7 +100,7 @@ public final class LoopHandle {
             }
 
             @Override
-            public void handle(SignalCallback cb, int signum) {
+            public void handleSignalCallback(SignalCallback cb, int signum) {
                 try {
                     cb.call(signum);
                 } catch (Exception ex) {
@@ -110,7 +109,7 @@ public final class LoopHandle {
             }
 
             @Override
-            public void handle(StreamCallback cb, Object[] args) {
+            public void handleStreamCallback(StreamCallback cb, Object[] args) {
                 try {
                     cb.call(args);
                 } catch (Exception ex) {
@@ -119,7 +118,7 @@ public final class LoopHandle {
             }
 
             @Override
-            public void handle(FileCallback cb, int id, Object[] args) {
+            public void handleFileCallback(FileCallback cb, int id, Object[] args) {
                 try {
                     cb.call(id, args);
                 } catch (Exception ex) {
@@ -128,7 +127,7 @@ public final class LoopHandle {
             }
 
             @Override
-            public void handle(UDPCallback cb, Object[] args) {
+            public void handleUDPCallback(UDPCallback cb, Object[] args) {
                 try {
                     cb.call(args);
                 } catch (Exception ex) {

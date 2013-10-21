@@ -189,7 +189,7 @@ public class StreamHandle extends Handle {
     }
 
     private void call(final StreamCallback callback, final Object... args) {
-       loop.callbackHandler.handle(callback, args);
+       loop.callbackHandler.handleStreamCallback(callback, args);
     }
 
     private static native void _static_initialize();
