@@ -330,7 +330,10 @@ public class PermissionTest extends TestBase {
         while (serverRecvCount.get() == 0) {
             lh.runNoWait();
         }
-        Files.deleteIfExists(FileSystems.getDefault().getPath(PIPE_NAME));
+
+        try {
+            Files.deleteIfExists(FileSystems.getDefault().getPath(PIPE_NAME));
+        } catch (Exception ignore) {}
 
         Assert.assertEquals(serverRecvCount.get(), 1);
 
