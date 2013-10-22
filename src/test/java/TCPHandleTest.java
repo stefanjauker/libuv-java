@@ -47,8 +47,6 @@ public class TCPHandleTest extends TestBase {
     private static final int PORT6 = 34567;
     private static final int TIMES = 10;
 
-    private static final ScheduledExecutorService TIMER = Executors.newSingleThreadScheduledExecutor();
-
     @Test
     public void testConnection() throws Exception {
         final AtomicReference<ScheduledFuture<?>> serverTimer = new AtomicReference<>();
@@ -80,16 +78,7 @@ public class TCPHandleTest extends TestBase {
                 server.accept(peer);
                 peer.readStart();
                 System.out.println("s: " + server.getSocketName() + " connected to " + peer.getPeerName());
-                serverTimer.set(TIMER.scheduleWithFixedDelay(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (serverSendCount.incrementAndGet() < TIMES) {
-                            peer.write("message " + serverSendCount.get() + " from server");
-                        } else {
-                            serverTimer.get().cancel(false);
-                        }
-                    }
-                }, 0, 100, TimeUnit.MILLISECONDS));
+                peer.write("message " + serverSendCount.getAndIncrement() + " from server");
                 server.close(); // not expecting any more connections
             }
         });
@@ -97,13 +86,15 @@ public class TCPHandleTest extends TestBase {
         peer.setReadCallback(new StreamCallback() {
             @Override
             public void call(final Object[] args) throws Exception {
-                if (args == null) {
+                serverRecvCount.incrementAndGet();
+                if (args[0] == null) {
                     peer.close();
                 } else {
-                    serverRecvCount.incrementAndGet();
                     serverLoggingCallback.call(args);
                     if (serverRecvCount.get() == TIMES) {
                         peer.close();
+                    } else {
+                        peer.write("message " + serverSendCount.getAndIncrement() + " from server");
                     }
                 }
             }
@@ -119,24 +110,15 @@ public class TCPHandleTest extends TestBase {
         client.setReadCallback(new StreamCallback() {
             @Override
             public void call(final Object[] args) throws Exception {
-                if (args == null) {
+                clientRecvCount.incrementAndGet();
+                if (args[0] == null) {
                     client.close();
                 } else {
-                    clientRecvCount.incrementAndGet();
                     clientLoggingCallback.call(args);
                     if (clientRecvCount.get() == TIMES) {
                         client.close();
-                    }
-                }
-            }
-        });
-
-        client.setWriteCallback(new StreamCallback() {
-            @Override
-            public void call(final Object[] args) throws Exception {
-                if (clientSendCount.get() >= TIMES) {
-                    if (clientTimer.get() != null) {
-                        clientTimer.get().cancel(false);
+                    } else {
+                        client.write("message " + clientSendCount.getAndIncrement() + " from client");
                     }
                 }
             }
@@ -148,14 +130,7 @@ public class TCPHandleTest extends TestBase {
                 clientLoggingCallback.call(args);
                 System.out.println("c: " + client.getSocketName() + " connected to " + client.getPeerName());
                 client.readStart();
-                clientTimer.set(TIMER.scheduleWithFixedDelay(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (clientSendCount.get() < TIMES) {
-                            client.write("message " + clientSendCount.incrementAndGet() + " from client");
-                        }
-                    }
-                }, 0, 100, TimeUnit.MILLISECONDS));
+                client.write("message " + clientSendCount.getAndIncrement() + " from client");
             }
         });
 
@@ -169,12 +144,11 @@ public class TCPHandleTest extends TestBase {
         server.bind(ADDRESS, PORT);
         server.listen(1);
 
-        Thread.sleep((long) (random.nextDouble() * 1000));
+        Thread.sleep((long) (random.nextDouble() * 100));
         client.connect(ADDRESS, PORT);
 
         while (!serverDone.get() || !clientDone.get()) {
             loop.run();
-            Thread.sleep((long) (random.nextDouble() * 10));
         }
 
         Assert.assertEquals(serverSendCount.get(), TIMES);
@@ -217,16 +191,7 @@ public class TCPHandleTest extends TestBase {
                 server.accept(peer);
                 peer.readStart();
                 System.out.println("s: " + server.getSocketName() + " connected to " + peer.getPeerName());
-                serverTimer.set(TIMER.scheduleWithFixedDelay(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (serverSendCount.incrementAndGet() < TIMES) {
-                            peer.write("message " + serverSendCount.get() + " from server");
-                        } else {
-                            serverTimer.get().cancel(false);
-                        }
-                    }
-                }, 0, 100, TimeUnit.MILLISECONDS));
+                peer.write("message " + serverSendCount.getAndIncrement() + " from server");
                 server.close(); // not expecting any more connections
             }
         });
@@ -234,13 +199,15 @@ public class TCPHandleTest extends TestBase {
         peer.setReadCallback(new StreamCallback() {
             @Override
             public void call(final Object[] args) throws Exception {
-                if (args == null) {
+                serverRecvCount.incrementAndGet();
+                if (args[0] == null) {
                     peer.close();
                 } else {
-                    serverRecvCount.incrementAndGet();
                     serverLoggingCallback.call(args);
                     if (serverRecvCount.get() == TIMES) {
                         peer.close();
+                    } else {
+                        peer.write("message " + serverSendCount.getAndIncrement() + " from server");
                     }
                 }
             }
@@ -256,24 +223,15 @@ public class TCPHandleTest extends TestBase {
         client.setReadCallback(new StreamCallback() {
             @Override
             public void call(final Object[] args) throws Exception {
-                if (args == null) {
+                clientRecvCount.incrementAndGet();
+                if (args[0] == null) {
                     client.close();
                 } else {
-                    clientRecvCount.incrementAndGet();
                     clientLoggingCallback.call(args);
                     if (clientRecvCount.get() == TIMES) {
                         client.close();
-                    }
-                }
-            }
-        });
-
-        client.setWriteCallback(new StreamCallback() {
-            @Override
-            public void call(final Object[] args) throws Exception {
-                if (clientSendCount.get() >= TIMES) {
-                    if (clientTimer.get() != null) {
-                        clientTimer.get().cancel(false);
+                    } else {
+                        client.write("message " + clientSendCount.getAndIncrement() + " from client");
                     }
                 }
             }
@@ -285,14 +243,7 @@ public class TCPHandleTest extends TestBase {
                 clientLoggingCallback.call(args);
                 System.out.println("c: " + client.getSocketName() + " connected to " + client.getPeerName());
                 client.readStart();
-                clientTimer.set(TIMER.scheduleWithFixedDelay(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (clientSendCount.get() < TIMES) {
-                            client.write("message " + clientSendCount.incrementAndGet() + " from client");
-                        }
-                    }
-                }, 0, 100, TimeUnit.MILLISECONDS));
+                client.write("message " + clientSendCount.getAndIncrement() + " from client");
             }
         });
 
@@ -306,12 +257,11 @@ public class TCPHandleTest extends TestBase {
         server.bind6(ADDRESS6, PORT6);
         server.listen(1);
 
-        Thread.sleep((long) (random.nextDouble() * 1000));
+        Thread.sleep((long) (random.nextDouble() * 100));
         client.connect6(ADDRESS6, PORT6);
 
         while (!serverDone.get() || !clientDone.get()) {
             loop.run();
-            Thread.sleep((long) (random.nextDouble() * 10));
         }
 
         Assert.assertEquals(serverSendCount.get(), TIMES);
