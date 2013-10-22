@@ -34,6 +34,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,20 +46,24 @@ public class TestRunner {
         final String test = System.getProperty("test");
         if (test != null) {
             runATest(test);
+            System.out.flush();
+            System.err.flush();
             System.exit(0);
         }
 
         for (final String arg : args) {
             final String[] files = arg.split(";");
             for (final String file : files) {
-                final String className = file.replaceAll(".java", "");
-                runATest(className);
+                runATest(file);
             }
+            System.out.flush();
+            System.err.flush();
             System.exit(0);
         }
     }
 
-    public static void runATest(final String testClassName) throws FileNotFoundException {
+    public static void runATest(final String file) throws FileNotFoundException {
+        final String testClassName = file.replaceAll(".java", "");
         final PrintStream out = new PrintStream(TEST_REPORTS_DIR + File.separator + testClassName + ".txt");
         System.setOut(out);
         try {
@@ -80,6 +85,10 @@ public class TestRunner {
         Method afterMethod = null;
         final List<Method> tests = new ArrayList<>(16);
         for (final Method method : testClass.getDeclaredMethods()) {
+            final int modifiers = method.getModifiers();
+            if (Modifier.isStatic(modifiers)) {
+                continue;
+            }
             for (final Annotation ann : method.getDeclaredAnnotations()) {
                 if (BeforeTest.class.isAssignableFrom(ann.annotationType())) {
                     beforeTest = method;
