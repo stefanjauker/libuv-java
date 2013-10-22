@@ -70,10 +70,10 @@ public class PipeHandleTest extends TestBase {
         peer.setReadCallback(new StreamCallback() {
             @Override
             public void call(final Object[] args) throws Exception {
-                if (args == null) {
+                serverRecvCount.incrementAndGet();
+                if (args[0] == null) {
                     peer.close();
                 } else {
-                    serverRecvCount.incrementAndGet();
                     serverLoggingCallback.call(args);
                     if (serverSendCount.get() < TIMES) {
                         peer.write("PING " + serverSendCount.incrementAndGet());
@@ -113,10 +113,10 @@ public class PipeHandleTest extends TestBase {
         client.setReadCallback(new StreamCallback() {
             @Override
             public void call(final Object[] args) throws Exception {
-                if (args == null) {
+                clientRecvCount.incrementAndGet();
+                if (args[0] == null) {
                     client.close();
                 } else {
-                    clientRecvCount.incrementAndGet();
                     clientLoggingCallback.call(args);
                     if (clientSendCount.incrementAndGet() < TIMES) {
                         client.write("PONG " + clientSendCount.get());
