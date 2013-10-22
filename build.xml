@@ -33,6 +33,7 @@
             <class name="net.java.libuv.handles.SignalHandle"/>
             <class name="net.java.libuv.handles.StreamHandle"/>
             <class name="net.java.libuv.handles.TCPHandle"/>
+            <class name="net.java.libuv.handles.TimerHandle"/>
             <class name="net.java.libuv.handles.TTYHandle"/>
             <class name="net.java.libuv.handles.UDPHandle"/>
         </javah>

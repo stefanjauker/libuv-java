@@ -33,6 +33,7 @@ import net.java.libuv.NativeException;
 import net.java.libuv.ProcessCallback;
 import net.java.libuv.SignalCallback;
 import net.java.libuv.StreamCallback;
+import net.java.libuv.TimerCallback;
 import net.java.libuv.UDPCallback;
 
 public final class LoopHandle {
@@ -79,6 +80,7 @@ public final class LoopHandle {
         newLoop();
         this.pointer = _new();
         assert pointer != 0;
+
         this.exceptionHandler = new CallbackExceptionHandler() {
             @Override
             public void handle(final Exception ex) {
@@ -89,6 +91,7 @@ public final class LoopHandle {
                 }
             }
         };
+
         this.callbackHandler = new CallbackHandler() {
             @Override
             public void handleProcessCallback(ProcessCallback cb, Object[] args) {
@@ -121,6 +124,15 @@ public final class LoopHandle {
             public void handleFileCallback(FileCallback cb, int id, Object[] args) {
                 try {
                     cb.call(id, args);
+                } catch (Exception ex) {
+                    exceptionHandler.handle(ex);
+                }
+            }
+
+            @Override
+            public void handleTimerCallback(TimerCallback cb, int status) {
+                try {
+                    cb.call(status);
                 } catch (Exception ex) {
                     exceptionHandler.handle(ex);
                 }
