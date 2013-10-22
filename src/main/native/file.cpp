@@ -199,7 +199,7 @@ void FileCallbacks::static_initialize(JNIEnv* env, jclass cls) {
 jobject FileCallbacks::build_stats(uv_statbuf_t *ptr) {
   if (ptr) {
     int blksize = 0;
-    double blocks = 0;
+    jlong blocks = 0;
 #ifdef __POSIX__
     blksize = ptr->st_blksize;
     blocks = ptr->st_blocks;
