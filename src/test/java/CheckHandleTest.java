@@ -23,107 +23,64 @@
  * questions.
  */
 
-import net.java.libuv.TimerCallback;
+import net.java.libuv.CheckCallback;
 import net.java.libuv.handles.LoopHandle;
-import net.java.libuv.handles.TimerHandle;
+import net.java.libuv.handles.CheckHandle;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TimerHandleTest extends TestBase {
+public class CheckHandleTest extends TestBase {
 
     private static final int TIMEOUT = 5000;
     private static final int TIMES = 100;
 
     @Test
-    public void testOnce() throws Exception {
+    public void testCheck() throws Exception {
         final AtomicBoolean gotCallback = new AtomicBoolean(false);
         final AtomicBoolean gotClose = new AtomicBoolean(false);
+        final AtomicInteger times = new AtomicInteger(0);
 
         final LoopHandle loop = new LoopHandle();
-        final TimerHandle timer = new TimerHandle(loop);
+        final CheckHandle checkHandle = new CheckHandle(loop);
 
-        timer.setCloseCallback(new TimerCallback() {
+        checkHandle.setCloseCallback(new CheckCallback() {
             @Override
             public void call(int i) throws Exception {
-                System.out.println("timer closed");
+                System.out.println("check closed");
                 gotClose.set(true);
             }
         });
 
-        timer.setTimerFiredCallback(new TimerCallback() {
+        checkHandle.setCheckCallback(new CheckCallback() {
             @Override
             public void call(final int status) throws Exception {
                 gotCallback.set(true);
-                System.out.println("timer fired once");
-                timer.close();
+                System.out.println("check!");
+                times.incrementAndGet();
+                checkHandle.close();
             }
         });
 
-        timer.start(100, 0);
+        checkHandle.start();
 
         final long start = System.currentTimeMillis();
         while (!gotCallback.get() || !gotClose.get()) {
             if (System.currentTimeMillis() - start > TIMEOUT) {
-                Assert.fail("timeout waiting for timer");
+                Assert.fail("timeout waiting for check");
             }
             loop.runNoWait();
         }
 
         Assert.assertTrue(gotCallback.get());
         Assert.assertTrue(gotClose.get());
+        Assert.assertEquals(times.get(), 1);
     }
-
-    @Test
-    public void testRepeat() throws Exception {
-        final AtomicBoolean gotCallback = new AtomicBoolean(false);
-        final AtomicBoolean gotClose = new AtomicBoolean(false);
-        final AtomicInteger callbackCount = new AtomicInteger(0);
-
-        final LoopHandle loop = new LoopHandle();
-        final TimerHandle timer = new TimerHandle(loop);
-
-        timer.setCloseCallback(new TimerCallback() {
-            @Override
-            public void call(int i) throws Exception {
-                System.out.println("repeat timer closed");
-                gotClose.set(true);
-            }
-        });
-
-        timer.setTimerFiredCallback(new TimerCallback() {
-            @Override
-            public void call(final int status) throws Exception {
-                gotCallback.set(true);
-                if (callbackCount.incrementAndGet() == TIMES) {
-                    System.out.println("closing repeat timer");
-                    gotClose.set(true);
-                }
-                System.out.println("timer fired " + callbackCount.get());
-            }
-        });
-
-        timer.start(50, 5);
-
-        final long start = System.currentTimeMillis();
-        while (!gotCallback.get() || !gotClose.get()) {
-            if (System.currentTimeMillis() - start > TIMEOUT) {
-                Assert.fail("timeout waiting for timer");
-            }
-            loop.runNoWait();
-        }
-
-        Assert.assertTrue(gotCallback.get());
-        Assert.assertTrue(gotClose.get());
-        Assert.assertTrue(callbackCount.get() == TIMES);
-    }
-
     public static void main(final String[] args) throws Exception {
-        final TimerHandleTest test = new TimerHandleTest();
-        test.testOnce();
-        test.testRepeat();
+        final CheckHandleTest test = new CheckHandleTest();
+        test.testCheck();
     }
 
 }

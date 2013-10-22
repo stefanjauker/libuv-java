@@ -25,12 +25,8 @@
 
 package net.java.libuv;
 
-public interface CallbackHandler {
-    public void handleCheckCallback(CheckCallback cb, int status);
-    public void handleProcessCallback(ProcessCallback cb, Object[] args);
-    public void handleSignalCallback(SignalCallback cb, int signum);
-    public void handleStreamCallback(StreamCallback cb, Object[] args);
-    public void handleFileCallback(FileCallback cb, int id, Object[] args);
-    public void handleTimerCallback(TimerCallback cb, int status);
-    public void handleUDPCallback(UDPCallback cb, Object[] args);
+public interface CheckCallback {
+
+    public void call(int status) throws Exception;
+
 }

@@ -27,6 +27,7 @@ package net.java.libuv.handles;
 
 import net.java.libuv.CallbackExceptionHandler;
 import net.java.libuv.CallbackHandler;
+import net.java.libuv.CheckCallback;
 import net.java.libuv.FileCallback;
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.NativeException;
@@ -93,6 +94,15 @@ public final class LoopHandle {
         };
 
         this.callbackHandler = new CallbackHandler() {
+            @Override
+            public void handleCheckCallback(CheckCallback cb, int status) {
+                try {
+                    cb.call(status);
+                } catch (Exception ex) {
+                    exceptionHandler.handle(ex);
+                }
+            }
+
             @Override
             public void handleProcessCallback(ProcessCallback cb, Object[] args) {
                 try {

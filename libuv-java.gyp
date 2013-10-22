@@ -55,6 +55,7 @@
             'conditions': [
                 ['OS == "linux"', {
                     'sources': [
+                        'check.cpp',
                         'child.cpp',
                         'constants.cpp',
                         'file.cpp',
@@ -92,6 +93,7 @@
                 }],
                 ['OS == "mac"', {
                     'sources': [
+                        '<(LIBUV_PATH)/../obj.target/libuv-java/check.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/child.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/constants.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/file.cpp',
@@ -128,6 +130,7 @@
                         '<(LIBUV_HOME)/uv.gyp:libuv',
                     ],
                     'sources': [
+                        '<(LIBUV_PATH)/../obj.target/libuv-java/check.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/child.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/constants.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/file.cpp',

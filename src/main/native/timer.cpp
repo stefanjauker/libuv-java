@@ -244,9 +244,6 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_TimerHandle__1stop
   if (r) {
     ThrowException(env, handle->loop, "uv_timer_stop");
   }
-  TimerCallbacks* cb = reinterpret_cast<TimerCallbacks*>(handle->data);
-  delete cb;
-  delete handle;
   return r;
 }
 
