@@ -633,8 +633,8 @@ public class PermissionTest extends TestBase {
         System.out.println("Security File Auth test passed");
     }
 
-    // @Test // TODO: test fails on windows
-    public void testFileReaOnly() throws Exception {
+    @Test
+    public void testFileReadOnly() throws Exception {
         Permissions permissions = new Permissions();
         final String fileName = "testFileReaOnly.txt";
         permissions.add(new LibUVPermission("libuv.handle"));
@@ -653,8 +653,20 @@ public class PermissionTest extends TestBase {
         if (s == null) {
            throw new Exception("Stats is null");
         }
-        handle.fdatasync(fd);
-        handle.fsync(fd);
+
+        try {
+            handle.fdatasync(fd);
+            throw new Exception("fdatasync should have failed");
+        }catch(NativeException ex){
+            // XXX OK.
+        }
+
+        try {
+            handle.fsync(fd);
+            throw new Exception("fsync should have failed");
+        }catch(NativeException ex){
+            // XXX OK.
+        }
 
         try {
             handle.write(fd, "Hello".getBytes(), 0, 2, 0);
