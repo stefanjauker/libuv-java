@@ -656,14 +656,18 @@ public class PermissionTest extends TestBase {
 
         try {
             handle.fdatasync(fd);
-            throw new Exception("fdatasync should have failed");
+            if (OS.startsWith("Windows")) {
+                throw new Exception("fdatasync should have failed");
+            }
         }catch(NativeException ex){
             // XXX OK.
         }
 
         try {
             handle.fsync(fd);
-            throw new Exception("fsync should have failed");
+            if (OS.startsWith("Windows")) {
+                throw new Exception("fsync should have failed");
+            }
         }catch(NativeException ex){
             // XXX OK.
         }
