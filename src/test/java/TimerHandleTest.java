@@ -65,7 +65,7 @@ public class TimerHandleTest extends TestBase {
         timer.start(100, 0);
 
         final long start = System.currentTimeMillis();
-        while (!gotCallback.get()) {
+        while (!gotClose.get() || !gotClose.get()) {
             if (System.currentTimeMillis() - start > TIMEOUT) {
                 Assert.fail("timeout waiting for timer");
             }
@@ -88,7 +88,7 @@ public class TimerHandleTest extends TestBase {
         timer.setCloseCallback(new TimerCallback() {
             @Override
             public void call(int i) throws Exception {
-                System.out.println("timer closed");
+                System.out.println("repeat timer closed");
                 gotClose.set(true);
             }
         });
@@ -98,7 +98,7 @@ public class TimerHandleTest extends TestBase {
             public void call(final int status) throws Exception {
                 gotCallback.set(true);
                 if (callbackCount.incrementAndGet() == TIMES) {
-                    System.out.println("closing timer");
+                    System.out.println("closing repeat timer");
                     gotClose.set(true);
                 }
                 System.out.println("timer fired " + callbackCount.get());
