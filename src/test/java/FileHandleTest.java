@@ -31,6 +31,7 @@ import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.handles.Stats;
 
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -49,6 +50,17 @@ public class FileHandleTest extends TestBase {
     protected void startSession(Method method) throws Exception {
         final String tmp = System.getProperty("java.io.tmpdir");
         testName = (tmp.endsWith(File.separator) ? tmp : tmp + File.separator) + method.getName();
+    }
+
+    @AfterMethod
+    public void endSession(Method method) {
+        final LoopHandle loop = new LoopHandle();
+        final FileHandle handle = new FileHandle(loop);
+
+        cleanupFiles(handle, testName);
+        cleanupFiles(handle, testName + ".txt");
+        cleanupFiles(handle, testName + "-new.txt");
+        cleanupFiles(handle, testName + "2.txt");
     }
 
     @Test
@@ -375,13 +387,16 @@ public class FileHandleTest extends TestBase {
     }
 
     private void cleanupFiles(final FileHandle handle, final String... files) {
-        try {
-            for (int i = 0; i < files.length; i++) {
-                handle.unlink(files[i]);
-            }
-        } catch(NativeException e) {
-            if (!"ENOENT".equals(e.errnoString())) {
-                throw e;
+        for (int i = 0; i < files.length; i++) {
+            try {
+                String test = files[i];
+                Stats stat = handle.stat(test);
+                if ((stat.getMode() & Constants.S_IFMT) == Constants.S_IFDIR) {
+                    handle.rmdir(test);
+                } else if ((stat.getMode() & Constants.S_IFMT) == Constants.S_IFREG) {
+                    handle.unlink(test);
+                }
+            } catch (Exception e) {
             }
         }
     }
