@@ -30,7 +30,7 @@ import java.nio.file.LinkPermission;
 import java.security.BasicPermission;
 
 import net.java.libuv.handles.Address;
-import net.java.libuv.handles.FileHandle;
+import net.java.libuv.handles.Files;
 
 /**
  * Permissions specific to LibUV. 
@@ -207,14 +207,14 @@ public final class LibUVPermission extends BasicPermission {
         }
     }
     
-    public static void checkReadFile(int fd, FileHandle fh) {
+    public static void checkReadFile(int fd, Files fh) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkRead(fh.getPath(fd));
         }
     }
     
-    public static void checkWriteFile(int fd, FileHandle fh) {
+    public static void checkWriteFile(int fd, Files fh) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkWrite(fh.getPath(fd));

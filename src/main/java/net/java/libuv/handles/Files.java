@@ -28,7 +28,7 @@ package net.java.libuv.handles;
 import net.java.libuv.FileCallback;
 import net.java.libuv.LibUVPermission;
 
-public final class FileHandle extends Handle {
+public final class Files extends Handle {
 
     static {
         _static_initialize();
@@ -92,7 +92,7 @@ public final class FileHandle extends Handle {
     private FileCallback onChown = null;
     private FileCallback onFChown = null;
 
-    public FileHandle(final LoopHandle loop) {
+    public Files(final LoopHandle loop) {
         super(_new(), loop);
         _initialize(pointer);
     }

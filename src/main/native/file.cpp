@@ -29,7 +29,7 @@
 
 #include "uv.h"
 #include "throw.h"
-#include "net_java_libuv_handles_FileHandle.h"
+#include "net_java_libuv_handles_Files.h"
 
 #ifdef __MACOS__
 #include <sys/fcntl.h>
@@ -388,22 +388,22 @@ static FileRequest* new_request(JNIEnv *env, jlong callback_ptr, int id) {
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _static_initialize
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_FileHandle__1static_1initialize
+JNIEXPORT void JNICALL Java_net_java_libuv_handles_Files__1static_1initialize
   (JNIEnv *env, jclass cls) {
 
   FileCallbacks::static_initialize(env, cls);
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _new
  * Signature: ()J
  */
-JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_FileHandle__1new
+JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_Files__1new
   (JNIEnv *env, jclass cls) {
 
   FileCallbacks* cb = new FileCallbacks();
@@ -411,11 +411,11 @@ JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_FileHandle__1new
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _initialize
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_FileHandle__1initialize
+JNIEXPORT void JNICALL Java_net_java_libuv_handles_Files__1initialize
   (JNIEnv *env, jobject that, jlong ptr) {
 
   assert(ptr);
@@ -424,11 +424,11 @@ JNIEXPORT void JNICALL Java_net_java_libuv_handles_FileHandle__1initialize
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _close
 * Signature: (JIIJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1close
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1close
   (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -451,11 +451,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1close
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _open
  * Signature: (JLjava/lang/String;IIIJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1open
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1open
   (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint flags, jint mode, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -480,11 +480,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1open
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _read
  * Signature: (JI[BJJJIJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1read
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1read
   (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jbyteArray buffer, jlong length, jlong offset, jlong position, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -512,11 +512,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1read
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _unlink
  * Signature: (JLjava/lang/String;IJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1unlink
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1unlink
   (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -541,11 +541,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1unlink
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _write
  * Signature: (JI[BJJJIJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1write
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1write
   (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jbyteArray data, jlong length, jlong offset, jlong position, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -576,11 +576,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1write
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _mkdir
  * Signature: (JLjava/lang/String;IIJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1mkdir
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1mkdir
   (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint mode, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -605,11 +605,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1mkdir
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _rmdir
  * Signature: (JLjava/lang/String;IJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1rmdir
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1rmdir
   (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -634,11 +634,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1rmdir
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _readdir
  * Signature: (JLjava/lang/String;IIJ)[Ljava/lang/String;
  */
-JNIEXPORT jobjectArray JNICALL Java_net_java_libuv_handles_FileHandle__1readdir
+JNIEXPORT jobjectArray JNICALL Java_net_java_libuv_handles_Files__1readdir
   (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint flags, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -679,11 +679,11 @@ JNIEXPORT jobjectArray JNICALL Java_net_java_libuv_handles_FileHandle__1readdir
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _stat
  * Signature: (JLjava/lang/String;IJ)Lnet/java/libuv/handles/Stats;
  */
-JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_FileHandle__1stat
+JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_Files__1stat
   (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -709,11 +709,11 @@ JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_FileHandle__1stat
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _fstat
  * Signature: (JIIJ)Lnet/java/libuv/handles/Stats;
  */
-JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_FileHandle__1fstat
+JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_Files__1fstat
   (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -737,11 +737,11 @@ JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_FileHandle__1fstat
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _rename
  * Signature: (JLjava/lang/String;Ljava/lang/String;IJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1rename
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1rename
   (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jstring new_path, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -768,11 +768,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1rename
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _fsync
  * Signature: (JIIJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1fsync
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1fsync
   (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -795,11 +795,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1fsync
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _fdatasync
  * Signature: (JIIJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1fdatasync
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1fdatasync
   (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -822,11 +822,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1fdatasync
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _ftruncate
  * Signature: (JIJIJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1ftruncate
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1ftruncate
   (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jlong offset, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -849,11 +849,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1ftruncate
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _sendfile
  * Signature: (JIIJJIJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1sendfile
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1sendfile
   (JNIEnv *env, jobject that, jlong loop_ptr, jint out_fd, jint in_fd, jlong offset, jlong length, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -876,11 +876,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1sendfile
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _chmod
  * Signature: (JLjava/lang/String;IIJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1chmod
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1chmod
   (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint mode, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -905,11 +905,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1chmod
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _utime
  * Signature: (JLjava/lang/String;DDIJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1utime
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1utime
   (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jdouble atime, jdouble mtime, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -934,11 +934,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1utime
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _futime
  * Signature: (JIDDIJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1futime
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1futime
   (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jdouble atime, jdouble mtime, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -961,11 +961,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1futime
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _lstat
  * Signature: (JLjava/lang/String;IJ)Lnet/java/libuv/handles/Stats;
  */
-JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_FileHandle__1lstat
+JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_Files__1lstat
   (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -991,11 +991,11 @@ JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_FileHandle__1lstat
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _link
  * Signature: (JLjava/lang/String;Ljava/lang/String;IJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1link
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1link
   (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jstring new_path, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -1022,11 +1022,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1link
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _symlink
  * Signature: (JLjava/lang/String;Ljava/lang/String;IIJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1symlink
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1symlink
   (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jstring new_path, jint flags, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -1053,11 +1053,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1symlink
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _readlink
  * Signature: (JLjava/lang/String;IJ)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_FileHandle__1readlink
+JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_Files__1readlink
   (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -1083,11 +1083,11 @@ JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_FileHandle__1readlink
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _fchmod
  * Signature: (JIIIJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1fchmod
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1fchmod
   (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jint mode, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -1110,11 +1110,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1fchmod
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _chown
  * Signature: (JLjava/lang/String;IIIJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1chown
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1chown
   (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint uid, jint gid, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -1139,11 +1139,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1chown
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _fchown
  * Signature: (JIIIIJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1fchown
+JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1fchown
   (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jint uid, jint gid, jint callback, jlong callback_ptr) {
 
   assert(loop_ptr);
@@ -1166,11 +1166,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileHandle__1fchown
 }
 
 /*
- * Class:     net_java_libuv_handles_FileHandle
+ * Class:     net_java_libuv_handles_Files
  * Method:    _get_path
  * Signature: (JI)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_FileHandle__1get_1path
+JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_Files__1get_1path
   (JNIEnv *env, jobject that, jlong loop_ptr, jint fd) {
   assert(loop_ptr);
 #ifdef __MACOS__

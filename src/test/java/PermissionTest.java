@@ -27,7 +27,6 @@ import java.io.File;
 import java.io.FilePermission;
 import java.net.SocketPermission;
 import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.nio.file.LinkPermission;
 import java.security.AccessControlException;
 import java.security.Permission;
@@ -45,7 +44,7 @@ import net.java.libuv.LibUV;
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.NativeException;
 import net.java.libuv.StreamCallback;
-import net.java.libuv.handles.FileHandle;
+import net.java.libuv.handles.Files;
 import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.handles.PipeHandle;
 import net.java.libuv.handles.ProcessHandle;
@@ -243,7 +242,7 @@ public class PermissionTest extends TestBase {
         testFailure(new Runnable() {
             @Override
             public void run() {
-                new FileHandle(lh);
+                new Files(lh);
             }
         });
 
@@ -273,7 +272,7 @@ public class PermissionTest extends TestBase {
         } else {
             PIPE_NAME = "/tmp/uv-java-test-pipe";
         }
-        Files.deleteIfExists(FileSystems.getDefault().getPath(PIPE_NAME));
+        java.nio.file.Files.deleteIfExists(FileSystems.getDefault().getPath(PIPE_NAME));
 
         final AtomicInteger serverRecvCount = new AtomicInteger(0);
 
@@ -332,7 +331,7 @@ public class PermissionTest extends TestBase {
         }
 
         try {
-            Files.deleteIfExists(FileSystems.getDefault().getPath(PIPE_NAME));
+            java.nio.file.Files.deleteIfExists(FileSystems.getDefault().getPath(PIPE_NAME));
         } catch (Exception ignore) {}
 
         Assert.assertEquals(serverRecvCount.get(), 1);
@@ -606,7 +605,7 @@ public class PermissionTest extends TestBase {
         permissions.add(new FilePermission(TMPDIR, "read"));
 
         init(permissions);
-        TestRunner.runATest(FileHandleTest.class.getSimpleName());
+        TestRunner.runATest(FilesTest.class.getSimpleName());
 
         System.out.println("Security File Auth test passed");
     }
@@ -623,7 +622,7 @@ public class PermissionTest extends TestBase {
 
         init(permissions);
         final LoopHandle loop = new LoopHandle();
-        final FileHandle handle = new FileHandle(loop);
+        final Files handle = new Files(loop);
         final int fd = handle.open(fileName, Constants.O_RDONLY, Constants.S_IRWXU);
 
         handle.read(fd, new byte[5], 0, 0, 0);
@@ -701,7 +700,7 @@ public class PermissionTest extends TestBase {
         permissions.add(new LibUVPermission("libuv.handle"));
         init(permissions);
         final LoopHandle loop = new LoopHandle();
-        final FileHandle handle = new FileHandle(loop);
+        final Files handle = new net.java.libuv.handles.Files(loop);
         final String fileName = "testFileNoAuth.txt";
         testFailure(new Runnable() {
             @Override
