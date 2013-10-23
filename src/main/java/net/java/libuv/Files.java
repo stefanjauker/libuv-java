@@ -23,12 +23,14 @@
  * questions.
  */
 
-package net.java.libuv.handles;
+package net.java.libuv;
 
 import net.java.libuv.FileCallback;
 import net.java.libuv.LibUVPermission;
+import net.java.libuv.handles.LoopHandle;
+import net.java.libuv.handles.Stats;
 
-public final class Files extends Handle {
+public final class Files {
 
     static {
         _static_initialize();
@@ -36,34 +38,37 @@ public final class Files extends Handle {
 
     private static final int SYNC_MODE = 0;
 
+    private final long pointer;
+    private final LoopHandle loop;
+
     // must be equal to values in uv.h
-    public static final int UV_FS_UNKNOWN   = -1;
-    public static final int UV_FS_CUSTOM    = 0;
-    public static final int UV_FS_OPEN      = 1;
-    public static final int UV_FS_CLOSE     = 2;
-    public static final int UV_FS_READ      = 3;
-    public static final int UV_FS_WRITE     = 4;
-    public static final int UV_FS_SENDFILE  = 5;
-    public static final int UV_FS_STAT      = 6;
-    public static final int UV_FS_LSTAT     = 7;
-    public static final int UV_FS_FSTAT     = 8;
-    public static final int UV_FS_FTRUNCATE = 9;
-    public static final int UV_FS_UTIME     = 10;
-    public static final int UV_FS_FUTIME    = 11;
-    public static final int UV_FS_CHMOD     = 12;
-    public static final int UV_FS_FCHMOD    = 13;
-    public static final int UV_FS_FSYNC     = 14;
-    public static final int UV_FS_FDATASYNC = 15;
-    public static final int UV_FS_UNLINK    = 16;
-    public static final int UV_FS_RMDIR     = 17;
-    public static final int UV_FS_MKDIR     = 18;
-    public static final int UV_FS_RENAME    = 19;
-    public static final int UV_FS_READDIR   = 20;
-    public static final int UV_FS_LINK      = 21;
-    public static final int UV_FS_SYMLINK   = 22;
-    public static final int UV_FS_READLINK  = 23;
-    public static final int UV_FS_CHOWN     = 24;
-    public static final int UV_FS_FCHOWN    = 25;
+    private static final int UV_FS_UNKNOWN   = -1;
+    private static final int UV_FS_CUSTOM    = 0;
+    private static final int UV_FS_OPEN      = 1;
+    private static final int UV_FS_CLOSE     = 2;
+    private static final int UV_FS_READ      = 3;
+    private static final int UV_FS_WRITE     = 4;
+    private static final int UV_FS_SENDFILE  = 5;
+    private static final int UV_FS_STAT      = 6;
+    private static final int UV_FS_LSTAT     = 7;
+    private static final int UV_FS_FSTAT     = 8;
+    private static final int UV_FS_FTRUNCATE = 9;
+    private static final int UV_FS_UTIME     = 10;
+    private static final int UV_FS_FUTIME    = 11;
+    private static final int UV_FS_CHMOD     = 12;
+    private static final int UV_FS_FCHMOD    = 13;
+    private static final int UV_FS_FSYNC     = 14;
+    private static final int UV_FS_FDATASYNC = 15;
+    private static final int UV_FS_UNLINK    = 16;
+    private static final int UV_FS_RMDIR     = 17;
+    private static final int UV_FS_MKDIR     = 18;
+    private static final int UV_FS_RENAME    = 19;
+    private static final int UV_FS_READDIR   = 20;
+    private static final int UV_FS_LINK      = 21;
+    private static final int UV_FS_SYMLINK   = 22;
+    private static final int UV_FS_READLINK  = 23;
+    private static final int UV_FS_CHOWN     = 24;
+    private static final int UV_FS_FCHOWN    = 25;
 
     private FileCallback onCustom = null;
     private FileCallback onOpen = null;
@@ -93,7 +98,8 @@ public final class Files extends Handle {
     private FileCallback onFChown = null;
 
     public Files(final LoopHandle loop) {
-        super(_new(), loop);
+        this.pointer = _new();
+        this.loop = loop;
         _initialize(pointer);
     }
 
