@@ -23,7 +23,7 @@
  * questions.
  */
 
-package net.java.libuv.handles;
+package net.java.libuv;
 
 public class Stats {
 
