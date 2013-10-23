@@ -202,7 +202,7 @@ public final class LoopHandle {
         return _list(pointer);
     }
 
-    long pointer() {
+    public long pointer() {
         return pointer;
     }
 

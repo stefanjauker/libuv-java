@@ -44,7 +44,7 @@ import net.java.libuv.LibUV;
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.NativeException;
 import net.java.libuv.StreamCallback;
-import net.java.libuv.handles.Files;
+import net.java.libuv.Files;
 import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.handles.PipeHandle;
 import net.java.libuv.handles.ProcessHandle;
@@ -700,7 +700,7 @@ public class PermissionTest extends TestBase {
         permissions.add(new LibUVPermission("libuv.handle"));
         init(permissions);
         final LoopHandle loop = new LoopHandle();
-        final Files handle = new net.java.libuv.handles.Files(loop);
+        final Files handle = new Files(loop);
         final String fileName = "testFileNoAuth.txt";
         testFailure(new Runnable() {
             @Override

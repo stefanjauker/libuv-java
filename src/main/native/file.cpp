@@ -29,7 +29,7 @@
 
 #include "uv.h"
 #include "throw.h"
-#include "net_java_libuv_handles_Files.h"
+#include "net_java_libuv_Files.h"
 
 #ifdef __MACOS__
 #include <sys/fcntl.h>
@@ -41,9 +41,11 @@
 #include <tchar.h>
 #endif
 
+class FileCallbacks;
+
 class FileRequest {
 private:
-  jlong _callback_ptr;
+  FileCallbacks* _callback;
   jint _callback_id;
   jlong _read_buffer_offset;
   jobject _read_buffer;
@@ -51,10 +53,10 @@ private:
   JNIEnv* _env;
 
 public:
-  FileRequest(JNIEnv *env, jlong ptr, jint id, jobject read_buffer, jlong byte_array_size, jlong offset);
+  FileRequest(JNIEnv *env, FileCallbacks* ptr, jint id, jobject read_buffer, jlong byte_array_size, jlong offset);
   ~FileRequest();
 
-  jlong get_callback_ptr() { return _callback_ptr; }
+  FileCallbacks* get_callback() { return _callback; }
 
   jint get_callback_id() { return _callback_id; }
 
@@ -70,9 +72,9 @@ public:
 
 };
 
-FileRequest::FileRequest(JNIEnv *env, jlong ptr, jint id, jobject read_buffer, jlong byte_array_size, jlong offset) {
+FileRequest::FileRequest(JNIEnv *env, FileCallbacks* ptr, jint id, jobject read_buffer, jlong byte_array_size, jlong offset) {
   _env = env;
-  _callback_ptr = ptr;
+  _callback = ptr;
   _callback_id = id;
   _read_buffer_offset = offset;
   _read_buffer = NULL;
@@ -124,9 +126,9 @@ private:
   static JNIEnv* _env;
 
   jobject _instance;
+  uv_loop_t* _loop;
 
 public:
-
   static jclass _object_cid;
 
   static void static_initialize(JNIEnv *env, jclass cls);
@@ -135,7 +137,9 @@ public:
   FileCallbacks();
   ~FileCallbacks();
 
-  void initialize(jobject instance);
+  uv_loop_t* loop() { return _loop; }
+
+  void initialize(jobject instance, uv_loop_t* loop);
   void fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t result, void *ptr);
   void fs_cb(FileRequest *request, uv_fs_type fs_type, int errorno, const char *path);
 };
@@ -205,21 +209,22 @@ jobject FileCallbacks::build_stats(uv_statbuf_t *ptr) {
     blocks = ptr->st_blocks;
 #endif
 
-    return _env->NewObject(_stats_cid,
-      _stats_init_mid,
-      ptr->st_dev,
-      ptr->st_ino,
-      ptr->st_mode,
-      ptr->st_nlink,
-      ptr->st_uid,
-      ptr->st_gid,
-      ptr->st_rdev,
-      ptr->st_size,
-      blksize,
-      blocks,
-      ptr->st_atime * 1000,     // Convert seconds to milliseconds
-      ptr->st_mtime * 1000,     // Convert seconds to milliseconds
-      ptr->st_ctime * 1000);    // Convert seconds to milliseconds
+    return _env->NewObject(
+        _stats_cid,
+        _stats_init_mid,
+        ptr->st_dev,
+        ptr->st_ino,
+        ptr->st_mode,
+        ptr->st_nlink,
+        ptr->st_uid,
+        ptr->st_gid,
+        ptr->st_rdev,
+        ptr->st_size,
+        blksize,
+        blocks,
+        ptr->st_atime * 1000,     // Convert seconds to milliseconds
+        ptr->st_mtime * 1000,     // Convert seconds to milliseconds
+        ptr->st_ctime * 1000);    // Convert seconds to milliseconds
   }
   return NULL;
 }
@@ -231,16 +236,16 @@ FileCallbacks::~FileCallbacks() {
   _env->DeleteGlobalRef(_instance);
 }
 
-void FileCallbacks::initialize(jobject instance) {
-
+void FileCallbacks::initialize(jobject instance, uv_loop_t* loop) {
   assert(_env);
   assert(instance);
+  assert(loop);
 
   _instance = _env->NewGlobalRef(instance);
+  _loop = loop;
 }
 
 void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t result, void *ptr) {
-
   assert(_env);
   jobject arg;
 
@@ -338,7 +343,6 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t resu
 }
 
 void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, int errorno, const char *path) {
-
   assert(_env);
 
   int callback_id = request->get_callback_id();
@@ -358,52 +362,50 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, int errorno,
 }
 
 static void _fs_cb(uv_fs_t* req) {
-
   assert(req);
   assert(req->data);
 
   FileRequest* request = reinterpret_cast<FileRequest*>(req->data);
-  assert(request->get_callback_ptr());
-
-  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(request->get_callback_ptr());
+  assert(request);
+  FileCallbacks* cb = request->get_callback();
+  assert(cb);
 
   if (req->result == -1) {
     cb->fs_cb(request, req->fs_type, req->errorno, req->path);
   } else {
     cb->fs_cb(request, req->fs_type, req->result, req->ptr);
   }
+
   uv_fs_req_cleanup(req);
   delete(req);
   delete(request);
 }
 
-static FileRequest* new_request(JNIEnv *env, jlong callback_ptr, int id, jobject read_buffer, jlong byte_array_size, jlong offset) {
-
-  FileRequest* req = new FileRequest(env, callback_ptr, id, read_buffer, byte_array_size, offset);
-  return req;
+static inline FileRequest* new_request(JNIEnv *env, FileCallbacks* cb, int id, jobject read_buffer, jlong byte_array_size, jlong offset) {
+  return new FileRequest(env, cb, id, read_buffer, byte_array_size, offset);
 }
 
-static FileRequest* new_request(JNIEnv *env, jlong callback_ptr, int id) {
-  return new_request(env, callback_ptr, id, NULL, 0, 0);
+static inline FileRequest* new_request(JNIEnv *env, FileCallbacks* cb, int id) {
+  return new_request(env, cb, id, NULL, 0, 0);
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _static_initialize
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_Files__1static_1initialize
+JNIEXPORT void JNICALL Java_net_java_libuv_Files__1static_1initialize
   (JNIEnv *env, jclass cls) {
 
   FileCallbacks::static_initialize(env, cls);
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _new
  * Signature: ()J
  */
-JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_Files__1new
+JNIEXPORT jlong JNICALL Java_net_java_libuv_Files__1new
   (JNIEnv *env, jclass cls) {
 
   FileCallbacks* cb = new FileCallbacks();
@@ -411,68 +413,70 @@ JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_Files__1new
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _initialize
- * Signature: (J)V
+ * Signature: (JJ)V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_Files__1initialize
-  (JNIEnv *env, jobject that, jlong ptr) {
+JNIEXPORT void JNICALL Java_net_java_libuv_Files__1initialize
+  (JNIEnv *env, jobject that, jlong ptr, jlong loop_ptr) {
 
   assert(ptr);
   FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
-  cb->initialize(that);
+  assert(loop_ptr);
+  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  cb->initialize(that, loop);
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _close
-* Signature: (JIIJ)I
+* Signature: (JII)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1close
-  (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1close
+  (JNIEnv *env, jobject that, jlong ptr, jint fd, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   int r;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    r = uv_fs_close(loop, req, fd, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    r = uv_fs_close(cb->loop(), req, fd, _fs_cb);
   } else {
     uv_fs_t req;
-    r = uv_fs_close(loop, &req, fd, NULL);
+    r = uv_fs_close(cb->loop(), &req, fd, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_close");
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_close");
     }
   }
   return r;
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _open
- * Signature: (JLjava/lang/String;IIIJ)I
+ * Signature: (JLjava/lang/String;III)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1open
-  (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint flags, jint mode, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1open
+  (JNIEnv *env, jobject that, jlong ptr, jstring path, jint flags, jint mode, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   const char* cpath = env->GetStringUTFChars(path, 0);
   int fd;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    fd = uv_fs_open(loop, req, cpath, flags, mode, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    fd = uv_fs_open(cb->loop(), req, cpath, flags, mode, _fs_cb);
   } else {
     uv_fs_t req;
-    fd = uv_fs_open(loop, &req, cpath, flags, mode, NULL);
+    fd = uv_fs_open(cb->loop(), &req, cpath, flags, mode, NULL);
     uv_fs_req_cleanup(&req);
     if (fd == -1) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_open", NULL, cpath);
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_open", NULL, cpath);
     }
   }
   env->ReleaseStringUTFChars(path, cpath);
@@ -480,60 +484,60 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1open
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _read
- * Signature: (JI[BJJJIJ)I
+ * Signature: (JI[BJJJI)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1read
-  (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jbyteArray buffer, jlong length, jlong offset, jlong position, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1read
+  (JNIEnv *env, jobject that, jlong ptr, jint fd, jbyteArray buffer, jlong length, jlong offset, jlong position, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   int r;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
     jlong buffer_size = length - offset;
-    FileRequest* request = new_request(env, callback_ptr, callback, buffer, buffer_size, offset);
+    FileRequest* request = new_request(env, cb, callback, buffer, buffer_size, offset);
     req->data = request;
-    r = uv_fs_read(loop, req, fd, request->get_byte_array(), length, position, _fs_cb);
+    r = uv_fs_read(cb->loop(), req, fd, request->get_byte_array(), length, position, _fs_cb);
   } else {
     uv_fs_t req;
     jbyte* base = new jbyte[length - offset];
-    r = uv_fs_read(loop, &req, fd, base, length, position, NULL);
+    r = uv_fs_read(cb->loop(), &req, fd, base, length, position, NULL);
     env->SetByteArrayRegion(buffer, (jsize)offset, (jsize)length, base);
     uv_fs_req_cleanup(&req);
     delete base;
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_read");
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_read");
     }
   }
   return r;
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _unlink
- * Signature: (JLjava/lang/String;IJ)I
+ * Signature: (JLjava/lang/String;I)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1unlink
-  (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1unlink
+  (JNIEnv *env, jobject that, jlong ptr, jstring path, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   const char* cpath = env->GetStringUTFChars(path, 0);
   int r;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    r = uv_fs_unlink(loop, req, cpath, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    r = uv_fs_unlink(cb->loop(), req, cpath, _fs_cb);
   } else {
     uv_fs_t req;
-    r = uv_fs_unlink(loop, &req, cpath, NULL);
+    r = uv_fs_unlink(cb->loop(), &req, cpath, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_unlink", NULL, cpath);
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_unlink", NULL, cpath);
     }
   }
   env->ReleaseStringUTFChars(path, cpath);
@@ -541,63 +545,62 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1unlink
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _write
- * Signature: (JI[BJJJIJ)I
+ * Signature: (JI[BJJJI)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1write
-  (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jbyteArray data, jlong length, jlong offset, jlong position, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1write
+  (JNIEnv *env, jobject that, jlong ptr, jint fd, jbyteArray data, jlong length, jlong offset, jlong position, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
-
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   int r;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
     jsize buffer_size = env->GetArrayLength(data);
-    FileRequest* request = new_request(env, callback_ptr, callback, NULL, (jlong) buffer_size, 0);
+    FileRequest* request = new_request(env, cb, callback, NULL, (jlong) buffer_size, 0);
     jbyte* base = request->get_bytes_from_array_region(data, (jsize) (buffer_size - offset), (jsize) offset);
     req->data = request;
-    r = uv_fs_write(loop, req, fd, base, length, position, _fs_cb);
+    r = uv_fs_write(cb->loop(), req, fd, base, length, position, _fs_cb);
   } else {
     uv_fs_t req;
     jsize buffer_size = env->GetArrayLength(data);
     jbyte* base = new jbyte[buffer_size];
     env->GetByteArrayRegion(data, (jsize) offset, (jsize) (buffer_size - offset), base);
-    r = uv_fs_write(loop, &req, fd, base, length, position, NULL);
+    r = uv_fs_write(cb->loop(), &req, fd, base, length, position, NULL);
     uv_fs_req_cleanup(&req);
     delete base;
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_write");
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_write");
     }
   }
   return r;
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _mkdir
- * Signature: (JLjava/lang/String;IIJ)I
+ * Signature: (JLjava/lang/String;II)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1mkdir
-  (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint mode, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1mkdir
+  (JNIEnv *env, jobject that, jlong ptr, jstring path, jint mode, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   const char* cpath = env->GetStringUTFChars(path, 0);
   int r;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    r = uv_fs_mkdir(loop, req, cpath, mode, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    r = uv_fs_mkdir(cb->loop(), req, cpath, mode, _fs_cb);
   } else {
     uv_fs_t req;
-    r = uv_fs_mkdir(loop, &req, cpath, mode, NULL);
+    r = uv_fs_mkdir(cb->loop(), &req, cpath, mode, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_mkdir", NULL, cpath);
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_mkdir", NULL, cpath);
     }
   }
   env->ReleaseStringUTFChars(path, cpath);
@@ -605,28 +608,28 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1mkdir
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _rmdir
- * Signature: (JLjava/lang/String;IJ)I
+ * Signature: (JLjava/lang/String;I)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1rmdir
-  (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1rmdir
+  (JNIEnv *env, jobject that, jlong ptr, jstring path, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   const char* cpath = env->GetStringUTFChars(path, 0);
   int r;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    r = uv_fs_rmdir(loop, req, cpath, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    r = uv_fs_rmdir(cb->loop(), req, cpath, _fs_cb);
   } else {
     uv_fs_t req;
-    r = uv_fs_rmdir(loop, &req, cpath, NULL);
+    r = uv_fs_rmdir(cb->loop(), &req, cpath, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_rmdir", NULL, cpath);
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_rmdir", NULL, cpath);
     }
   }
   env->ReleaseStringUTFChars(path, cpath);
@@ -634,25 +637,25 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1rmdir
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _readdir
- * Signature: (JLjava/lang/String;IIJ)[Ljava/lang/String;
+ * Signature: (JLjava/lang/String;II)[Ljava/lang/String;
  */
-JNIEXPORT jobjectArray JNICALL Java_net_java_libuv_handles_Files__1readdir
-  (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint flags, jint callback, jlong callback_ptr) {
+JNIEXPORT jobjectArray JNICALL Java_net_java_libuv_Files__1readdir
+  (JNIEnv *env, jobject that, jlong ptr, jstring path, jint flags, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   const char* cpath = env->GetStringUTFChars(path, 0);
   jobjectArray names = NULL;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    uv_fs_readdir(loop, req, cpath, flags, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    uv_fs_readdir(cb->loop(), req, cpath, flags, _fs_cb);
   } else {
     uv_fs_t req;
-    int r = uv_fs_readdir(loop, &req, cpath, flags, NULL);
+    int r = uv_fs_readdir(cb->loop(), &req, cpath, flags, NULL);
     if (r >= 0) {
         char *namebuf = static_cast<char*>(req.ptr);
         int nnames = static_cast<int>(req.result);
@@ -670,7 +673,7 @@ JNIEXPORT jobjectArray JNICALL Java_net_java_libuv_handles_Files__1readdir
 #endif
         }
     } else {
-        ThrowException(env, uv_last_error(loop).code, "uv_fs_readdir", NULL, cpath);
+        ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_readdir", NULL, cpath);
     }
     uv_fs_req_cleanup(&req);
   }
@@ -679,29 +682,29 @@ JNIEXPORT jobjectArray JNICALL Java_net_java_libuv_handles_Files__1readdir
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _stat
- * Signature: (JLjava/lang/String;IJ)Lnet/java/libuv/handles/Stats;
+ * Signature: (JLjava/lang/String;I)Lnet/java/libuv/handles/Stats;
  */
-JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_Files__1stat
-  (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint callback, jlong callback_ptr) {
+JNIEXPORT jobject JNICALL Java_net_java_libuv_Files__1stat
+  (JNIEnv *env, jobject that, jlong ptr, jstring path, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   const char* cpath = env->GetStringUTFChars(path, 0);
   jobject stats = NULL;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    uv_fs_stat(loop, req, cpath, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    uv_fs_stat(cb->loop(), req, cpath, _fs_cb);
   } else {
     uv_fs_t req;
-    int r = uv_fs_stat(loop, &req, cpath, NULL);
+    int r = uv_fs_stat(cb->loop(), &req, cpath, NULL);
     stats = FileCallbacks::build_stats(static_cast<uv_statbuf_t *>(req.ptr));
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_stat", NULL, cpath);
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_stat", NULL, cpath);
     }
   }
   env->ReleaseStringUTFChars(path, cpath);
@@ -709,57 +712,57 @@ JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_Files__1stat
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _fstat
- * Signature: (JIIJ)Lnet/java/libuv/handles/Stats;
+ * Signature: (JII)Lnet/java/libuv/handles/Stats;
  */
-JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_Files__1fstat
-  (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jint callback, jlong callback_ptr) {
+JNIEXPORT jobject JNICALL Java_net_java_libuv_Files__1fstat
+  (JNIEnv *env, jobject that, jlong ptr, jint fd, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   jobject stats = NULL;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    uv_fs_fstat(loop, req, fd, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    uv_fs_fstat(cb->loop(), req, fd, _fs_cb);
   } else {
     uv_fs_t req;
-    int r = uv_fs_fstat(loop, &req, fd, NULL);
+    int r = uv_fs_fstat(cb->loop(), &req, fd, NULL);
     stats = FileCallbacks::build_stats(static_cast<uv_statbuf_t*>(req.ptr));
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_fstat");
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_fstat");
     }
   }
   return stats;
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _rename
- * Signature: (JLjava/lang/String;Ljava/lang/String;IJ)I
+ * Signature: (JLjava/lang/String;Ljava/lang/String;I)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1rename
-  (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jstring new_path, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1rename
+  (JNIEnv *env, jobject that, jlong ptr, jstring path, jstring new_path, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   const char* src_path = env->GetStringUTFChars(path, 0);
   const char* dst_path = env->GetStringUTFChars(new_path, 0);
   int r;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    r = uv_fs_rename(loop, req, src_path, dst_path, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    r = uv_fs_rename(cb->loop(), req, src_path, dst_path, _fs_cb);
   } else {
     uv_fs_t req;
-    r = uv_fs_rename(loop, &req, src_path, dst_path, NULL);
+    r = uv_fs_rename(cb->loop(), &req, src_path, dst_path, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_rename", NULL, src_path);
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_rename", NULL, src_path);
     }
   }
   env->ReleaseStringUTFChars(path, src_path);
@@ -768,136 +771,136 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1rename
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _fsync
- * Signature: (JIIJ)I
+ * Signature: (JII)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1fsync
-  (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1fsync
+  (JNIEnv *env, jobject that, jlong ptr, jint fd, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   int r;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    r = uv_fs_fsync(loop, req, fd, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    r = uv_fs_fsync(cb->loop(), req, fd, _fs_cb);
   } else {
     uv_fs_t req;
-    r = uv_fs_fsync(loop, &req, fd, NULL);
+    r = uv_fs_fsync(cb->loop(), &req, fd, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_fsync");
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_fsync");
     }
   }
   return r;
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _fdatasync
- * Signature: (JIIJ)I
+ * Signature: (JII)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1fdatasync
-  (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1fdatasync
+  (JNIEnv *env, jobject that, jlong ptr, jint fd, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   int r;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    r = uv_fs_fdatasync(loop, req, fd, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    r = uv_fs_fdatasync(cb->loop(), req, fd, _fs_cb);
   } else {
     uv_fs_t req;
-    r = uv_fs_fdatasync(loop, &req, fd, NULL);
+    r = uv_fs_fdatasync(cb->loop(), &req, fd, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_fdatasync");
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_fdatasync");
     }
   }
   return r;
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _ftruncate
- * Signature: (JIJIJ)I
+ * Signature: (JIJI)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1ftruncate
-  (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jlong offset, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1ftruncate
+  (JNIEnv *env, jobject that, jlong ptr, jint fd, jlong offset, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   int r;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    r = uv_fs_ftruncate(loop, req, fd, offset, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    r = uv_fs_ftruncate(cb->loop(), req, fd, offset, _fs_cb);
   } else {
     uv_fs_t req;
-    r = uv_fs_ftruncate(loop, &req, fd, offset, NULL);
+    r = uv_fs_ftruncate(cb->loop(), &req, fd, offset, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_ftruncate");
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_ftruncate");
     }
   }
   return r;
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _sendfile
- * Signature: (JIIJJIJ)I
+ * Signature: (JIIJJI)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1sendfile
-  (JNIEnv *env, jobject that, jlong loop_ptr, jint out_fd, jint in_fd, jlong offset, jlong length, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1sendfile
+  (JNIEnv *env, jobject that, jlong ptr, jint out_fd, jint in_fd, jlong offset, jlong length, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   int r;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    r = uv_fs_sendfile(loop, req, out_fd, in_fd, offset, length, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    r = uv_fs_sendfile(cb->loop(), req, out_fd, in_fd, offset, length, _fs_cb);
   } else {
     uv_fs_t req;
-    r = uv_fs_sendfile(loop, &req, out_fd, in_fd, offset, length, NULL);
+    r = uv_fs_sendfile(cb->loop(), &req, out_fd, in_fd, offset, length, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_sendfile");
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_sendfile");
     }
   }
   return r;
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _chmod
- * Signature: (JLjava/lang/String;IIJ)I
+ * Signature: (JLjava/lang/String;II)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1chmod
-  (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint mode, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1chmod
+  (JNIEnv *env, jobject that, jlong ptr, jstring path, jint mode, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   const char* cpath = env->GetStringUTFChars(path, 0);
   int r;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    r = uv_fs_chmod(loop, req, cpath, mode, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    r = uv_fs_chmod(cb->loop(), req, cpath, mode, _fs_cb);
   } else {
     uv_fs_t req;
-    r = uv_fs_chmod(loop, &req, cpath, mode, NULL);
+    r = uv_fs_chmod(cb->loop(), &req, cpath, mode, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_chmod", NULL, cpath);
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_chmod", NULL, cpath);
     }
   }
   env->ReleaseStringUTFChars(path, cpath);
@@ -905,28 +908,28 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1chmod
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _utime
- * Signature: (JLjava/lang/String;DDIJ)I
+ * Signature: (JLjava/lang/String;DDI)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1utime
-  (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jdouble atime, jdouble mtime, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1utime
+  (JNIEnv *env, jobject that, jlong ptr, jstring path, jdouble atime, jdouble mtime, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   const char* cpath = env->GetStringUTFChars(path, 0);
   int r;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    r = uv_fs_utime(loop, req, cpath, atime, mtime, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    r = uv_fs_utime(cb->loop(), req, cpath, atime, mtime, _fs_cb);
   } else {
     uv_fs_t req;
-    r = uv_fs_utime(loop, &req, cpath, atime, mtime, NULL);
+    r = uv_fs_utime(cb->loop(), &req, cpath, atime, mtime, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_utime", NULL, cpath);
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_utime", NULL, cpath);
     }
   }
   env->ReleaseStringUTFChars(path, cpath);
@@ -934,56 +937,56 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1utime
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _futime
- * Signature: (JIDDIJ)I
+ * Signature: (JIDDI)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1futime
-  (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jdouble atime, jdouble mtime, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1futime
+  (JNIEnv *env, jobject that, jlong ptr, jint fd, jdouble atime, jdouble mtime, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   int r;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    r = uv_fs_futime(loop, req, fd, atime, mtime, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    r = uv_fs_futime(cb->loop(), req, fd, atime, mtime, _fs_cb);
   } else {
     uv_fs_t req;
-    r = uv_fs_futime(loop, &req, fd, atime, mtime, NULL);
+    r = uv_fs_futime(cb->loop(), &req, fd, atime, mtime, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_futime");
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_futime");
     }
   }
   return r;
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _lstat
- * Signature: (JLjava/lang/String;IJ)Lnet/java/libuv/handles/Stats;
+ * Signature: (JLjava/lang/String;I)Lnet/java/libuv/handles/Stats;
  */
-JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_Files__1lstat
-  (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint callback, jlong callback_ptr) {
+JNIEXPORT jobject JNICALL Java_net_java_libuv_Files__1lstat
+  (JNIEnv *env, jobject that, jlong ptr, jstring path, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   const char* cpath = env->GetStringUTFChars(path, 0);
   jobject stats = NULL;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    uv_fs_lstat(loop, req, cpath, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    uv_fs_lstat(cb->loop(), req, cpath, _fs_cb);
   } else {
     uv_fs_t req;
-    int r = uv_fs_lstat(loop, &req, cpath, NULL);
+    int r = uv_fs_lstat(cb->loop(), &req, cpath, NULL);
     stats = FileCallbacks::build_stats(static_cast<uv_statbuf_t*>(req.ptr));
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_lstat", NULL, cpath);
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_lstat", NULL, cpath);
     }
   }
   env->ReleaseStringUTFChars(path, cpath);
@@ -991,29 +994,29 @@ JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_Files__1lstat
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _link
- * Signature: (JLjava/lang/String;Ljava/lang/String;IJ)I
+ * Signature: (JLjava/lang/String;Ljava/lang/String;I)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1link
-  (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jstring new_path, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1link
+  (JNIEnv *env, jobject that, jlong ptr, jstring path, jstring new_path, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   const char* src_path = env->GetStringUTFChars(path, 0);
   const char* dst_path = env->GetStringUTFChars(new_path, 0);
   int r;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    r = uv_fs_link(loop, req, src_path, dst_path, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    r = uv_fs_link(cb->loop(), req, src_path, dst_path, _fs_cb);
   } else {
     uv_fs_t req;
-    r = uv_fs_link(loop, &req, src_path, dst_path, NULL);
+    r = uv_fs_link(cb->loop(), &req, src_path, dst_path, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_link", NULL, src_path);
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_link", NULL, src_path);
     }
   }
   env->ReleaseStringUTFChars(path, src_path);
@@ -1022,29 +1025,29 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1link
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _symlink
- * Signature: (JLjava/lang/String;Ljava/lang/String;IIJ)I
+ * Signature: (JLjava/lang/String;Ljava/lang/String;II)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1symlink
-  (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jstring new_path, jint flags, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1symlink
+  (JNIEnv *env, jobject that, jlong ptr, jstring path, jstring new_path, jint flags, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   const char* src_path = env->GetStringUTFChars(path, 0);
   const char* dst_path = env->GetStringUTFChars(new_path, 0);
   int r;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    r = uv_fs_symlink(loop, req, src_path, dst_path, flags, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    r = uv_fs_symlink(cb->loop(), req, src_path, dst_path, flags, _fs_cb);
   } else {
     uv_fs_t req;
-    r = uv_fs_symlink(loop, &req, src_path, dst_path, flags, NULL);
+    r = uv_fs_symlink(cb->loop(), &req, src_path, dst_path, flags, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_symlink", NULL, src_path);
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_symlink", NULL, src_path);
     }
   }
   env->ReleaseStringUTFChars(path, src_path);
@@ -1053,29 +1056,29 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1symlink
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _readlink
- * Signature: (JLjava/lang/String;IJ)Ljava/lang/String;
+ * Signature: (JLjava/lang/String;I)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_Files__1readlink
-  (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint callback, jlong callback_ptr) {
+JNIEXPORT jstring JNICALL Java_net_java_libuv_Files__1readlink
+  (JNIEnv *env, jobject that, jlong ptr, jstring path, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   const char* cpath = env->GetStringUTFChars(path, 0);
   jstring link = NULL;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    uv_fs_readlink(loop, req, cpath, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    uv_fs_readlink(cb->loop(), req, cpath, _fs_cb);
   } else {
     uv_fs_t req;
-    int r = uv_fs_readlink(loop, &req, cpath, NULL);
+    int r = uv_fs_readlink(cb->loop(), &req, cpath, NULL);
     link = env->NewStringUTF(static_cast<char*>(req.ptr));
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_readklink", NULL, cpath);
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_readklink", NULL, cpath);
     }
   }
   env->ReleaseStringUTFChars(path, cpath);
@@ -1083,55 +1086,55 @@ JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_Files__1readlink
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _fchmod
- * Signature: (JIIIJ)I
+ * Signature: (JIII)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1fchmod
-  (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jint mode, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1fchmod
+  (JNIEnv *env, jobject that, jlong ptr, jint fd, jint mode, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   int r;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    r = uv_fs_fchmod(loop, req, fd, mode, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    r = uv_fs_fchmod(cb->loop(), req, fd, mode, _fs_cb);
   } else {
     uv_fs_t req;
-    r = uv_fs_fchmod(loop, &req, fd, mode, NULL);
+    r = uv_fs_fchmod(cb->loop(), &req, fd, mode, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_fchmod");
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_fchmod");
     }
   }
   return r;
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _chown
- * Signature: (JLjava/lang/String;IIIJ)I
+ * Signature: (JLjava/lang/String;III)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1chown
-  (JNIEnv *env, jobject that, jlong loop_ptr, jstring path, jint uid, jint gid, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1chown
+  (JNIEnv *env, jobject that, jlong ptr, jstring path, jint uid, jint gid, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   const char* cpath = env->GetStringUTFChars(path, 0);
   int r;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    r = uv_fs_chown(loop, req, cpath, (uv_uid_t)uid, (uv_gid_t)gid, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    r = uv_fs_chown(cb->loop(), req, cpath, (uv_uid_t)uid, (uv_gid_t)gid, _fs_cb);
   } else {
     uv_fs_t req;
-    r = uv_fs_chown(loop, &req, cpath, (uv_uid_t)uid, (uv_gid_t)gid, NULL);
+    r = uv_fs_chown(cb->loop(), &req, cpath, (uv_uid_t)uid, (uv_gid_t)gid, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_chown", NULL, cpath);
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_chown", NULL, cpath);
     }
   }
   env->ReleaseStringUTFChars(path, cpath);
@@ -1139,40 +1142,41 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1chown
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _fchown
- * Signature: (JIIIIJ)I
+ * Signature: (JIIII)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_Files__1fchown
-  (JNIEnv *env, jobject that, jlong loop_ptr, jint fd, jint uid, jint gid, jint callback, jlong callback_ptr) {
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1fchown
+  (JNIEnv *env, jobject that, jlong ptr, jint fd, jint uid, jint gid, jint callback) {
 
-  assert(loop_ptr);
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   int r;
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(env, callback_ptr, callback);
-    r = uv_fs_fchown(loop, req, fd, (uv_uid_t)uid, (uv_gid_t)gid, _fs_cb);
+    req->data = new_request(env, cb, callback);
+    r = uv_fs_fchown(cb->loop(), req, fd, (uv_uid_t)uid, (uv_gid_t)gid, _fs_cb);
   } else {
     uv_fs_t req;
-    r = uv_fs_fchown(loop, &req, fd, (uv_uid_t)uid, (uv_gid_t)gid, NULL);
+    r = uv_fs_fchown(cb->loop(), &req, fd, (uv_uid_t)uid, (uv_gid_t)gid, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(loop).code, "uv_fs_fchown");
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_fchown");
     }
   }
   return r;
 }
 
 /*
- * Class:     net_java_libuv_handles_Files
+ * Class:     net_java_libuv_Files
  * Method:    _get_path
  * Signature: (JI)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_Files__1get_1path
-  (JNIEnv *env, jobject that, jlong loop_ptr, jint fd) {
-  assert(loop_ptr);
+JNIEXPORT jstring JNICALL Java_net_java_libuv_Files__1get_1path
+  (JNIEnv *env, jobject that, jlong ptr, jint fd) {
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
 #ifdef __MACOS__
   char pathbuf[PATH_MAX];
   if (fcntl(fd, F_GETPATH, pathbuf) >= 0) {
@@ -1181,7 +1185,7 @@ JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_Files__1get_1path
     return path;
   } else {
     uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
-    ThrowException(env, uv_last_error(loop).code, "fcntl");
+    ThrowException(env, uv_last_error(cb->loop()).code, "fcntl");
     return NULL;
   }
 #elif _WIN32
@@ -1264,15 +1268,14 @@ JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_Files__1get_1path
   HeapFree(GetProcessHeap(), 0, filename_info);
   return path;
 #else /* POSIX */
-  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
   char proc_path[sizeof("/proc/self/fd/") + 3 * sizeof(int)];
   snprintf(proc_path, sizeof(proc_path), "/proc/self/fd/%d", fd);
   uv_fs_t req;
-  int r = uv_fs_readlink(loop, &req, proc_path, NULL);
+  int r = uv_fs_readlink(cb->loop(), &req, proc_path, NULL);
   jstring path = env->NewStringUTF(static_cast<char*>(req.ptr));
   uv_fs_req_cleanup(&req);
   if (r < 0) {
-    ThrowException(env, uv_last_error(loop).code, "uv_fs_readlink");
+    ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_readlink");
     return NULL;
   }
   return path;

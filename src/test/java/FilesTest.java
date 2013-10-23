@@ -26,7 +26,7 @@
 import net.java.libuv.Constants;
 import net.java.libuv.FileCallback;
 import net.java.libuv.NativeException;
-import net.java.libuv.handles.Files;
+import net.java.libuv.Files;
 import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.handles.Stats;
 

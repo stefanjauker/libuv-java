@@ -30,21 +30,20 @@ import java.nio.file.LinkPermission;
 import java.security.BasicPermission;
 
 import net.java.libuv.handles.Address;
-import net.java.libuv.handles.Files;
 
 /**
- * Permissions specific to LibUV. 
- * Permission examples: 
- * permission net.java.libuv.LibUVPermission "libuv.process.*"; 
+ * Permissions specific to LibUV.
+ * Permission examples:
+ * permission net.java.libuv.LibUVPermission "libuv.process.*";
  * permission net.java.libuv.LibUVPermission "libuv.process.chdir";
  * permission net.java.libuv.LibUVPermission "libuv.pipe.*";
  * permission net.java.libuv.LibUVPermission "libuv.signal.9";
- * permission net.java.libuv.LibUVPermission "libuv.handle"; 
- * permission net.java.libuv.LibUVPermission "libuv.loop.multi"; 
- * - Child process spawning is authorized thanks to SecurityManager.checkExec. 
- * libuv.spawn permission is also required. 
+ * permission net.java.libuv.LibUVPermission "libuv.handle";
+ * permission net.java.libuv.LibUVPermission "libuv.loop.multi";
+ * - Child process spawning is authorized thanks to SecurityManager.checkExec.
+ * libuv.spawn permission is also required.
  * - TCP/UDP are authorized thanks to calls to SecurityManager.checkConnect/checkListen/checkAccept
- * libuv.udp or libuv.tcp permission are also required. 
+ * libuv.udp or libuv.tcp permission are also required.
  */
 public final class LibUVPermission extends BasicPermission {
 
@@ -69,17 +68,17 @@ public final class LibUVPermission extends BasicPermission {
     public static final String PIPE_BIND = PIPE + "bind";
     public static final String PIPE_CONNECT = PIPE + "connect";
     public static final String PIPE_OPEN = PIPE + "open";
-    public static final String PIPE_ACCEPT = PIPE + "accept";    
-    
+    public static final String PIPE_ACCEPT = PIPE + "accept";
+
     // handle
     public static final LibUVPermission HANDLE = new LibUVPermission(PREFIX + "handle");
 
     // loop
     public static final LibUVPermission MULTI_LOOP = new LibUVPermission(PREFIX + "loop.multi");
-    
+
     // signal
     public static final String SIGNAL = PREFIX + "signal.";
-    
+
     public LibUVPermission(String name) {
         super(name);
     }
@@ -98,14 +97,14 @@ public final class LibUVPermission extends BasicPermission {
             sm.checkPermission(HANDLE);
         }
     }
-    
+
     public static void checkNewLoop(int count) {
         SecurityManager sm = System.getSecurityManager();
         if (count > 1 && System.getSecurityManager() != null) {
             sm.checkPermission(MULTI_LOOP);
         }
     }
-    
+
     public static void checkSpawn(String cmd) {
         SecurityManager sm = System.getSecurityManager();
         if (System.getSecurityManager() != null) {
@@ -166,68 +165,68 @@ public final class LibUVPermission extends BasicPermission {
             sm.checkConnect(host, port);
         }
     }
-    
+
     /*
      * Files
      */
     private static boolean isFlag(int mask, int flag) {
         return (mask & flag) == flag;
     }
-    
+
     public static void checkOpenFile(String path, int mask) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             // write
-            if (isFlag(mask, Constants.O_CREAT) || 
+            if (isFlag(mask, Constants.O_CREAT) ||
                 isFlag(mask, Constants.O_WRONLY)||
                 isFlag(mask, Constants.O_RDWR) ||
                 isFlag(mask, Constants.O_TRUNC)) {
                 sm.checkWrite(path);
             }
-            
+
             // read
-            if (isFlag(mask, Constants.O_RDONLY) || 
+            if (isFlag(mask, Constants.O_RDONLY) ||
                 isFlag(mask, Constants.O_RDWR)) {
                 sm.checkRead(path);
             }
         }
     }
-    
+
     public static void checkReadFile(String path) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkRead(path);
         }
     }
-    
+
     public static void checkWriteFile(String path) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkWrite(path);
         }
     }
-    
-    public static void checkReadFile(int fd, Files fh) {
+
+    public static void checkReadFile(int fd, String path) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
-            sm.checkRead(fh.getPath(fd));
+            sm.checkRead(path);
         }
     }
-    
-    public static void checkWriteFile(int fd, Files fh) {
+
+    public static void checkWriteFile(int fd, String path) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
-            sm.checkWrite(fh.getPath(fd));
+            sm.checkWrite(path);
         }
     }
-    
+
     public static void checkDeleteFile(String path) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkDelete(path);
         }
     }
-    
+
     public static void checkHardLink(String existing, String link) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
@@ -236,7 +235,7 @@ public final class LibUVPermission extends BasicPermission {
             sm.checkWrite(link);
         }
     }
-    
+
     public static void checkSymbolicLink(String existing, String link) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
