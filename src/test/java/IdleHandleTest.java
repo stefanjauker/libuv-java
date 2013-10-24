@@ -48,7 +48,7 @@ public class IdleHandleTest extends TestBase {
         idleHandle.setCloseCallback(new IdleCallback() {
             @Override
             public void call(int i) throws Exception {
-                System.out.println("check closed");
+                System.out.println("idle closed");
                 gotClose.set(true);
             }
         });
@@ -57,7 +57,7 @@ public class IdleHandleTest extends TestBase {
             @Override
             public void call(final int status) throws Exception {
                 gotCallback.set(true);
-                System.out.println("check!");
+                System.out.println("idle!");
                 times.incrementAndGet();
                 idleHandle.close();
             }
@@ -68,7 +68,7 @@ public class IdleHandleTest extends TestBase {
         final long start = System.currentTimeMillis();
         while (!gotCallback.get() || !gotClose.get()) {
             if (System.currentTimeMillis() - start > TIMEOUT) {
-                Assert.fail("timeout waiting for check");
+                Assert.fail("timeout waiting for idle");
             }
             loop.runNoWait();
         }
@@ -78,8 +78,8 @@ public class IdleHandleTest extends TestBase {
         Assert.assertEquals(times.get(), 1);
     }
     public static void main(final String[] args) throws Exception {
-        final CheckHandleTest test = new CheckHandleTest();
-        test.testCheck();
+        final IdleHandleTest test = new IdleHandleTest();
+        test.testIdle();
     }
 
 }
