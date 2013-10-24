@@ -177,7 +177,7 @@ void FileCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _object_cid = (jclass) env->NewGlobalRef(_object_cid);
   assert(_object_cid);
 
-  _stats_cid = env->FindClass("net/java/libuv/handles/Stats");
+  _stats_cid = env->FindClass("net/java/libuv/Stats");
   assert(_stats_cid);
   _stats_cid = (jclass) env->NewGlobalRef(_stats_cid);
   assert(_stats_cid);

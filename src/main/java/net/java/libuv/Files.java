@@ -26,7 +26,6 @@
 package net.java.libuv;
 
 import net.java.libuv.handles.LoopHandle;
-import net.java.libuv.handles.Stats;
 
 public final class Files {
 
