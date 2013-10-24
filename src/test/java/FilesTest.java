@@ -28,7 +28,7 @@ import net.java.libuv.FileCallback;
 import net.java.libuv.NativeException;
 import net.java.libuv.Files;
 import net.java.libuv.handles.LoopHandle;
-import net.java.libuv.handles.Stats;
+import net.java.libuv.Stats;
 
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;

@@ -216,12 +216,10 @@ public final class Files {
 
     public int open(final String path, final int flags, final int mode) {
         LibUVPermission.checkOpenFile(path, flags);
-        assert pointer != 0;
         return _open(pointer, path, flags, mode, SYNC_MODE);
     }
 
     public int open(final String path, final int flags, final int mode, final int callbackId) {
-        assert pointer != 0;
         LibUVPermission.checkOpenFile(path, flags);
         return _open(pointer, path, flags, mode, callbackId);
     }

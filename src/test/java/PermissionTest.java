@@ -49,7 +49,7 @@ import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.handles.PipeHandle;
 import net.java.libuv.handles.ProcessHandle;
 import net.java.libuv.handles.SignalHandle;
-import net.java.libuv.handles.Stats;
+import net.java.libuv.Stats;
 import net.java.libuv.handles.StdioOptions;
 import net.java.libuv.handles.TCPHandle;
 import net.java.libuv.handles.TTYHandle;

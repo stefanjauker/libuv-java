@@ -684,7 +684,7 @@ JNIEXPORT jobjectArray JNICALL Java_net_java_libuv_Files__1readdir
 /*
  * Class:     net_java_libuv_Files
  * Method:    _stat
- * Signature: (JLjava/lang/String;I)Lnet/java/libuv/handles/Stats;
+ * Signature: (JLjava/lang/String;I)Lnet/java/libuv/Stats;
  */
 JNIEXPORT jobject JNICALL Java_net_java_libuv_Files__1stat
   (JNIEnv *env, jobject that, jlong ptr, jstring path, jint callback) {
@@ -714,7 +714,7 @@ JNIEXPORT jobject JNICALL Java_net_java_libuv_Files__1stat
 /*
  * Class:     net_java_libuv_Files
  * Method:    _fstat
- * Signature: (JII)Lnet/java/libuv/handles/Stats;
+ * Signature: (JII)Lnet/java/libuv/Stats;
  */
 JNIEXPORT jobject JNICALL Java_net_java_libuv_Files__1fstat
   (JNIEnv *env, jobject that, jlong ptr, jint fd, jint callback) {
@@ -966,7 +966,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1futime
 /*
  * Class:     net_java_libuv_Files
  * Method:    _lstat
- * Signature: (JLjava/lang/String;I)Lnet/java/libuv/handles/Stats;
+ * Signature: (JLjava/lang/String;I)Lnet/java/libuv/Stats;
  */
 JNIEXPORT jobject JNICALL Java_net_java_libuv_Files__1lstat
   (JNIEnv *env, jobject that, jlong ptr, jstring path, jint callback) {
