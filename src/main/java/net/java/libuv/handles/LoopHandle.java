@@ -29,6 +29,7 @@ import net.java.libuv.CallbackExceptionHandler;
 import net.java.libuv.CallbackHandler;
 import net.java.libuv.CheckCallback;
 import net.java.libuv.FileCallback;
+import net.java.libuv.IdleCallback;
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.NativeException;
 import net.java.libuv.ProcessCallback;
@@ -152,6 +153,15 @@ public final class LoopHandle {
             public void handleUDPCallback(UDPCallback cb, Object[] args) {
                 try {
                     cb.call(args);
+                } catch (Exception ex) {
+                    exceptionHandler.handle(ex);
+                }
+            }
+
+            @Override
+            public void handleIdleCallback(IdleCallback cb, int status) {
+                try {
+                    cb.call(status);
                 } catch (Exception ex) {
                     exceptionHandler.handle(ex);
                 }
