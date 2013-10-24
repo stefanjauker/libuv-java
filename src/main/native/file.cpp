@@ -1184,7 +1184,6 @@ JNIEXPORT jstring JNICALL Java_net_java_libuv_Files__1get_1path
     jstring path = env->NewStringUTF(static_cast<char*>(pathbuf));
     return path;
   } else {
-    uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
     ThrowException(env, uv_last_error(cb->loop()).code, "fcntl");
     return NULL;
   }
