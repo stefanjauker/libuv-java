@@ -430,9 +430,23 @@ JNIEXPORT void JNICALL Java_net_java_libuv_Files__1initialize
 /*
  * Class:     net_java_libuv_Files
  * Method:    _close
+* Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1close__J
+  (JNIEnv *env, jobject that, jlong ptr) {
+
+  assert(ptr);
+  FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
+  delete cb;
+  return 0;
+}
+
+/*
+ * Class:     net_java_libuv_Files
+ * Method:    _close
 * Signature: (JII)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1close
+JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1close__JII
   (JNIEnv *env, jobject that, jlong ptr, jint fd, jint callback) {
 
   assert(ptr);

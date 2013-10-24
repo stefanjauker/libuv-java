@@ -94,6 +94,8 @@ public final class Files {
     private final long pointer;
     private final LoopHandle loop;
 
+    private boolean closed;
+
     public Files(final LoopHandle loop) {
         LibUVPermission.checkHandle();
         this.pointer = _new();
@@ -204,6 +206,19 @@ public final class Files {
 
     public void setFChownCallback(final FileCallback callback) {
         onFChown = callback;
+    }
+
+    public void close() {
+        if (!closed) {
+            _close(pointer);
+        }
+        closed = true;
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        close();
+        super.finalize();
     }
 
     public int close(final int fd) {
@@ -511,6 +526,8 @@ public final class Files {
     private static native long _new();
 
     private native void _initialize(final long ptr, final long loop);
+
+    private native int _close(final long ptr);
 
     private native int _close(final long ptr, final int fd, final int callbackId);
 
