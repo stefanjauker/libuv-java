@@ -27,6 +27,9 @@ package net.java.libuv;
 
 import net.java.libuv.handles.LoopHandle;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public final class Files {
 
     static {
@@ -93,6 +96,7 @@ public final class Files {
 
     private final long pointer;
     private final LoopHandle loop;
+    private final Map<Integer, String> paths = new HashMap<>();
 
     private boolean closed;
 
@@ -210,6 +214,7 @@ public final class Files {
 
     public void close() {
         if (!closed) {
+            paths.clear();
             _close(pointer);
         }
         closed = true;
@@ -222,7 +227,11 @@ public final class Files {
     }
 
     public int close(final int fd) {
-        return _close(pointer, fd, SYNC_MODE);
+        final int r = _close(pointer, fd, SYNC_MODE);
+        if (r != -1) {
+            paths.remove(fd);
+        }
+        return r;
     }
 
     public int close(final int fd, final int callbackId) {
@@ -231,7 +240,11 @@ public final class Files {
 
     public int open(final String path, final int flags, final int mode) {
         LibUVPermission.checkOpenFile(path, flags);
-        return _open(pointer, path, flags, mode, SYNC_MODE);
+        final int fd = _open(pointer, path, flags, mode, SYNC_MODE);
+        if (fd != -1) {
+            paths.put(fd, path);
+        }
+        return fd;
     }
 
     public int open(final String path, final int flags, final int mode, final int callbackId) {
@@ -477,7 +490,7 @@ public final class Files {
 
     public String getPath(final int fd) {
         // No security check, can retrieve path of an opened fd.
-        return _get_path(pointer, fd);
+        return paths.get(fd);
     }
 
     private void callback(final int type, final int callbackId, final Object arg) {
@@ -486,10 +499,23 @@ public final class Files {
     }
 
     private void callback(final int type, final int callbackId, final Object... args) {
+        Integer fd;
         switch (type) {
             case UV_FS_CUSTOM: if (onCustom != null) {call(onCustom, callbackId,  args);} break;
-            case UV_FS_OPEN: if (onOpen != null) {call(onOpen, callbackId,  args);} break;
-            case UV_FS_CLOSE: if (onClose != null) {call(onClose, callbackId,  args);} break;
+            case UV_FS_OPEN:
+                assert args != null && args.length == 2 && args[0] != null && args[1] != null;
+                fd = (Integer) args[0];
+                if (fd != -1) {
+                    paths.put(fd, (String) args[1]);
+                }
+                if (onOpen != null) {call(onOpen, callbackId,  args);} break;
+            case UV_FS_CLOSE:
+                assert args != null && args.length == 1 && args[0] != null;
+                fd = (Integer) args[0];
+                if (fd != -1) {
+                    paths.remove(fd);
+                }
+                if (onClose != null) {call(onClose, callbackId,  args);} break;
             case UV_FS_READ: if (onRead != null) {call(onRead, callbackId, args);} break;
             case UV_FS_WRITE: if (onWrite != null) {call(onWrite, callbackId,  args);} break;
             case UV_FS_SENDFILE: if (onSendfile != null) {call(onSendfile, callbackId,  args);} break;
@@ -579,5 +605,4 @@ public final class Files {
 
     private native int _fchown(final long ptr, final int fd, final int uid, final int gid, final int callbackId);
 
-    private native String _get_path(final long ptr, final int fd);
 }

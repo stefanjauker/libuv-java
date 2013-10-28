@@ -143,7 +143,7 @@ public class FilesTest extends TestBase {
             public void call(int id, Object[] args) throws Exception {
                 closeCallbackCalled.set(true);
                 checkCallbackArgs(args);
-                Assert.assertTrue(args[0] == null);
+                Assert.assertEquals(args[0], fd.get());
                 cleanupFiles(handle, filename);
             }
         });
