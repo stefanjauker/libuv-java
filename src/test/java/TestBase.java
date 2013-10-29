@@ -32,4 +32,6 @@ class TestBase {
         LibUV.cwd();
     }
 
+    protected static final String TMPDIR = System.getProperty("java.io.tmpdir");
+    protected static final int TIMEOUT = 5000;
 }

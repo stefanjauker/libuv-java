@@ -29,6 +29,7 @@ import net.java.libuv.CallbackExceptionHandler;
 import net.java.libuv.CallbackHandler;
 import net.java.libuv.CheckCallback;
 import net.java.libuv.FileCallback;
+import net.java.libuv.FileEventCallback;
 import net.java.libuv.IdleCallback;
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.NativeException;
@@ -135,6 +136,15 @@ public final class LoopHandle {
             public void handleFileCallback(FileCallback cb, int id, Object[] args) {
                 try {
                     cb.call(id, args);
+                } catch (Exception ex) {
+                    exceptionHandler.handle(ex);
+                }
+            }
+
+            @Override
+            public void handleFileEventCallback(FileEventCallback cb, int status, String event, String filename) {
+                try {
+                    cb.call(status, event, filename);
                 } catch (Exception ex) {
                     exceptionHandler.handle(ex);
                 }

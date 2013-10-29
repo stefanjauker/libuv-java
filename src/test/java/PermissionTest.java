@@ -577,7 +577,7 @@ public class PermissionTest extends TestBase {
 
     @Test
     public void testFileAuth() throws Exception {
-        final String TMPDIR = System.getProperty("java.io.tmpdir") + File.separator;
+        final String TMPDIR = TestBase.TMPDIR + File.separator;
         Permissions permissions = new Permissions();
         permissions.add(new LibUVPermission("libuv.handle"));
         permissions.add(new FilePermission(TMPDIR + "testGetPath.txt", "read, write, delete"));

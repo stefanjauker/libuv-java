@@ -48,8 +48,7 @@ public class FilesTest extends TestBase {
 
     @BeforeMethod
     protected void startSession(Method method) throws Exception {
-        final String tmp = System.getProperty("java.io.tmpdir");
-        testName = (tmp.endsWith(File.separator) ? tmp : tmp + File.separator) + method.getName();
+        testName = (TMPDIR.endsWith(File.separator) ? TMPDIR : TMPDIR + File.separator) + method.getName();
     }
 
     @AfterMethod
