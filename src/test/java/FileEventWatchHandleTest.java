@@ -23,27 +23,27 @@
  * questions.
  */
 
+import java.io.File;
+import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
 import net.java.libuv.Constants;
 import net.java.libuv.FileEventCallback;
 import net.java.libuv.Files;
 import net.java.libuv.handles.FileEventWatchHandle;
 import net.java.libuv.handles.LoopHandle;
 
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import java.io.File;
-import java.lang.reflect.Method;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
 public class FileEventWatchHandleTest extends TestBase {
 
     private String testName;
 
     @BeforeMethod
-    protected void startSession(Method method) throws Exception {
+    protected void startSession(final Method method) throws Exception {
         testName = (TMPDIR.endsWith(File.separator) ? TMPDIR : TMPDIR + File.separator) + method.getName();
     }
 
@@ -59,7 +59,7 @@ public class FileEventWatchHandleTest extends TestBase {
 
         eventHandle.setCloseCallback(new FileEventCallback() {
             @Override
-            public void call(int status, String event, String filename) throws Exception {
+            public void call(final int status, final String event, final String filename) throws Exception {
                 System.out.println("file event closed");
                 handle.unlink(testName);
                 gotClose.set(true);
@@ -68,7 +68,7 @@ public class FileEventWatchHandleTest extends TestBase {
 
         eventHandle.setFileEventCallback(new FileEventCallback() {
             @Override
-            public void call(int status, String event, String filename) throws Exception {
+            public void call(final int status, final String event, final String filename) throws Exception {
                 Assert.assertEquals(status, 0);
                 Assert.assertEquals(event, "change");
                 Assert.assertTrue(testName.endsWith(filename));
@@ -109,7 +109,7 @@ public class FileEventWatchHandleTest extends TestBase {
 
         eventHandle.setCloseCallback(new FileEventCallback() {
             @Override
-            public void call(int status, String event, String filename) throws Exception {
+            public void call(final int status, final String event, final String filename) throws Exception {
                 System.out.println("file event closed");
                 handle.unlink(newName);
                 gotClose.set(true);
@@ -118,7 +118,7 @@ public class FileEventWatchHandleTest extends TestBase {
 
         eventHandle.setFileEventCallback(new FileEventCallback() {
             @Override
-            public void call(int status, String event, String filename) throws Exception {
+            public void call(final int status, final String event, final String filename) throws Exception {
                 Assert.assertEquals(status, 0);
                 Assert.assertEquals(event, "rename");
                 Assert.assertTrue(testName.endsWith(filename));
@@ -129,7 +129,9 @@ public class FileEventWatchHandleTest extends TestBase {
             }
         });
 
+        @SuppressWarnings("unused")
         final int fd = handle.open(testName, Constants.O_WRONLY | Constants.O_CREAT, Constants.S_IRWXU);
+
         eventHandle.start(testName, true);
         handle.rename(testName, newName);
 

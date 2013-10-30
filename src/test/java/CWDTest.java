@@ -23,12 +23,12 @@
  * questions.
  */
 
-import net.java.libuv.LibUV;
-
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import net.java.libuv.LibUV;
 
 public class CWDTest extends TestBase {
 

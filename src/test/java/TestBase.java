@@ -34,4 +34,5 @@ class TestBase {
 
     protected static final String TMPDIR = System.getProperty("java.io.tmpdir");
     protected static final int TIMEOUT = 5000;
+    protected static final boolean IS_WINDOWS = System.getProperty("os.name").startsWith("Windows");
 }

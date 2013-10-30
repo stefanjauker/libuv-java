@@ -23,15 +23,15 @@
  * questions.
  */
 
-import net.java.libuv.NativeException;
-import net.java.libuv.StreamCallback;
-import net.java.libuv.handles.LoopHandle;
-import net.java.libuv.handles.TTYHandle;
-
 import java.nio.ByteBuffer;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import net.java.libuv.NativeException;
+import net.java.libuv.StreamCallback;
+import net.java.libuv.handles.LoopHandle;
+import net.java.libuv.handles.TTYHandle;
 
 public class TTYHandleTest extends TestBase {
 
@@ -60,10 +60,12 @@ public class TTYHandleTest extends TestBase {
         testStdOutErrWindowSize("stderr", 2);
     }
 
-    private void testStdOutErrWindowSize(String name, int fd) {
+    private void testStdOutErrWindowSize(final String name, final int fd) {
         final LoopHandle loop = new LoopHandle();
         final TTYHandle tty = newTTY(loop, fd, false);
-        if (tty == null) return;
+        if (tty == null) {
+            return;
+        }
         testWindowSize(name, tty);
     }
 
@@ -71,7 +73,9 @@ public class TTYHandleTest extends TestBase {
     public void testStdinWindowSize() {
         final LoopHandle loop = new LoopHandle();
         final TTYHandle tty = newTTY(loop, 0, true);
-        if (tty == null) return;
+        if (tty == null) {
+            return;
+        }
         testWindowSize("stdin", tty);
     }
 
@@ -92,13 +96,15 @@ public class TTYHandleTest extends TestBase {
         testWrite("stderr", 2);
     }
 
-    private void testWrite(String name, int fd) throws Exception {
+    private void testWrite(final String name, final int fd) throws Exception {
         final LoopHandle loop = new LoopHandle();
         final TTYHandle tty = newTTY(loop, fd, false);
-        if (tty == null) return;
+        if (tty == null) {
+            return;
+        }
         tty.setWriteCallback(new StreamCallback() {
             @Override
-            public void call(Object[] args) throws Exception {
+            public void call(final Object[] args) throws Exception {
                 System.out.println(args[0]);
             }
         });
@@ -110,11 +116,13 @@ public class TTYHandleTest extends TestBase {
     public void testRead() throws Exception {
         final LoopHandle loop = new LoopHandle();
         final TTYHandle tty = newTTY(loop, 0, true);
-        if (tty == null) return;
+        if (tty == null) {
+            return;
+        }
         final String prompt = "\ntype something (^D to exit) > ";
         tty.setReadCallback(new StreamCallback() {
             @Override
-            public void call(Object[] args) throws Exception {
+            public void call(final Object[] args) throws Exception {
                 if (args != null && args.length > 0) {
                     final ByteBuffer buffer = (ByteBuffer) args[0];
                     System.out.print(new String(buffer.array()));

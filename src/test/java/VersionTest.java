@@ -23,10 +23,10 @@
  * questions.
  */
 
-import net.java.libuv.LibUV;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import net.java.libuv.LibUV;
 
 public class VersionTest extends TestBase {
 

@@ -24,20 +24,15 @@
  */
 
 import java.util.Random;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
+
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import net.java.libuv.StreamCallback;
 import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.handles.TCPHandle;
-
-import org.testng.Assert;
-import org.testng.annotations.Test;
 
 public class TCPHandleTest extends TestBase {
 
@@ -49,9 +44,6 @@ public class TCPHandleTest extends TestBase {
 
     @Test
     public void testConnection() throws Exception {
-        final AtomicReference<ScheduledFuture<?>> serverTimer = new AtomicReference<>();
-        final AtomicReference<ScheduledFuture<?>> clientTimer = new AtomicReference<>();
-
         final AtomicInteger serverSendCount = new AtomicInteger(0);
         final AtomicInteger clientSendCount = new AtomicInteger(0);
 
@@ -163,8 +155,6 @@ public class TCPHandleTest extends TestBase {
         if (!UDPHandleTest.isIPv6Enabled(loop)) {
             return;
         }
-        final AtomicReference<ScheduledFuture<?>> serverTimer = new AtomicReference<>();
-        final AtomicReference<ScheduledFuture<?>> clientTimer = new AtomicReference<>();
 
         final AtomicInteger serverSendCount = new AtomicInteger(0);
         final AtomicInteger clientSendCount = new AtomicInteger(0);

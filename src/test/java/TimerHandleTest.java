@@ -23,18 +23,18 @@
  * questions.
  */
 
-import net.java.libuv.TimerCallback;
-import net.java.libuv.handles.LoopHandle;
-import net.java.libuv.handles.TimerHandle;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+import net.java.libuv.TimerCallback;
+import net.java.libuv.handles.LoopHandle;
+import net.java.libuv.handles.TimerHandle;
+
 public class TimerHandleTest extends TestBase {
 
-    private static final int TIMEOUT = 5000;
     private static final int TIMES = 100;
 
     @Test
@@ -47,7 +47,7 @@ public class TimerHandleTest extends TestBase {
 
         timer.setCloseCallback(new TimerCallback() {
             @Override
-            public void call(int i) throws Exception {
+            public void call(final int i) throws Exception {
                 System.out.println("timer closed");
                 gotClose.set(true);
             }
@@ -87,7 +87,7 @@ public class TimerHandleTest extends TestBase {
 
         timer.setCloseCallback(new TimerCallback() {
             @Override
-            public void call(int i) throws Exception {
+            public void call(final int i) throws Exception {
                 System.out.println("repeat timer closed");
                 gotClose.set(true);
             }

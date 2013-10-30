@@ -23,16 +23,17 @@
  * questions.
  */
 
+import java.util.HashSet;
+import java.util.Set;
+
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
 import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.handles.PipeHandle;
 import net.java.libuv.handles.SignalHandle;
 import net.java.libuv.handles.TCPHandle;
 import net.java.libuv.handles.UDPHandle;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
-import java.util.HashSet;
-import java.util.Set;
 
 public class LoopHandleTest extends TestBase {
 
@@ -42,14 +43,14 @@ public class LoopHandleTest extends TestBase {
     public void testList() throws Exception {
         final LoopHandle loop = new LoopHandle();
         //loop.run();
-        String[] handles = loop.list();
+        final String[] handles = loop.list();
         Assert.assertNotNull(handles);
         Assert.assertEquals(handles.length, 0);
 
-        SignalHandle signal = new SignalHandle(loop);
-        PipeHandle pipe = new PipeHandle(loop, false);
-        TCPHandle tcp = new TCPHandle(loop);
-        UDPHandle udp = new UDPHandle(loop);
+        final SignalHandle signal = new SignalHandle(loop);
+        final PipeHandle pipe = new PipeHandle(loop, false);
+        final TCPHandle tcp = new TCPHandle(loop);
+        final UDPHandle udp = new UDPHandle(loop);
 
         System.out.println(signal);
         System.out.println(pipe);
@@ -62,7 +63,7 @@ public class LoopHandleTest extends TestBase {
         pointers.add(tcp.toString().split(DOT_SPLIT_REGEX)[1]);
         pointers.add(udp.toString().split(DOT_SPLIT_REGEX)[1]);
 
-        String[] handles1 = loop.list();
+        final String[] handles1 = loop.list();
 
         Assert.assertNotNull(handles1);
         Assert.assertEquals(handles1.length, 4);

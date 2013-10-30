@@ -29,10 +29,8 @@ import net.java.libuv.handles.SignalHandle;
 
 public class SignalHandleTest extends TestBase {
 
-    private static final boolean IS_WINDOWS = System.getProperty("os.name").startsWith("Windows");
-
     // this test needs to be run manually, so no @Test annotation
-    public static void main(String[] args) throws Exception {
+    public static void main(final String[] args) throws Exception {
         if (IS_WINDOWS) {
             System.err.println("Sorry this test does not work on windows");
             return;
@@ -41,7 +39,7 @@ public class SignalHandleTest extends TestBase {
         final SignalHandle handle = new SignalHandle(loop);
         handle.setSignalCallback(new SignalCallback() {
             @Override
-            public void call(int signum) throws Exception {
+            public void call(final int signum) throws Exception {
                 assert signum == 28;
                 System.out.println("received signal " + signum);
             }

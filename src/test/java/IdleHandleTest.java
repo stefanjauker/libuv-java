@@ -23,18 +23,17 @@
  * questions.
  */
 
-import net.java.libuv.IdleCallback;
-import net.java.libuv.handles.LoopHandle;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+import net.java.libuv.IdleCallback;
 import net.java.libuv.handles.IdleHandle;
+import net.java.libuv.handles.LoopHandle;
 
 public class IdleHandleTest extends TestBase {
-
-    private static final int TIMEOUT = 5000;
 
     @Test
     public void testIdle() throws Exception {
@@ -47,7 +46,7 @@ public class IdleHandleTest extends TestBase {
 
         idleHandle.setCloseCallback(new IdleCallback() {
             @Override
-            public void call(int i) throws Exception {
+            public void call(final int i) throws Exception {
                 System.out.println("idle closed");
                 gotClose.set(true);
             }

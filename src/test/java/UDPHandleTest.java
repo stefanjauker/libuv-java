@@ -26,21 +26,20 @@
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
 import net.java.libuv.UDPCallback;
 import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.handles.UDPHandle;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
-public class UDPHandleTest {
+public class UDPHandleTest extends TestBase {
 
     private static final String HOST = "127.0.0.1";
     private static final String HOST6 = "::1";
     private static final int PORT = 34567;
     private static final int PORT6 = 45678;
     private static final int TIMES = 10;
-    private static final int TIMEOUT = 5000;
 
     @Test
     public void testConnection() throws Exception {
@@ -58,7 +57,7 @@ public class UDPHandleTest {
 
         server.setRecvCallback(new UDPCallback() {
             @Override
-            public void call(Object[] args) throws Exception {
+            public void call(final Object[] args) throws Exception {
                 if (serverRecvCount.incrementAndGet() < TIMES) {
                     serverLoggingCallback.call(args);
                 } else {
@@ -85,7 +84,7 @@ public class UDPHandleTest {
         for (int i=0; i < TIMES; i++) {
             client.send("PING." + i, PORT, HOST);
         }
-        
+
         // On Mac, server never receives the message if closed before messages
         // are sent.
         //client.close();
@@ -121,7 +120,7 @@ public class UDPHandleTest {
 
         server.setRecvCallback(new UDPCallback() {
             @Override
-            public void call(Object[] args) throws Exception {
+            public void call(final Object[] args) throws Exception {
                 if (serverRecvCount.incrementAndGet() < TIMES) {
                     serverLoggingCallback.call(args);
                 } else {
@@ -133,7 +132,7 @@ public class UDPHandleTest {
 
         client.setSendCallback(new UDPCallback() {
             @Override
-            public void call(Object[] args) throws Exception {
+            public void call(final Object[] args) throws Exception {
                 if (clientSendCount.incrementAndGet() < TIMES) {
                 } else {
                     client.close();
@@ -148,7 +147,7 @@ public class UDPHandleTest {
         for (int i=0; i < TIMES; i++) {
             client.send6("PING." + i, PORT6, HOST6);
         }
-        
+
         // On Mac, server never receives the message if closed before messages
         // are sent.
         //client.close();
@@ -177,7 +176,7 @@ public class UDPHandleTest {
             socket = new UDPHandle(loop);
             socket.recvStart();
             socket.send6("", PORT6, HOST6);
-        } catch(net.java.libuv.NativeException e) {
+        } catch(final net.java.libuv.NativeException e) {
             if ("EAFNOSUPPORT".equals(e.errnoString())) {
                 return false;
             }

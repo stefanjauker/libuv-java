@@ -26,6 +26,11 @@
 import java.nio.ByteBuffer;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.util.EnumSet;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import net.java.libuv.ProcessCallback;
 import net.java.libuv.StreamCallback;
@@ -33,12 +38,6 @@ import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.handles.PipeHandle;
 import net.java.libuv.handles.ProcessHandle;
 import net.java.libuv.handles.StdioOptions;
-import net.java.libuv.handles.StreamHandle;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
-import java.util.EnumSet;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ProcessHandleTest extends TestBase {
 
@@ -49,12 +48,11 @@ public class ProcessHandleTest extends TestBase {
         final String MESSAGE = "TEST";
         final String PIPE_NAME;
         if (OS.startsWith("Windows")) {
-            PIPE_NAME = "\\\\.\\pipe\\libuv-java-pipe-handle-test-pipe";
+            PIPE_NAME = "\\\\.\\pipe\\libuv-java-process-handle-test-pipe";
         } else {
-            PIPE_NAME = "/tmp/libuv-java-pipe-handle-test-pipe";
+            PIPE_NAME = "/tmp/libuv-java-process-handle-test-pipe";
             Files.deleteIfExists(FileSystems.getDefault().getPath(PIPE_NAME));
         }
-
 
         final AtomicBoolean exitCalled = new AtomicBoolean(false);
         final AtomicBoolean closeCalled = new AtomicBoolean(false);
@@ -69,7 +67,7 @@ public class ProcessHandleTest extends TestBase {
             public void call(final Object[] args) throws Exception {
                 Assert.assertEquals(args.length, 1);
                 final byte[] bytes = ((ByteBuffer) args[0]).array();
-                String s = new String(bytes, "utf-8");
+                final String s = new String(bytes, "utf-8");
                 Assert.assertEquals(s, MESSAGE);
                 peer.close();
                 process.close();
@@ -95,7 +93,7 @@ public class ProcessHandleTest extends TestBase {
 
         process.setExitCallback(new ProcessCallback() {
             @Override
-            public void call(Object[] args) throws Exception {
+            public void call(final Object[] args) throws Exception {
                 System.out.println("status " + args[0] + ", signal " + args[1]);
                 child.connect(PIPE_NAME);
                 exitCalled.set(true);
@@ -104,19 +102,19 @@ public class ProcessHandleTest extends TestBase {
 
         process.setCloseCallback(new ProcessCallback() {
             @Override
-            public void call(Object[] args) throws Exception {
+            public void call(final Object[] args) throws Exception {
                 closeCalled.set(true);
             }
         });
 
-        String[] args = new String[2];
+        final String[] args = new String[2];
         args[0] = "java";
         args[1] = "-version";
 
-        EnumSet<ProcessHandle.ProcessFlags> processFlags = EnumSet.noneOf(ProcessHandle.ProcessFlags.class);
+        final EnumSet<ProcessHandle.ProcessFlags> processFlags = EnumSet.noneOf(ProcessHandle.ProcessFlags.class);
         processFlags.add(ProcessHandle.ProcessFlags.NONE);
 
-        StdioOptions[] stdio = new StdioOptions[3];
+        final StdioOptions[] stdio = new StdioOptions[3];
         stdio[0] = new StdioOptions(StdioOptions.StdioType.INHERIT_FD, null, 0);
         stdio[1] = new StdioOptions(StdioOptions.StdioType.INHERIT_FD, null, 1);
         stdio[2] = new StdioOptions(StdioOptions.StdioType.INHERIT_FD, null, 2);

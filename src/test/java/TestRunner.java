@@ -23,12 +23,6 @@
  * questions.
  */
 
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
@@ -38,11 +32,17 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
+
 public class TestRunner {
 
     private static final String TEST_REPORTS_DIR = "test-reports";
 
-    public static void main(String[] args) throws Exception {
+    public static void main(final String[] args) throws Exception {
         final String test = System.getProperty("test");
         if (test != null) {
             runATest(test);
@@ -68,7 +68,7 @@ public class TestRunner {
         System.setOut(out);
         try {
             runTest(testClassName);
-        } catch (Exception ex) {
+        } catch (final Exception ex) {
             ex.printStackTrace();
             System.exit(1);
         } finally {

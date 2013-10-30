@@ -23,19 +23,17 @@
  * questions.
  */
 
-import net.java.libuv.CheckCallback;
-import net.java.libuv.handles.LoopHandle;
-import net.java.libuv.handles.CheckHandle;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class CheckHandleTest extends TestBase {
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
-    private static final int TIMEOUT = 5000;
-    private static final int TIMES = 100;
+import net.java.libuv.CheckCallback;
+import net.java.libuv.handles.CheckHandle;
+import net.java.libuv.handles.LoopHandle;
+
+public class CheckHandleTest extends TestBase {
 
     @Test
     public void testCheck() throws Exception {
@@ -48,7 +46,7 @@ public class CheckHandleTest extends TestBase {
 
         checkHandle.setCloseCallback(new CheckCallback() {
             @Override
-            public void call(int i) throws Exception {
+            public void call(final int i) throws Exception {
                 System.out.println("check closed");
                 gotClose.set(true);
             }

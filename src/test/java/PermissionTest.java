@@ -38,27 +38,27 @@ import java.util.Enumeration;
 import java.util.PropertyPermission;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import net.java.libuv.Constants;
 
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import net.java.libuv.Constants;
+import net.java.libuv.Files;
 import net.java.libuv.LibUV;
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.NativeException;
+import net.java.libuv.Stats;
 import net.java.libuv.StreamCallback;
-import net.java.libuv.Files;
 import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.handles.PipeHandle;
 import net.java.libuv.handles.ProcessHandle;
 import net.java.libuv.handles.SignalHandle;
-import net.java.libuv.Stats;
 import net.java.libuv.handles.StdioOptions;
 import net.java.libuv.handles.TCPHandle;
 import net.java.libuv.handles.TTYHandle;
 import net.java.libuv.handles.UDPHandle;
-import org.testng.Assert;
-
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.Test;
 
 /**
  * Test LibUV permissions. This test doesn't rely on a policy file. Permissions
@@ -83,9 +83,9 @@ public class PermissionTest extends TestBase {
 
         final Permissions permissions;
 
-        public SimplePolicy(Permissions perms) {
+        public SimplePolicy(final Permissions perms) {
             permissions = new Permissions();
-            Enumeration<Permission> enumeration = perms.elements();
+            final Enumeration<Permission> enumeration = perms.elements();
             while (enumeration.hasMoreElements()) {
                 permissions.add(enumeration.nextElement());
             }
@@ -98,7 +98,8 @@ public class PermissionTest extends TestBase {
         }
 
         @Override
-        public boolean implies(ProtectionDomain domain, Permission permission) {
+        public boolean implies(final ProtectionDomain domain,
+                final Permission permission) {
             return permissions.implies(permission);
         }
     }
@@ -112,9 +113,6 @@ public class PermissionTest extends TestBase {
 
     @AfterMethod
     public void after() {
-        // testng broken a security manager, would have to grant all testng required
-        // permissions. Better to set it back to null. We are in a test....
-        // So do unsafe stuff!
         System.setSecurityManager(null);
     }
 
@@ -166,7 +164,7 @@ public class PermissionTest extends TestBase {
     @Test
     public void testProcessAuth() {
 
-        Permissions permissions = new Permissions();
+        final Permissions permissions = new Permissions();
         permissions.add(new LibUVPermission("libuv.process.*"));
         init(permissions);
 
@@ -268,15 +266,15 @@ public class PermissionTest extends TestBase {
         final String PIPE_NAME;
 
         if (OS.startsWith("Windows")) {
-            PIPE_NAME = "\\\\.\\pipe\\uv-java-test-pipe";
+            PIPE_NAME = "\\\\.\\pipe\\uv-java-test-pipe-auth";
         } else {
-            PIPE_NAME = "/tmp/uv-java-test-pipe";
+            PIPE_NAME = "/tmp/uv-java-test-pipe-auth";
         }
         java.nio.file.Files.deleteIfExists(FileSystems.getDefault().getPath(PIPE_NAME));
 
         final AtomicInteger serverRecvCount = new AtomicInteger(0);
 
-        Permissions permissions = new Permissions();
+        final Permissions permissions = new Permissions();
         permissions.add(new LibUVPermission("libuv.pipe.connect"));
         permissions.add(new LibUVPermission("libuv.pipe.bind"));
         permissions.add(new LibUVPermission("libuv.pipe.open"));
@@ -331,8 +329,10 @@ public class PermissionTest extends TestBase {
         }
 
         try {
-            java.nio.file.Files.deleteIfExists(FileSystems.getDefault().getPath(PIPE_NAME));
-        } catch (Exception ignore) {}
+            java.nio.file.Files.deleteIfExists(FileSystems.getDefault()
+                    .getPath(PIPE_NAME));
+        } catch (final Exception ignore) {
+        }
 
         Assert.assertEquals(serverRecvCount.get(), 1);
 
@@ -346,11 +346,10 @@ public class PermissionTest extends TestBase {
         System.out.println("Security pipe Auth test passed");
     }
 
-
     @Test
     public void testChildProcessAuth() {
 
-        Permissions permissions = new Permissions();
+        final Permissions permissions = new Permissions();
         permissions.add(new LibUVPermission("libuv.handle"));
         permissions.add(new FilePermission("<<ALL FILES>>", "execute"));
 
@@ -398,7 +397,7 @@ public class PermissionTest extends TestBase {
         final AtomicBoolean serverDone = new AtomicBoolean(false);
         final int port = getPort();
         final int port2 = getPort();
-        Permissions permissions = new Permissions();
+        final Permissions permissions = new Permissions();
         permissions.add(new LibUVPermission("libuv.handle"));
         permissions.add(new SocketPermission(ADDRESS + ":" + port, "listen"));
         permissions.add(new SocketPermission(ADDRESS + ":" + port, "connect"));
@@ -481,7 +480,7 @@ public class PermissionTest extends TestBase {
         final AtomicBoolean serverDone = new AtomicBoolean(false);
         final int port = getPort();
         final int port2 = getPort();
-        Permissions permissions = new Permissions();
+        final Permissions permissions = new Permissions();
         permissions.add(new LibUVPermission("libuv.handle"));
         permissions.add(new SocketPermission("[" + ADDRESS6 + "]:" + port, "listen"));
         permissions.add(new SocketPermission("[" + ADDRESS6 + "]:" + port, "connect"));
@@ -498,7 +497,6 @@ public class PermissionTest extends TestBase {
         server.setConnectionCallback(new StreamCallback() {
             @Override
             public void call(final Object[] args) throws Exception { // connection
-
                 testSuccess(new Runnable() {
                     @Override
                     public void run() {
@@ -517,12 +515,14 @@ public class PermissionTest extends TestBase {
                 server.bind6(ADDRESS6, port);
             }
         });
+
         testSuccess(new Runnable() {
             @Override
             public void run() {
                 server.listen(1);
             }
         });
+
         testSuccess(new Runnable() {
             @Override
             public void run() {
@@ -532,7 +532,7 @@ public class PermissionTest extends TestBase {
 
         while (!serverDone.get()) {
             lh.runNoWait();
-            Thread.sleep((long) (100));
+            Thread.sleep(100);
         }
 
         final UDPHandle udpserver = new UDPHandle(lh);
@@ -544,6 +544,7 @@ public class PermissionTest extends TestBase {
                 udpserver.bind6(port2, ADDRESS6);
             }
         });
+
         testSuccess(new Runnable() {
             @Override
             public void run() {
@@ -556,7 +557,7 @@ public class PermissionTest extends TestBase {
 
     @Test
     public void testSignalAuth() throws Exception {
-        Permissions permissions = new Permissions();
+        final Permissions permissions = new Permissions();
         permissions.add(new LibUVPermission("libuv.handle"));
         permissions.add(new LibUVPermission("libuv.signal.28"));
 
@@ -578,7 +579,7 @@ public class PermissionTest extends TestBase {
     @Test
     public void testFileAuth() throws Exception {
         final String TMPDIR = TestBase.TMPDIR + File.separator;
-        Permissions permissions = new Permissions();
+        final Permissions permissions = new Permissions();
         permissions.add(new LibUVPermission("libuv.handle"));
         permissions.add(new FilePermission(TMPDIR + "testGetPath.txt", "read, write, delete"));
         permissions.add(new FilePermission(TMPDIR + "testOpenWriteReadAndCloseSync.txt", "read, write, delete"));
@@ -612,12 +613,12 @@ public class PermissionTest extends TestBase {
 
     @Test
     public void testFileReadOnly() throws Exception {
-        Permissions permissions = new Permissions();
+        final Permissions permissions = new Permissions();
         final String fileName = "testFileReaOnly.txt";
         permissions.add(new LibUVPermission("libuv.handle"));
         permissions.add(new FilePermission(fileName, "read"));
         permissions.add(new FilePermission(fileName, "delete"));
-        File f = new File(fileName);
+        final File f = new File(fileName);
         f.createNewFile();
 
         init(permissions);
@@ -626,9 +627,9 @@ public class PermissionTest extends TestBase {
         final int fd = handle.open(fileName, Constants.O_RDONLY, Constants.S_IRWXU);
 
         handle.read(fd, new byte[5], 0, 0, 0);
-        Stats s = handle.fstat(fd);
+        final Stats s = handle.fstat(fd);
         if (s == null) {
-           throw new Exception("Stats is null");
+            throw new Exception("Stats is null");
         }
 
         try {
@@ -636,7 +637,7 @@ public class PermissionTest extends TestBase {
             if (OS.startsWith("Windows")) {
                 throw new Exception("fdatasync should have failed");
             }
-        }catch(NativeException ex){
+        } catch (final NativeException ex) {
             // XXX OK.
         }
 
@@ -645,21 +646,21 @@ public class PermissionTest extends TestBase {
             if (OS.startsWith("Windows")) {
                 throw new Exception("fsync should have failed");
             }
-        }catch(NativeException ex){
+        } catch (final NativeException ex) {
             // XXX OK.
         }
 
         try {
             handle.write(fd, "Hello".getBytes(), 0, 2, 0);
             throw new Exception("Write should have failed");
-        }catch(NativeException ex){
+        } catch (final NativeException ex) {
             // XXX OK.
         }
 
         try {
             handle.ftruncate(fd, 1);
             throw new Exception("Write should have failed");
-        }catch(NativeException ex){
+        } catch (final NativeException ex) {
             // XXX OK.
         }
 
@@ -696,7 +697,7 @@ public class PermissionTest extends TestBase {
 
     @Test
     public void testFileNoAuth() throws Exception {
-        Permissions permissions = new Permissions();
+        final Permissions permissions = new Permissions();
         permissions.add(new LibUVPermission("libuv.handle"));
         init(permissions);
         final LoopHandle loop = new LoopHandle();
@@ -956,11 +957,11 @@ public class PermissionTest extends TestBase {
         System.out.println("Security File No Auth test passed");
     }
 
-    private static void testFailure(Runnable r) {
+    private static void testFailure(final Runnable r) {
         try {
             r.run();
             throw new RuntimeException("Should have failed");
-        } catch (Throwable ex) {
+        } catch (final Throwable ex) {
             if (!(ex instanceof AccessControlException)) {
                 System.out.println("UNEXPECTED EXCEPTION " + ex);
                 ex.printStackTrace();
@@ -971,10 +972,10 @@ public class PermissionTest extends TestBase {
         }
     }
 
-    private static void testSuccess(Runnable r) {
+    private static void testSuccess(final Runnable r) {
         try {
             r.run();
-        } catch (Exception ex) {
+        } catch (final Exception ex) {
             if (ex instanceof AccessControlException) {
                 System.out.println("UNEXPECTED SECURITY EXCEPTION " + ex);
                 ex.printStackTrace();
@@ -983,7 +984,7 @@ public class PermissionTest extends TestBase {
         }
     }
 
-    private static void init(Permissions permissions) {
+    private static void init(final Permissions permissions) {
         Policy.setPolicy(new SimplePolicy(permissions));
         System.setSecurityManager(new SecurityManager());
     }
