@@ -27,8 +27,8 @@ package net.java.libuv.handles;
 
 import java.util.EnumSet;
 
-import net.java.libuv.ProcessCallback;
 import net.java.libuv.LibUVPermission;
+import net.java.libuv.ProcessCallback;
 
 public final class ProcessHandle extends Handle {
 

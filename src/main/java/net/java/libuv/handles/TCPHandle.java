@@ -30,7 +30,7 @@ import net.java.libuv.LibUVPermission.AddressResolver;
 public class TCPHandle extends StreamHandle {
 
     private int bindPort = 0;
-    
+
     public TCPHandle(final LoopHandle loop) {
         super(_new(loop.pointer()), loop);
     }
@@ -63,7 +63,7 @@ public class TCPHandle extends StreamHandle {
 
     @Override
     public int listen(final int backlog) {
-        LibUVPermission.checkListen(bindPort);      
+        LibUVPermission.checkListen(bindPort);
         return super.listen(backlog);
     }
 
@@ -71,7 +71,7 @@ public class TCPHandle extends StreamHandle {
     public int accept(final StreamHandle client) {
         assert client instanceof TCPHandle;
         final TCPHandle tcpClient = (TCPHandle) client;
-        int accepted = super.accept(client);
+        final int accepted = super.accept(client);
         // Check once the native call has been done otherwise peerName is not available.
         // If Accept becomes asynchronous, we will have to adapt the check to be done once
         // the peerName is available.

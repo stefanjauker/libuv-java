@@ -65,11 +65,11 @@ public final class TTYHandle extends StreamHandle {
         return _get_window_size(pointer);
     }
 
-    public static boolean isTTY(int fd) {
+    public static boolean isTTY(final int fd) {
         return _is_tty(fd);
     }
 
-    public static String guessHandleType(int fd) {
+    public static String guessHandleType(final int fd) {
         return _guess_handle_type(fd);
     }
 

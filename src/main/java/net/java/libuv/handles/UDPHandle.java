@@ -27,8 +27,8 @@ package net.java.libuv.handles;
 
 import java.io.UnsupportedEncodingException;
 
-import net.java.libuv.UDPCallback;
 import net.java.libuv.LibUVPermission;
+import net.java.libuv.UDPCallback;
 
 public final class UDPHandle extends Handle {
 

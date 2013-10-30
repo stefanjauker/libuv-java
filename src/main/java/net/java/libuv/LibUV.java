@@ -26,7 +26,6 @@
 package net.java.libuv;
 
 import java.util.Objects;
-import net.java.libuv.LibUVPermission;
 
 public final class LibUV {
 

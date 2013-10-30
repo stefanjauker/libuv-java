@@ -22,6 +22,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
+
 package net.java.libuv;
 
 import java.net.InetAddress;
@@ -50,9 +51,9 @@ public final class LibUVPermission extends BasicPermission {
     static final long serialVersionUID = 8529091307897434802L;
 
     public interface AddressResolver {
-
         public Address resolve();
     }
+
     private static final String LIBUV = "libuv";
     private static final String PREFIX = LIBUV + ".";
     // process
@@ -79,87 +80,87 @@ public final class LibUVPermission extends BasicPermission {
     // signal
     public static final String SIGNAL = PREFIX + "signal.";
 
-    public LibUVPermission(String name) {
+    public LibUVPermission(final String name) {
         super(name);
     }
 
-    public static void checkPermission(String name) {
-        SecurityManager sm = System.getSecurityManager();
+    public static void checkPermission(final String name) {
+        final SecurityManager sm = System.getSecurityManager();
         if (System.getSecurityManager() != null) {
-            LibUVPermission perm = new LibUVPermission(name);
+            final LibUVPermission perm = new LibUVPermission(name);
             sm.checkPermission(perm);
         }
     }
 
     public static void checkHandle() {
-        SecurityManager sm = System.getSecurityManager();
+        final SecurityManager sm = System.getSecurityManager();
         if (System.getSecurityManager() != null) {
             sm.checkPermission(HANDLE);
         }
     }
 
-    public static void checkNewLoop(int count) {
-        SecurityManager sm = System.getSecurityManager();
+    public static void checkNewLoop(final int count) {
+        final SecurityManager sm = System.getSecurityManager();
         if (count > 1 && System.getSecurityManager() != null) {
             sm.checkPermission(MULTI_LOOP);
         }
     }
 
-    public static void checkSpawn(String cmd) {
-        SecurityManager sm = System.getSecurityManager();
+    public static void checkSpawn(final String cmd) {
+        final SecurityManager sm = System.getSecurityManager();
         if (System.getSecurityManager() != null) {
             sm.checkExec(cmd);
         }
     }
 
-    public static void checkBind(String host, int port) {
-        SecurityManager sm = System.getSecurityManager();
+    public static void checkBind(final String host, final int port) {
+        final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             // Side effect is to check permission to resolve host.
             new InetSocketAddress(host, port);
         }
     }
 
-    public static void checkConnect(String host, int port) {
-        SecurityManager sm = System.getSecurityManager();
+    public static void checkConnect(final String host, final int port) {
+        final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkConnect(host, port);
         }
     }
 
-    public static void checkListen(int port) {
-        SecurityManager sm = System.getSecurityManager();
+    public static void checkListen(final int port) {
+        final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkListen(port);
         }
     }
 
-    public static void checkAccept(AddressResolver resolver) {
-        SecurityManager sm = System.getSecurityManager();
+    public static void checkAccept(final AddressResolver resolver) {
+        final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
-            Address addr = resolver.resolve();
+            final Address addr = resolver.resolve();
 
             sm.checkAccept(addr.getIp(), addr.getPort());
         }
     }
 
-    public static void checkUDPBind(String host, int port) {
-        SecurityManager sm = System.getSecurityManager();
+    public static void checkUDPBind(final String host, final int port) {
+        final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             checkBind(host, port);
             sm.checkListen(port);
         }
     }
 
-    public static void checkUDPSend(String host, int port) {
-        SecurityManager sm = System.getSecurityManager();
+    public static void checkUDPSend(final String host, final int port) {
+        final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             try {
-                InetAddress addr = InetAddress.getByName(host);
+                final InetAddress addr = InetAddress.getByName(host);
                 if (addr.isMulticastAddress()) {
                     sm.checkMulticast(addr);
                 }
-            } catch (Exception ex) {
+            } catch (final Exception ex) {
                 throw new RuntimeException(ex);
             }
             sm.checkConnect(host, port);
@@ -169,12 +170,12 @@ public final class LibUVPermission extends BasicPermission {
     /*
      * Files
      */
-    private static boolean isFlag(int mask, int flag) {
+    private static boolean isFlag(final int mask, final int flag) {
         return (mask & flag) == flag;
     }
 
-    public static void checkOpenFile(String path, int mask) {
-        SecurityManager sm = System.getSecurityManager();
+    public static void checkOpenFile(final String path, final int mask) {
+        final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             // write
             if (isFlag(mask, Constants.O_CREAT) ||
@@ -192,43 +193,43 @@ public final class LibUVPermission extends BasicPermission {
         }
     }
 
-    public static void checkReadFile(String path) {
-        SecurityManager sm = System.getSecurityManager();
+    public static void checkReadFile(final String path) {
+        final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkRead(path);
         }
     }
 
-    public static void checkWriteFile(String path) {
-        SecurityManager sm = System.getSecurityManager();
+    public static void checkWriteFile(final String path) {
+        final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkWrite(path);
         }
     }
 
-    public static void checkReadFile(int fd, String path) {
-        SecurityManager sm = System.getSecurityManager();
+    public static void checkReadFile(final int fd, final String path) {
+        final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkRead(path);
         }
     }
 
-    public static void checkWriteFile(int fd, String path) {
-        SecurityManager sm = System.getSecurityManager();
+    public static void checkWriteFile(final int fd, final String path) {
+        final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkWrite(path);
         }
     }
 
-    public static void checkDeleteFile(String path) {
-        SecurityManager sm = System.getSecurityManager();
+    public static void checkDeleteFile(final String path) {
+        final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkDelete(path);
         }
     }
 
-    public static void checkHardLink(String existing, String link) {
-        SecurityManager sm = System.getSecurityManager();
+    public static void checkHardLink(final String existing, final String link) {
+        final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkPermission(new LinkPermission("hard"));
             sm.checkWrite(existing);
@@ -236,8 +237,8 @@ public final class LibUVPermission extends BasicPermission {
         }
     }
 
-    public static void checkSymbolicLink(String existing, String link) {
-        SecurityManager sm = System.getSecurityManager();
+    public static void checkSymbolicLink(final String existing, final String link) {
+        final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkPermission(new LinkPermission("symbolic"));
             sm.checkWrite(existing);

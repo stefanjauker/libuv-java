@@ -51,7 +51,7 @@ public final class TimerHandle extends Handle {
         _initialize(pointer);
     }
 
-    public int start(long timeout, long repeat) {
+    public int start(final long timeout, final long repeat) {
         return _start(pointer, timeout, repeat);
     }
 
@@ -63,7 +63,7 @@ public final class TimerHandle extends Handle {
         return _get_repeat(pointer);
     }
 
-    public void setRepeat(long repeat) {
+    public void setRepeat(final long repeat) {
         _set_repeat(pointer, repeat);
     }
 

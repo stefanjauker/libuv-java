@@ -25,10 +25,10 @@
 
 package net.java.libuv.handles;
 
-import net.java.libuv.StreamCallback;
-
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+
+import net.java.libuv.StreamCallback;
 
 public class StreamHandle extends Handle {
 

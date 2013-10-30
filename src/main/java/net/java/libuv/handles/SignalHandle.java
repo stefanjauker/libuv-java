@@ -25,7 +25,6 @@
 
 package net.java.libuv.handles;
 
-import java.util.concurrent.Callable;
 import net.java.libuv.Constants;
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.SignalCallback;

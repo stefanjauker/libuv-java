@@ -87,7 +87,7 @@ public final class FileEventWatchHandle extends Handle {
         super.finalize();
     }
 
-    private void callback(final int type, int status, int event, String filename) {
+    private void callback(final int type, final int status, final int event, final String filename) {
         String eventStr = null;
         if (status != 0) {
             eventStr = EventType.UKNOWN.string;

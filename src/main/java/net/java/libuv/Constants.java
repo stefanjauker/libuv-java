@@ -130,8 +130,8 @@ public final class Constants {
     private static native void _get_field_values(int[] values);
 
     static {
-        Map<String, Integer> constants = new HashMap<>(FIELDS.length);
-        Map<Integer, String> constantsString = new HashMap<>(FIELDS.length);
+        final Map<String, Integer> constants = new HashMap<>(FIELDS.length);
+        final Map<Integer, String> constantsString = new HashMap<>(FIELDS.length);
         for (final Field f : FIELDS) {
             if ((f.getModifiers() & MASK) == MASK) {
                 try {

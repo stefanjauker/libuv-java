@@ -25,10 +25,10 @@
 
 package net.java.libuv;
 
-import net.java.libuv.handles.LoopHandle;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import net.java.libuv.handles.LoopHandle;
 
 public final class Files {
 
@@ -286,12 +286,12 @@ public final class Files {
         return _write(pointer, fd, buffer, length, offset, position, callbackId);
     }
 
-    public int mkdir(final String path, int mode) {
+    public int mkdir(final String path, final int mode) {
         LibUVPermission.checkWriteFile(path);
         return _mkdir(pointer, path, mode, SYNC_MODE);
     }
 
-    public int mkdir(final String path, int mode, final int callbackId) {
+    public int mkdir(final String path, final int mode, final int callbackId) {
         LibUVPermission.checkWriteFile(path);
         return _mkdir(pointer, path, mode, callbackId);
     }
@@ -306,12 +306,12 @@ public final class Files {
         return _rmdir(pointer, path, callbackId);
     }
 
-    public String[] readdir(final String path, int flags) {
+    public String[] readdir(final String path, final int flags) {
         LibUVPermission.checkReadFile(path);
         return _readdir(pointer, path, flags, SYNC_MODE);
     }
 
-    public String[] readdir(final String path, int flags, final int callbackId) {
+    public String[] readdir(final String path, final int flags, final int callbackId) {
         LibUVPermission.checkReadFile(path);
         return _readdir(pointer, path, flags, callbackId);
     }
@@ -378,42 +378,42 @@ public final class Files {
         return _ftruncate(pointer, fd, offset, callbackId);
     }
 
-    public int sendfile(final int outFd, final int inFd, long offset, long length) {
+    public int sendfile(final int outFd, final int inFd, final long offset, final long length) {
         // No security check required.
         return _sendfile(pointer, outFd, inFd, offset, length, SYNC_MODE);
     }
 
-    public int sendfile(final int outFd, final int inFd, long offset, long length, final int callbackId) {
+    public int sendfile(final int outFd, final int inFd, final long offset, final long length, final int callbackId) {
         // No security check required.
         return _sendfile(pointer, outFd, inFd, offset, length, callbackId);
     }
 
-    public int chmod(final String path, int mode) {
+    public int chmod(final String path, final int mode) {
         LibUVPermission.checkWriteFile(path);
         return _chmod(pointer, path, mode, SYNC_MODE);
     }
 
-    public int chmod(final String path, int mode, final int callbackId) {
+    public int chmod(final String path, final int mode, final int callbackId) {
         LibUVPermission.checkWriteFile(path);
         return _chmod(pointer, path, mode, callbackId);
     }
 
-    public int utime(final String path, double atime, double mtime) {
+    public int utime(final String path, final double atime, final double mtime) {
         LibUVPermission.checkWriteFile(path);
         return _utime(pointer, path, atime, mtime, SYNC_MODE);
     }
 
-    public int utime(final String path, double atime, double mtime, final int callbackId) {
+    public int utime(final String path, final double atime, final double mtime, final int callbackId) {
         LibUVPermission.checkWriteFile(path);
         return _utime(pointer, path, atime, mtime, callbackId);
     }
 
-    public int futime(final int fd, double atime, double mtime) {
+    public int futime(final int fd, final double atime, final double mtime) {
         LibUVPermission.checkWriteFile(fd, getPath(fd));
         return _futime(pointer, fd, atime, mtime, SYNC_MODE);
     }
 
-    public int futime(final int fd, double atime, double mtime, final int callbackId) {
+    public int futime(final int fd, final double atime, final double mtime, final int callbackId) {
         LibUVPermission.checkWriteFile(fd, getPath(fd));
         return _futime(pointer, fd, atime, mtime, callbackId);
     }

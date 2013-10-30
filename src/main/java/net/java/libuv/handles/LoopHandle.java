@@ -97,82 +97,82 @@ public final class LoopHandle {
 
         this.callbackHandler = new CallbackHandler() {
             @Override
-            public void handleCheckCallback(CheckCallback cb, int status) {
+            public void handleCheckCallback(final CheckCallback cb, final int status) {
                 try {
                     cb.call(status);
-                } catch (Exception ex) {
+                } catch (final Exception ex) {
                     exceptionHandler.handle(ex);
                 }
             }
 
             @Override
-            public void handleProcessCallback(ProcessCallback cb, Object[] args) {
+            public void handleProcessCallback(final ProcessCallback cb, final Object[] args) {
                 try {
                     cb.call(args);
-                } catch (Exception ex) {
+                } catch (final Exception ex) {
                     exceptionHandler.handle(ex);
                 }
             }
 
             @Override
-            public void handleSignalCallback(SignalCallback cb, int signum) {
+            public void handleSignalCallback(final SignalCallback cb, final int signum) {
                 try {
                     cb.call(signum);
-                } catch (Exception ex) {
+                } catch (final Exception ex) {
                     exceptionHandler.handle(ex);
                 }
             }
 
             @Override
-            public void handleStreamCallback(StreamCallback cb, Object[] args) {
+            public void handleStreamCallback(final StreamCallback cb, final Object[] args) {
                 try {
                     cb.call(args);
-                } catch (Exception ex) {
+                } catch (final Exception ex) {
                     exceptionHandler.handle(ex);
                 }
             }
 
             @Override
-            public void handleFileCallback(FileCallback cb, int id, Object[] args) {
+            public void handleFileCallback(final FileCallback cb, final int id, final Object[] args) {
                 try {
                     cb.call(id, args);
-                } catch (Exception ex) {
+                } catch (final Exception ex) {
                     exceptionHandler.handle(ex);
                 }
             }
 
             @Override
-            public void handleFileEventCallback(FileEventCallback cb, int status, String event, String filename) {
+            public void handleFileEventCallback(final FileEventCallback cb, final int status, final String event, final String filename) {
                 try {
                     cb.call(status, event, filename);
-                } catch (Exception ex) {
+                } catch (final Exception ex) {
                     exceptionHandler.handle(ex);
                 }
             }
 
             @Override
-            public void handleTimerCallback(TimerCallback cb, int status) {
+            public void handleTimerCallback(final TimerCallback cb, final int status) {
                 try {
                     cb.call(status);
-                } catch (Exception ex) {
+                } catch (final Exception ex) {
                     exceptionHandler.handle(ex);
                 }
             }
 
             @Override
-            public void handleUDPCallback(UDPCallback cb, Object[] args) {
+            public void handleUDPCallback(final UDPCallback cb, final Object[] args) {
                 try {
                     cb.call(args);
-                } catch (Exception ex) {
+                } catch (final Exception ex) {
                     exceptionHandler.handle(ex);
                 }
             }
 
             @Override
-            public void handleIdleCallback(IdleCallback cb, int status) {
+            public void handleIdleCallback(final IdleCallback cb, final int status) {
                 try {
                     cb.call(status);
-                } catch (Exception ex) {
+                } catch (final Exception ex) {
                     exceptionHandler.handle(ex);
                 }
             }

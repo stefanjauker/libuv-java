@@ -77,6 +77,7 @@ public final class NativeException extends RuntimeException {
         return path;
     }
 
+    @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder(4096);
         sb.append("errno: ");
