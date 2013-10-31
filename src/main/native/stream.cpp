@@ -141,8 +141,8 @@ void StreamCallbacks::on_read(uv_buf_t* buf, jsize nread) {
         _callback_1arg_mid,
         STREAM_READ_CALLBACK,
         arg);
-    free(buf->base);
   }
+  delete[] buf->base;
 }
 
 void StreamCallbacks::on_read2(uv_buf_t* buf, jsize nread, long ptr, uv_handle_type pending) {
@@ -168,8 +168,8 @@ void StreamCallbacks::on_read2(uv_buf_t* buf, jsize nread, long ptr, uv_handle_t
         _callback_narg_mid,
         STREAM_READ_CALLBACK,
         args);
-    free(buf->base);
   }
+  delete[] buf->base;
 }
 
 void StreamCallbacks::on_write(int status) {
