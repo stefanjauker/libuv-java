@@ -1,4 +1,4 @@
-package net.java.libuv.handles;/*
+/*
  * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
@@ -22,6 +22,8 @@ package net.java.libuv.handles;/*
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
+
+package net.java.libuv.handles;
 
 import java.nio.ByteBuffer;
 import java.nio.file.FileSystems;
