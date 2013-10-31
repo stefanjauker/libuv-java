@@ -23,6 +23,8 @@
  * questions.
  */
 
+package net.java.libuv.handles;
+
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,9 +32,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import net.java.libuv.LoggingCallback;
 import net.java.libuv.StreamCallback;
-import net.java.libuv.handles.LoopHandle;
-import net.java.libuv.handles.TCPHandle;
+import net.java.libuv.TestBase;
 
 public class TCPHandleTest extends TestBase {
 

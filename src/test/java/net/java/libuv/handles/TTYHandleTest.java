@@ -23,6 +23,8 @@
  * questions.
  */
 
+package net.java.libuv.handles;
+
 import java.nio.ByteBuffer;
 
 import org.testng.Assert;
@@ -30,8 +32,7 @@ import org.testng.annotations.Test;
 
 import net.java.libuv.NativeException;
 import net.java.libuv.StreamCallback;
-import net.java.libuv.handles.LoopHandle;
-import net.java.libuv.handles.TTYHandle;
+import net.java.libuv.TestBase;
 
 public class TTYHandleTest extends TestBase {
 

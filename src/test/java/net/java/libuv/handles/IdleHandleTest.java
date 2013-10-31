@@ -23,51 +23,52 @@
  * questions.
  */
 
+package net.java.libuv.handles;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import net.java.libuv.CheckCallback;
-import net.java.libuv.handles.CheckHandle;
-import net.java.libuv.handles.LoopHandle;
+import net.java.libuv.IdleCallback;
+import net.java.libuv.TestBase;
 
-public class CheckHandleTest extends TestBase {
+public class IdleHandleTest extends TestBase {
 
     @Test
-    public void testCheck() throws Exception {
+    public void testIdle() throws Exception {
         final AtomicBoolean gotCallback = new AtomicBoolean(false);
         final AtomicBoolean gotClose = new AtomicBoolean(false);
         final AtomicInteger times = new AtomicInteger(0);
 
         final LoopHandle loop = new LoopHandle();
-        final CheckHandle checkHandle = new CheckHandle(loop);
+        final IdleHandle idleHandle = new IdleHandle(loop);
 
-        checkHandle.setCloseCallback(new CheckCallback() {
+        idleHandle.setCloseCallback(new IdleCallback() {
             @Override
             public void call(final int i) throws Exception {
-                System.out.println("check closed");
+                System.out.println("idle closed");
                 gotClose.set(true);
             }
         });
 
-        checkHandle.setCheckCallback(new CheckCallback() {
+        idleHandle.setIdleCallback(new IdleCallback() {
             @Override
             public void call(final int status) throws Exception {
                 gotCallback.set(true);
-                System.out.println("check!");
+                System.out.println("idle!");
                 times.incrementAndGet();
-                checkHandle.close();
+                idleHandle.close();
             }
         });
 
-        checkHandle.start();
+        idleHandle.start();
 
         final long start = System.currentTimeMillis();
         while (!gotCallback.get() || !gotClose.get()) {
-            if (System.currentTimeMillis() - start > TIMEOUT) {
-                Assert.fail("timeout waiting for check");
+            if (System.currentTimeMillis() - start > TestBase.TIMEOUT) {
+                Assert.fail("timeout waiting for idle");
             }
             loop.runNoWait();
         }
@@ -77,8 +78,8 @@ public class CheckHandleTest extends TestBase {
         Assert.assertEquals(times.get(), 1);
     }
     public static void main(final String[] args) throws Exception {
-        final CheckHandleTest test = new CheckHandleTest();
-        test.testCheck();
+        final IdleHandleTest test = new IdleHandleTest();
+        test.testIdle();
     }
 
 }

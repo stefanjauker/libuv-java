@@ -23,9 +23,9 @@
  * questions.
  */
 
-import net.java.libuv.LibUV;
+package net.java.libuv;
 
-class TestBase {
+public class TestBase {
 
     static {
         // call an idempotent LibUV method just to ensure that the native lib is loaded

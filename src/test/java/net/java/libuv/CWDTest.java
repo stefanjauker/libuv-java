@@ -23,25 +23,41 @@
  * questions.
  */
 
+package net.java.libuv;
+
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import net.java.libuv.LibUV;
+public class CWDTest extends TestBase {
 
-public class VersionTest extends TestBase {
+    private String cwd;
 
-    @Test
-    public void testVersion() {
-        final String version = LibUV.version();
-        System.out.println("libuv version is " + version);
-        Assert.assertEquals(version, "0.10.15");
+    @BeforeMethod
+    public void before() {
+        cwd = LibUV.cwd();
+    }
+
+    @AfterMethod
+    public void after() {
+        LibUV.chdir(cwd);
     }
 
     @Test
-    public void testExePath() {
-        final String exe = LibUV.exePath();
-        System.out.println("exe is " + exe);
-        Assert.assertNotNull(exe);
+    public void testCWD() {
+        System.out.println("user.dir is " + cwd);
+        Assert.assertEquals(System.getProperty("user.dir"), cwd);
+
+        final String home = System.getProperty("user.home");
+        System.out.println("user.home is " + home);
+        LibUV.chdir(home);
+        Assert.assertEquals(home, LibUV.cwd());
+
+        final String java = System.getProperty("java.home");
+        System.out.println("java.home is " + java);
+        LibUV.chdir(java);
+        Assert.assertEquals(java, LibUV.cwd());
     }
 
 }

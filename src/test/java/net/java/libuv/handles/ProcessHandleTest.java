@@ -1,4 +1,4 @@
-/*
+package net.java.libuv.handles;/*
  * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
@@ -34,10 +34,7 @@ import org.testng.annotations.Test;
 
 import net.java.libuv.ProcessCallback;
 import net.java.libuv.StreamCallback;
-import net.java.libuv.handles.LoopHandle;
-import net.java.libuv.handles.PipeHandle;
-import net.java.libuv.handles.ProcessHandle;
-import net.java.libuv.handles.StdioOptions;
+import net.java.libuv.TestBase;
 
 public class ProcessHandleTest extends TestBase {
 

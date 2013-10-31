@@ -1,4 +1,4 @@
-/*
+package net.java.libuv.runner;/*
  * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
@@ -63,7 +63,7 @@ public class TestRunner {
     }
 
     public static void runATest(final String file) throws FileNotFoundException {
-        final String testClassName = file.replaceAll(".java", "");
+        final String testClassName = file.replaceAll(".java$", "").replaceAll("\\\\|/", ".");
         final PrintStream out = new PrintStream(TEST_REPORTS_DIR + File.separator + testClassName + ".txt");
         System.setOut(out);
         try {

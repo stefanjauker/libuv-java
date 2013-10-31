@@ -1,4 +1,4 @@
-/*
+package net.java.libuv.handles;/*
  * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
@@ -29,9 +29,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import net.java.libuv.TestBase;
 import net.java.libuv.TimerCallback;
-import net.java.libuv.handles.LoopHandle;
-import net.java.libuv.handles.TimerHandle;
 
 public class TimerHandleTest extends TestBase {
 
@@ -66,7 +65,7 @@ public class TimerHandleTest extends TestBase {
 
         final long start = System.currentTimeMillis();
         while (!gotCallback.get() || !gotClose.get()) {
-            if (System.currentTimeMillis() - start > TIMEOUT) {
+            if (System.currentTimeMillis() - start > TestBase.TIMEOUT) {
                 Assert.fail("timeout waiting for timer");
             }
             loop.runNoWait();
@@ -109,7 +108,7 @@ public class TimerHandleTest extends TestBase {
 
         final long start = System.currentTimeMillis();
         while (!gotCallback.get() || !gotClose.get()) {
-            if (System.currentTimeMillis() - start > TIMEOUT) {
+            if (System.currentTimeMillis() - start > TestBase.TIMEOUT) {
                 Assert.fail("timeout waiting for timer");
             }
             loop.runNoWait();

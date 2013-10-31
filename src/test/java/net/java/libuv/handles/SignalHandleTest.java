@@ -23,39 +23,32 @@
  * questions.
  */
 
-import java.nio.ByteBuffer;
+package net.java.libuv.handles;
 
-import net.java.libuv.ProcessCallback;
-import net.java.libuv.StreamCallback;
-import net.java.libuv.UDPCallback;
+import net.java.libuv.SignalCallback;
+import net.java.libuv.TestBase;
 
-final class LoggingCallback implements StreamCallback, UDPCallback, ProcessCallback {
+public class SignalHandleTest extends TestBase {
 
-    private final String prefix;
-
-    LoggingCallback() {
-        this.prefix = null;
-    }
-
-    LoggingCallback(final String prefix) {
-        this.prefix = prefix;
-    }
-
-    @Override
-    public void call(final Object[] args) throws Exception {
-        System.out.print(prefix == null ? "" : prefix);
-        if (args != null) {
-            for (final Object arg : args) {
-                if (arg instanceof ByteBuffer) {
-                    final byte[] bytes = ((ByteBuffer) arg).array();
-                    System.out.print(new String(bytes, "utf-8"));
-                } else {
-                    System.out.print(arg);
-                }
-                System.out.print(" ");
-            }
+    // this test needs to be run manually, so no @Test annotation
+    public static void main(final String[] args) throws Exception {
+        if (TestBase.IS_WINDOWS) {
+            System.err.println("Sorry this test does not work on windows");
+            return;
         }
-        System.out.println();
+        final LoopHandle loop = new LoopHandle();
+        final SignalHandle handle = new SignalHandle(loop);
+        handle.setSignalCallback(new SignalCallback() {
+            @Override
+            public void call(final int signum) throws Exception {
+                assert signum == 28;
+                System.out.println("received signal " + signum);
+            }
+        });
+        handle.start(28);
+        System.out.println("waiting for signals... ");
+        System.out.println("  (try kill -WINCH <pid>, kill -28 <pid>, or just resize the console)");
+        loop.run();
     }
 
 }

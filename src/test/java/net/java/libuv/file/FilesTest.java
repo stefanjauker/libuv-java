@@ -23,6 +23,8 @@
  * questions.
  */
 
+package net.java.libuv.file;
+
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -38,6 +40,7 @@ import net.java.libuv.FileCallback;
 import net.java.libuv.Files;
 import net.java.libuv.NativeException;
 import net.java.libuv.Stats;
+import net.java.libuv.TestBase;
 import net.java.libuv.handles.LoopHandle;
 
 public class FilesTest extends TestBase {
@@ -46,7 +49,7 @@ public class FilesTest extends TestBase {
     private static final int CALLBACK_ID = 1;
 
     @BeforeMethod
-    protected void startSession(final Method method) throws Exception {
+    public void startSession(final Method method) throws Exception {
         testName = (TMPDIR.endsWith(File.separator) ? TMPDIR : TMPDIR + File.separator) + method.getName();
     }
 

@@ -23,17 +23,15 @@
  * questions.
  */
 
+package net.java.libuv.handles;
+
 import java.util.HashSet;
 import java.util.Set;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import net.java.libuv.handles.LoopHandle;
-import net.java.libuv.handles.PipeHandle;
-import net.java.libuv.handles.SignalHandle;
-import net.java.libuv.handles.TCPHandle;
-import net.java.libuv.handles.UDPHandle;
+import net.java.libuv.TestBase;
 
 public class LoopHandleTest extends TestBase {
 

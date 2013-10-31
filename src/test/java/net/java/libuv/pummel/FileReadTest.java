@@ -23,63 +23,86 @@
  * questions.
  */
 
-import java.io.File;
+package net.java.libuv.pummel;
 
 import net.java.libuv.Constants;
 import net.java.libuv.FileCallback;
 import net.java.libuv.Files;
+import net.java.libuv.TestBase;
 import net.java.libuv.handles.LoopHandle;
 
-public class FileOpenTest extends TestBase {
+import java.io.File;
+
+public class FileReadTest extends TestBase {
 
     private int count = 0;
-    private final String filename = (TMPDIR.endsWith(File.separator) ? TMPDIR : TMPDIR + File.separator) + "FileOpenTest.txt";
+    private final String filename = (TestBase.TMPDIR.endsWith(File.separator) ? TestBase.TMPDIR : TestBase.TMPDIR + File.separator) + "FileReadTest.txt";
     private final LoopHandle loop;
     private final Files handle;
     private long startTime;
 
-    private final static int ITERATIONS = 1000000;
+    private final static int ITERATIONS = 100000;
     private final static long DURATION = 300000;  // DURATION after 5 minutes
+    private final static int BUFFER_SIZE = 16 * 1024 * 1024;
 
-    public FileOpenTest() {
+    private byte[] readBuffer = new byte[BUFFER_SIZE];
+    private int fd;
+
+    public FileReadTest() {
         loop = new LoopHandle();
         handle = new Files(loop);
 
-        handle.setOpenCallback(new FileCallback() {
+        handle.setReadCallback(new FileCallback() {
             @Override
-            public void call(final int id, final Object[] args) throws Exception {
-                count++;
-                handle.close((Integer)args[0], id);
-            }
-        });
-
-        handle.setCloseCallback(new FileCallback() {
-            @Override
-            public void call(final int id, final Object[] args) throws Exception {
+            public void call(int id, Object[] args) throws Exception {
                 if ((count % 1000) == 0) {
                     System.out.print(" " + count + " ");
                 }
                 if (count > ITERATIONS) {
                     System.out.println("Max number of ITERATIONS reached");
+                    handle.close(fd);
+                    handle.unlink(filename);
                     System.exit(0);
                 }
                 if (System.currentTimeMillis() - startTime > DURATION) {
                     System.out.println("Test complete total ITERATIONS: " + count);
+                    handle.close(fd);
+                    handle.unlink(filename);
                     System.exit(0);
                 }
-                handle.open(filename, Constants.O_RDONLY, Constants.S_IRWXU, this.hashCode());
+
+                if ((Long)args[0] != BUFFER_SIZE) {
+                    System.out.println("wrong number of bytes returned " + (Long)args[0] + " ITERATIONS " + count);
+                    handle.close(fd);
+                    handle.unlink(filename);
+                    System.exit(0);
+                }
+
+                count++;
+                for (int i = 0; i < BUFFER_SIZE; i++) {
+                    readBuffer[i] = 0;
+                }
+                handle.read(fd, readBuffer, 0, BUFFER_SIZE, 0, this.hashCode());
             }
         });
     }
 
-    public void openFile() throws Exception {
+    public void readFile() throws Exception {
         startTime = System.currentTimeMillis();
-        handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU, this.hashCode());
+        fd = handle.open(filename, Constants.O_WRONLY | Constants.O_CREAT, Constants.S_IRWXU);
+        byte[] b = new byte[BUFFER_SIZE];
+        for (int i = 0; i < BUFFER_SIZE; i++) {
+            b[i] = (byte)'x';
+        }
+        handle.write(fd, b, 0, BUFFER_SIZE, 0);
+        handle.close(fd);
+        fd = handle.open(filename, Constants.O_RDONLY, Constants.S_IRWXU);
+        handle.read(fd, readBuffer, 0, BUFFER_SIZE, 0, this.hashCode());
         loop.run();
     }
 
     public static void main(final String[] args) throws Exception {
-        final FileOpenTest f = new FileOpenTest();
-        f.openFile();
+        FileReadTest f = new FileReadTest();
+        f.readFile();
     }
 }

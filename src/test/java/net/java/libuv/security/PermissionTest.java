@@ -23,6 +23,8 @@
  * questions.
  */
 
+package net.java.libuv.security;
+
 import java.io.File;
 import java.io.FilePermission;
 import java.net.SocketPermission;
@@ -46,11 +48,13 @@ import org.testng.annotations.Test;
 
 import net.java.libuv.Constants;
 import net.java.libuv.Files;
+import net.java.libuv.file.FilesTest;
 import net.java.libuv.LibUV;
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.NativeException;
 import net.java.libuv.Stats;
 import net.java.libuv.StreamCallback;
+import net.java.libuv.TestBase;
 import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.handles.PipeHandle;
 import net.java.libuv.handles.ProcessHandle;
@@ -59,6 +63,8 @@ import net.java.libuv.handles.StdioOptions;
 import net.java.libuv.handles.TCPHandle;
 import net.java.libuv.handles.TTYHandle;
 import net.java.libuv.handles.UDPHandle;
+import net.java.libuv.handles.UDPHandleTest;
+import net.java.libuv.runner.TestRunner;
 
 /**
  * Test LibUV permissions. This test doesn't rely on a policy file. Permissions
@@ -606,7 +612,7 @@ public class PermissionTest extends TestBase {
         permissions.add(new FilePermission(TMPDIR, "read"));
 
         init(permissions);
-        TestRunner.runATest(FilesTest.class.getSimpleName());
+        TestRunner.runATest(FilesTest.class.getName());
 
         System.out.println("Security File Auth test passed");
     }

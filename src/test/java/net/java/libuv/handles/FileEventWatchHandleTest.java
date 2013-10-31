@@ -23,6 +23,8 @@
  * questions.
  */
 
+package net.java.libuv.handles;
+
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -35,16 +37,15 @@ import org.testng.annotations.Test;
 import net.java.libuv.Constants;
 import net.java.libuv.FileEventCallback;
 import net.java.libuv.Files;
-import net.java.libuv.handles.FileEventWatchHandle;
-import net.java.libuv.handles.LoopHandle;
+import net.java.libuv.TestBase;
 
 public class FileEventWatchHandleTest extends TestBase {
 
     private String testName;
 
     @BeforeMethod
-    protected void startSession(final Method method) throws Exception {
-        testName = (TMPDIR.endsWith(File.separator) ? TMPDIR : TMPDIR + File.separator) + method.getName();
+    public void startSession(final Method method) throws Exception {
+        testName = (TestBase.TMPDIR.endsWith(File.separator) ? TestBase.TMPDIR : TestBase.TMPDIR + File.separator) + method.getName();
     }
 
     @Test
@@ -85,7 +86,7 @@ public class FileEventWatchHandleTest extends TestBase {
 
         final long start = System.currentTimeMillis();
         while (!gotCallback.get() || !gotClose.get()) {
-            if (System.currentTimeMillis() - start > TIMEOUT) {
+            if (System.currentTimeMillis() - start > TestBase.TIMEOUT) {
                 Assert.fail("timeout waiting for file event");
             }
             loop.runNoWait();
@@ -137,7 +138,7 @@ public class FileEventWatchHandleTest extends TestBase {
 
         final long start = System.currentTimeMillis();
         while (!gotCallback.get() || !gotClose.get()) {
-            if (System.currentTimeMillis() - start > TIMEOUT) {
+            if (System.currentTimeMillis() - start > TestBase.TIMEOUT) {
                 Assert.fail("timeout waiting for file event");
             }
             loop.runNoWait();

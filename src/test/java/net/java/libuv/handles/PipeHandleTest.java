@@ -23,6 +23,8 @@
  * questions.
  */
 
+package net.java.libuv.handles;
+
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,9 +33,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import net.java.libuv.LoggingCallback;
 import net.java.libuv.StreamCallback;
-import net.java.libuv.handles.LoopHandle;
-import net.java.libuv.handles.PipeHandle;
+import net.java.libuv.TestBase;
 
 public class PipeHandleTest extends TestBase {
 

@@ -23,15 +23,17 @@
  * questions.
  */
 
+package net.java.libuv.handles;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import net.java.libuv.LoggingCallback;
+import net.java.libuv.TestBase;
 import net.java.libuv.UDPCallback;
-import net.java.libuv.handles.LoopHandle;
-import net.java.libuv.handles.UDPHandle;
 
 public class UDPHandleTest extends TestBase {
 
@@ -91,7 +93,7 @@ public class UDPHandleTest extends TestBase {
 
         final long start = System.currentTimeMillis();
         while (!serverDone.get()) {
-            if (System.currentTimeMillis() - start > TIMEOUT) {
+            if (System.currentTimeMillis() - start > TestBase.TIMEOUT) {
                 Assert.fail("timeout");
             }
             loop.runNoWait();
@@ -154,7 +156,7 @@ public class UDPHandleTest extends TestBase {
 
         final long start = System.currentTimeMillis();
         while (!serverDone.get()) {
-            if (System.currentTimeMillis() - start > TIMEOUT) {
+            if (System.currentTimeMillis() - start > TestBase.TIMEOUT) {
                 Assert.fail("timeout");
             }
             loop.runNoWait();
