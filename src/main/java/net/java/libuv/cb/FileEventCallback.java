@@ -23,10 +23,10 @@
  * questions.
  */
 
-package net.java.libuv;
+package net.java.libuv.cb;
 
-public interface SignalCallback {
+public interface FileEventCallback {
 
-    public void call(int signum) throws Exception;
+    public void call(int status, String event, String filename) throws Exception;
 
 }

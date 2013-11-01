@@ -27,6 +27,10 @@ package net.java.libuv;
 
 import java.nio.ByteBuffer;
 
+import net.java.libuv.cb.ProcessCallback;
+import net.java.libuv.cb.StreamCallback;
+import net.java.libuv.cb.UDPCallback;
+
 public final class LoggingCallback implements StreamCallback, UDPCallback, ProcessCallback {
 
     private final String prefix;

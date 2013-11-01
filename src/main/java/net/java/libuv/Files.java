@@ -28,6 +28,7 @@ package net.java.libuv;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.java.libuv.cb.FileCallback;
 import net.java.libuv.handles.LoopHandle;
 
 public final class Files {

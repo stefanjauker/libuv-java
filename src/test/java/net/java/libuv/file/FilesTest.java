@@ -36,7 +36,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import net.java.libuv.Constants;
-import net.java.libuv.FileCallback;
+import net.java.libuv.cb.FileCallback;
 import net.java.libuv.Files;
 import net.java.libuv.NativeException;
 import net.java.libuv.Stats;

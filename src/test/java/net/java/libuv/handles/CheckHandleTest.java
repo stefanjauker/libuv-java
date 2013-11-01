@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import net.java.libuv.CheckCallback;
+import net.java.libuv.cb.CheckCallback;
 import net.java.libuv.TestBase;
 
 public class CheckHandleTest extends TestBase {

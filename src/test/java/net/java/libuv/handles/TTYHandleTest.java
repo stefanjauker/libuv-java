@@ -31,7 +31,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import net.java.libuv.NativeException;
-import net.java.libuv.StreamCallback;
+import net.java.libuv.cb.StreamCallback;
 import net.java.libuv.TestBase;
 
 public class TTYHandleTest extends TestBase {

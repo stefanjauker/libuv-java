@@ -23,10 +23,10 @@
  * questions.
  */
 
-package net.java.libuv;
+package net.java.libuv.cb;
 
-public interface FileCallback {
+public interface StreamCallback {
 
-    public void call(int id, Object[] args) throws Exception;
+    public void call(Object[] args) throws Exception;
 
 }

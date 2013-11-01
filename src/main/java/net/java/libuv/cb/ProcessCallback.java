@@ -23,10 +23,10 @@
  * questions.
  */
 
-package net.java.libuv;
+package net.java.libuv.cb;
 
-public interface Callback {
+public interface ProcessCallback {
 
-    public void call(String name, Object[] args) throws Exception;
+    public void call(Object[] args) throws Exception;
 
 }

@@ -32,7 +32,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import net.java.libuv.TestBase;
-import net.java.libuv.TimerCallback;
+import net.java.libuv.cb.TimerCallback;
 
 public class TimerHandleTest extends TestBase {
 

@@ -33,7 +33,7 @@ import org.testng.annotations.Test;
 
 import net.java.libuv.LoggingCallback;
 import net.java.libuv.TestBase;
-import net.java.libuv.UDPCallback;
+import net.java.libuv.cb.UDPCallback;
 
 public class UDPHandleTest extends TestBase {
 

@@ -25,7 +25,7 @@
 
 package net.java.libuv.handles;
 
-import net.java.libuv.FileEventCallback;
+import net.java.libuv.cb.FileEventCallback;
 
 public final class FileEventWatchHandle extends Handle {
 

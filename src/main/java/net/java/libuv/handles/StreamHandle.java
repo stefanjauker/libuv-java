@@ -28,7 +28,7 @@ package net.java.libuv.handles;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
-import net.java.libuv.StreamCallback;
+import net.java.libuv.cb.StreamCallback;
 
 public class StreamHandle extends Handle {
 

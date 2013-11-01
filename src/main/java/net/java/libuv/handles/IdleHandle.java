@@ -25,7 +25,7 @@
 
 package net.java.libuv.handles;
 
-import net.java.libuv.IdleCallback;
+import net.java.libuv.cb.IdleCallback;
 
 public final class IdleHandle extends Handle {
 

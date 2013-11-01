@@ -23,10 +23,10 @@
  * questions.
  */
 
-package net.java.libuv;
+package net.java.libuv.cb;
 
-public interface StreamCallback {
+public interface SignalCallback {
 
-    public void call(Object[] args) throws Exception;
+    public void call(int signum) throws Exception;
 
 }

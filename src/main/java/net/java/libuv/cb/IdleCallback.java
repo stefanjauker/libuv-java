@@ -23,10 +23,10 @@
  * questions.
  */
 
-package net.java.libuv;
+package net.java.libuv.cb;
 
-public interface FileEventCallback {
+public interface IdleCallback {
 
-    public void call(int status, String event, String filename) throws Exception;
+    public void call(int status) throws Exception;
 
 }

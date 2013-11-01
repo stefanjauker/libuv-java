@@ -23,10 +23,10 @@
  * questions.
  */
 
-package net.java.libuv;
+package net.java.libuv.cb;
 
-public interface IdleCallback {
+public interface UDPCallback {
 
-    public void call(int status) throws Exception;
+    public void call(Object[] args) throws Exception;
 
 }

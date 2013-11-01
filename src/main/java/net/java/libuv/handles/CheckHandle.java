@@ -25,7 +25,7 @@
 
 package net.java.libuv.handles;
 
-import net.java.libuv.CheckCallback;
+import net.java.libuv.cb.CheckCallback;
 
 public final class CheckHandle extends Handle {
 

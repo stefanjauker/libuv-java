@@ -34,8 +34,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import net.java.libuv.ProcessCallback;
-import net.java.libuv.StreamCallback;
+import net.java.libuv.cb.ProcessCallback;
+import net.java.libuv.cb.StreamCallback;
 import net.java.libuv.TestBase;
 
 public class ProcessHandleTest extends TestBase {

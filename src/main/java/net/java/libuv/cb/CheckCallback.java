@@ -23,9 +23,9 @@
  * questions.
  */
 
-package net.java.libuv;
+package net.java.libuv.cb;
 
-public interface TimerCallback {
+public interface CheckCallback {
 
     public void call(int status) throws Exception;
 

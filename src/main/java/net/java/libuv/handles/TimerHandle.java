@@ -25,7 +25,7 @@
 
 package net.java.libuv.handles;
 
-import net.java.libuv.TimerCallback;
+import net.java.libuv.cb.TimerCallback;
 
 public final class TimerHandle extends Handle {
 

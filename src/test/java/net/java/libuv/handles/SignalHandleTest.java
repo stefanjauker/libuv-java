@@ -25,7 +25,7 @@
 
 package net.java.libuv.handles;
 
-import net.java.libuv.SignalCallback;
+import net.java.libuv.cb.SignalCallback;
 import net.java.libuv.TestBase;
 
 public class SignalHandleTest extends TestBase {

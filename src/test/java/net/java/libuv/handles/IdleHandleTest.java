@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import net.java.libuv.IdleCallback;
+import net.java.libuv.cb.IdleCallback;
 import net.java.libuv.TestBase;
 
 public class IdleHandleTest extends TestBase {

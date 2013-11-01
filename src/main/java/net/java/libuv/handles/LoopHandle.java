@@ -25,19 +25,19 @@
 
 package net.java.libuv.handles;
 
-import net.java.libuv.CallbackExceptionHandler;
-import net.java.libuv.CallbackHandler;
-import net.java.libuv.CheckCallback;
-import net.java.libuv.FileCallback;
-import net.java.libuv.FileEventCallback;
-import net.java.libuv.IdleCallback;
+import net.java.libuv.cb.CallbackExceptionHandler;
+import net.java.libuv.cb.CallbackHandler;
+import net.java.libuv.cb.CheckCallback;
+import net.java.libuv.cb.FileCallback;
+import net.java.libuv.cb.FileEventCallback;
+import net.java.libuv.cb.IdleCallback;
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.NativeException;
-import net.java.libuv.ProcessCallback;
-import net.java.libuv.SignalCallback;
-import net.java.libuv.StreamCallback;
-import net.java.libuv.TimerCallback;
-import net.java.libuv.UDPCallback;
+import net.java.libuv.cb.ProcessCallback;
+import net.java.libuv.cb.SignalCallback;
+import net.java.libuv.cb.StreamCallback;
+import net.java.libuv.cb.TimerCallback;
+import net.java.libuv.cb.UDPCallback;
 
 public final class LoopHandle {
 

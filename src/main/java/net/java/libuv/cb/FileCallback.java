@@ -23,10 +23,10 @@
  * questions.
  */
 
-package net.java.libuv;
+package net.java.libuv.cb;
 
-public interface CheckCallback {
+public interface FileCallback {
 
-    public void call(int status) throws Exception;
+    public void call(int id, Object[] args) throws Exception;
 
 }

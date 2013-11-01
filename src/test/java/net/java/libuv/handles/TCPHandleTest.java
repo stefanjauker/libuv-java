@@ -33,7 +33,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import net.java.libuv.LoggingCallback;
-import net.java.libuv.StreamCallback;
+import net.java.libuv.cb.StreamCallback;
 import net.java.libuv.TestBase;
 
 public class TCPHandleTest extends TestBase {
