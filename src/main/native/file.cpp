@@ -51,9 +51,12 @@ private:
   jobject _read_buffer;
   jbyte* _byte_array;
   jint _fd;
+  jstring _path;
 
 public:
-  FileRequest(FileCallbacks* ptr, jint id, jobject read_buffer, jlong byte_array_size, jlong offset, jint fd);
+  FileRequest(FileCallbacks* ptr, jint id,
+    jobject read_buffer, jlong byte_array_size, jlong offset, jint fd, jstring path);
+
   ~FileRequest();
 
   FileCallbacks* get_callback() { return _callback; }
@@ -71,6 +74,8 @@ public:
   jbyte* get_bytes_from_array_region(jbyteArray data, jsize length, jsize offset);
 
   jint fd() { return _fd; }
+
+  jstring path() { return _path; }
 
 };
 
@@ -105,8 +110,8 @@ public:
   uv_loop_t* loop() { return _loop; }
 
   void initialize(jobject instance, uv_loop_t* loop);
-  void fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t result, void *ptr, const char *path);
-  void fs_cb(FileRequest *request, uv_fs_type fs_type, int errorno, const char *path);
+  void fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t result, void *ptr);
+  void fs_cb(FileRequest *request, uv_fs_type fs_type, int errorno);
 };
 
 jclass FileCallbacks::_int_cid = NULL;
@@ -123,13 +128,16 @@ jmethodID FileCallbacks::_stats_init_mid = NULL;
 
 JNIEnv* FileCallbacks::_env = NULL;
 
-FileRequest::FileRequest(FileCallbacks* ptr, jint id, jobject read_buffer, jlong byte_array_size, jlong offset, jint fd) {
+FileRequest::FileRequest(FileCallbacks* ptr, jint id,
+    jobject read_buffer, jlong byte_array_size, jlong offset, jint fd, jstring path) {
+
   _callback = ptr;
   _callback_id = id;
   _read_buffer_offset = offset;
   _read_buffer = NULL;
   _byte_array = NULL;
   _fd = fd;
+  _path = path ? (jstring) _callback->env()->NewGlobalRef(path) : NULL;
 
   if (byte_array_size > 0) {
     _byte_array = new jbyte[byte_array_size];
@@ -148,6 +156,10 @@ FileRequest::~FileRequest() {
 
   if (_read_buffer) {
     _callback->env()->DeleteGlobalRef(_read_buffer);
+  }
+
+  if (_path) {
+    _callback->env()->DeleteGlobalRef(_path);
   }
 }
 
@@ -248,7 +260,7 @@ void FileCallbacks::initialize(jobject instance, uv_loop_t* loop) {
   _loop = loop;
 }
 
-void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t result, void *ptr, const char *path) {
+void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t result, void *ptr) {
   assert(_env);
   jobject arg;
 
@@ -279,7 +291,7 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t resu
       jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
       assert(args);
       _env->SetObjectArrayElement(args, 0, _env->CallStaticObjectMethod(_int_cid, _int_valueof_mid, result));
-      _env->SetObjectArrayElement(args, 1, _env->NewStringUTF(path));
+      _env->SetObjectArrayElement(args, 1, request->path());
       _env->CallVoidMethod(
           _instance,
           _callback_narg_mid,
@@ -358,13 +370,15 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t resu
       arg);
 }
 
-void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, int errorno, const char *path) {
+void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, int errorno) {
   assert(_env);
 
   int callback_id = request->get_callback_id();
 
   jobject error = _env->CallStaticObjectMethod(_int_cid, _int_valueof_mid, -1);
-  jthrowable exception = NewException(_env, errorno, NULL, NULL, path);
+  jstring path = request->path();
+  const char* cpath = _env->GetStringUTFChars(path, 0);
+  jthrowable exception = NewException(_env, errorno, NULL, NULL, cpath);
   jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
   assert(args);
   _env->SetObjectArrayElement(args, 0, error);
@@ -375,6 +389,7 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, int errorno,
       fs_type,
       callback_id,
       args);
+  _env->ReleaseStringUTFChars(path, cpath);
 }
 
 static void _fs_cb(uv_fs_t* req) {
@@ -387,9 +402,9 @@ static void _fs_cb(uv_fs_t* req) {
   assert(cb);
 
   if (req->result == -1) {
-    cb->fs_cb(request, req->fs_type, req->errorno, req->path);
+    cb->fs_cb(request, req->fs_type, req->errorno);
   } else {
-    cb->fs_cb(request, req->fs_type, req->result, req->ptr, req->path);
+    cb->fs_cb(request, req->fs_type, req->result, req->ptr);
   }
 
   uv_fs_req_cleanup(req);
@@ -397,20 +412,22 @@ static void _fs_cb(uv_fs_t* req) {
   delete(request);
 }
 
-static inline FileRequest* new_request(FileCallbacks* cb, int id, jobject read_buffer, jlong byte_array_size, jlong offset, jint fd) {
-  return new FileRequest(cb, id, read_buffer, byte_array_size, offset, fd);
+static inline FileRequest* new_request(FileCallbacks* cb, int id,
+        jobject read_buffer, jlong byte_array_size, jlong offset, jint fd, jstring path) {
+  return new FileRequest(cb, id, read_buffer, byte_array_size, offset, fd, path);
 }
 
-static inline FileRequest* new_request(FileCallbacks* cb, int id, jobject read_buffer, jlong byte_array_size, jlong offset) {
-  return new FileRequest(cb, id, read_buffer, byte_array_size, offset, -1);
+static inline FileRequest* new_request(FileCallbacks* cb, int id,
+        jobject read_buffer, jlong byte_array_size, jlong offset, jstring path) {
+  return new FileRequest(cb, id, read_buffer, byte_array_size, offset, -1, path);
 }
 
 static inline FileRequest* new_request(FileCallbacks* cb, int id, jint fd) {
-  return new_request(cb, id, NULL, 0, 0, fd);
+  return new_request(cb, id, NULL, 0, 0, fd, NULL);
 }
 
-static inline FileRequest* new_request(FileCallbacks* cb, int id) {
-  return new_request(cb, id, NULL, 0, 0, -1);
+static inline FileRequest* new_request(FileCallbacks* cb, int id, jstring path) {
+  return new_request(cb, id, NULL, 0, 0, -1, path);
 }
 
 /*
@@ -507,7 +524,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1open
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(cb, callback);
+    req->data = new_request(cb, callback, path);
     fd = uv_fs_open(cb->loop(), req, cpath, flags, mode, _fs_cb);
   } else {
     uv_fs_t req;
@@ -536,7 +553,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1read
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
     jlong buffer_size = length - offset;
-    FileRequest* request = new_request(cb, callback, buffer, buffer_size, offset, fd);
+    FileRequest* request = new_request(cb, callback, buffer, buffer_size, offset, fd, NULL);
     req->data = request;
     r = uv_fs_read(cb->loop(), req, fd, request->get_byte_array(), length, position, _fs_cb);
   } else {
@@ -568,7 +585,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1unlink
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(cb, callback);
+    req->data = new_request(cb, callback, path);
     r = uv_fs_unlink(cb->loop(), req, cpath, _fs_cb);
   } else {
     uv_fs_t req;
@@ -597,7 +614,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1write
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
     jsize buffer_size = env->GetArrayLength(data);
-    FileRequest* request = new_request(cb, callback, NULL, (jlong) buffer_size, 0, fd);
+    FileRequest* request = new_request(cb, callback, NULL, (jlong) buffer_size, 0, fd, NULL);
     jbyte* base = request->get_bytes_from_array_region(data, (jsize) (buffer_size - offset), (jsize) offset);
     req->data = request;
     r = uv_fs_write(cb->loop(), req, fd, base, length, position, _fs_cb);
@@ -631,7 +648,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1mkdir
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(cb, callback);
+    req->data = new_request(cb, callback, path);
     r = uv_fs_mkdir(cb->loop(), req, cpath, mode, _fs_cb);
   } else {
     uv_fs_t req;
@@ -660,7 +677,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1rmdir
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(cb, callback);
+    req->data = new_request(cb, callback, path);
     r = uv_fs_rmdir(cb->loop(), req, cpath, _fs_cb);
   } else {
     uv_fs_t req;
@@ -689,7 +706,7 @@ JNIEXPORT jobjectArray JNICALL Java_net_java_libuv_Files__1readdir
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(cb, callback);
+    req->data = new_request(cb, callback, path);
     uv_fs_readdir(cb->loop(), req, cpath, flags, _fs_cb);
   } else {
     uv_fs_t req;
@@ -734,7 +751,7 @@ JNIEXPORT jobject JNICALL Java_net_java_libuv_Files__1stat
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(cb, callback);
+    req->data = new_request(cb, callback, path);
     uv_fs_stat(cb->loop(), req, cpath, _fs_cb);
   } else {
     uv_fs_t req;
@@ -793,7 +810,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1rename
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(cb, callback);
+    req->data = new_request(cb, callback, path);
     r = uv_fs_rename(cb->loop(), req, src_path, dst_path, _fs_cb);
   } else {
     uv_fs_t req;
@@ -903,7 +920,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1sendfile
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(cb, callback);
+    req->data = new_request(cb, callback, in_fd);
     r = uv_fs_sendfile(cb->loop(), req, out_fd, in_fd, offset, length, _fs_cb);
   } else {
     uv_fs_t req;
@@ -931,7 +948,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1chmod
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(cb, callback);
+    req->data = new_request(cb, callback, path);
     r = uv_fs_chmod(cb->loop(), req, cpath, mode, _fs_cb);
   } else {
     uv_fs_t req;
@@ -960,7 +977,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1utime
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(cb, callback);
+    req->data = new_request(cb, callback, path);
     r = uv_fs_utime(cb->loop(), req, cpath, atime, mtime, _fs_cb);
   } else {
     uv_fs_t req;
@@ -1016,7 +1033,7 @@ JNIEXPORT jobject JNICALL Java_net_java_libuv_Files__1lstat
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(cb, callback);
+    req->data = new_request(cb, callback, path);
     uv_fs_lstat(cb->loop(), req, cpath, _fs_cb);
   } else {
     uv_fs_t req;
@@ -1047,7 +1064,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1link
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(cb, callback);
+    req->data = new_request(cb, callback, path);
     r = uv_fs_link(cb->loop(), req, src_path, dst_path, _fs_cb);
   } else {
     uv_fs_t req;
@@ -1078,7 +1095,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1symlink
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(cb, callback);
+    req->data = new_request(cb, callback, path);
     r = uv_fs_symlink(cb->loop(), req, src_path, dst_path, flags, _fs_cb);
   } else {
     uv_fs_t req;
@@ -1108,7 +1125,7 @@ JNIEXPORT jstring JNICALL Java_net_java_libuv_Files__1readlink
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(cb, callback);
+    req->data = new_request(cb, callback, path);
     uv_fs_readlink(cb->loop(), req, cpath, _fs_cb);
   } else {
     uv_fs_t req;
@@ -1165,7 +1182,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1chown
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new_request(cb, callback);
+    req->data = new_request(cb, callback, path);
     r = uv_fs_chown(cb->loop(), req, cpath, (uv_uid_t)uid, (uv_gid_t)gid, _fs_cb);
   } else {
     uv_fs_t req;
