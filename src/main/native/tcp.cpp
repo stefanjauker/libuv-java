@@ -172,7 +172,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_TCPHandle__1open
 /*
  * Class:     net_java_libuv_handles_TCPHandle
  * Method:    _socket_name
- * Signature: (J)Lnet/java/libuv/handles/Address;
+ * Signature: (J)Lnet/java/libuv/Address;
  */
 JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_TCPHandle__1socket_1name
   (JNIEnv *env, jobject that, jlong tcp) {
@@ -196,7 +196,7 @@ JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_TCPHandle__1socket_1name
 /*
  * Class:     net_java_libuv_handles_TCPHandle
  * Method:    _peer_name
- * Signature: (J)Lnet/java/libuv/handles/Address;
+ * Signature: (J)Lnet/java/libuv/Address;
  */
 JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_TCPHandle__1peer_1name
   (JNIEnv *env, jobject that, jlong tcp) {

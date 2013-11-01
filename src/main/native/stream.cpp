@@ -94,7 +94,7 @@ void StreamCallbacks::static_initialize(JNIEnv* env, jclass cls) {
 
 void StreamCallbacks::static_initialize_address(JNIEnv* env) {
   if (!_address_cid) {
-      _address_cid = env->FindClass("net/java/libuv/handles/Address");
+      _address_cid = env->FindClass("net/java/libuv/Address");
       assert(_address_cid);
       _address_cid = (jclass) env->NewGlobalRef(_address_cid);
       assert(_address_cid);

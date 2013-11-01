@@ -24,6 +24,8 @@
  */
 
 package net.java.libuv.handles;
+
+import net.java.libuv.Address;
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.LibUVPermission.AddressResolver;
 

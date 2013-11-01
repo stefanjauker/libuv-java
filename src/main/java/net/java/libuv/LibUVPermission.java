@@ -30,7 +30,7 @@ import java.net.InetSocketAddress;
 import java.nio.file.LinkPermission;
 import java.security.BasicPermission;
 
-import net.java.libuv.handles.Address;
+import net.java.libuv.Address;
 
 /**
  * Permissions specific to LibUV.

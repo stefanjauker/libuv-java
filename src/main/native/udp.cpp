@@ -241,7 +241,7 @@ JNIEXPORT void JNICALL Java_net_java_libuv_handles_UDPHandle__1initialize
 /*
  * Class:     net_java_libuv_handles_UDPHandle
  * Method:    _address
- * Signature: (J)Lnet/java/libuv/handles/Address;
+ * Signature: (J)Lnet/java/libuv/Address;
  */
 JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_UDPHandle__1address
   (JNIEnv *env, jobject that, jlong udp) {
