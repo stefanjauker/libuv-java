@@ -56,7 +56,7 @@
                 ['OS == "linux"', {
                     'sources': [
                         'check.cpp',
-                        'child.cpp',
+                        'child_process.cpp',
                         'constants.cpp',
                         'file.cpp',
                         'file_event.cpp',
@@ -96,7 +96,7 @@
                 ['OS == "mac"', {
                     'sources': [
                         '<(LIBUV_PATH)/../obj.target/libuv-java/check.cpp',
-                        '<(LIBUV_PATH)/../obj.target/libuv-java/child.cpp',
+                        '<(LIBUV_PATH)/../obj.target/libuv-java/child_process.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/constants.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/file.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/file_event.cpp',
@@ -135,7 +135,7 @@
                     ],
                     'sources': [
                         '<(LIBUV_PATH)/../obj.target/libuv-java/check.cpp',
-                        '<(LIBUV_PATH)/../obj.target/libuv-java/child.cpp',
+                        '<(LIBUV_PATH)/../obj.target/libuv-java/child_process.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/constants.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/file.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/file_event.cpp',
