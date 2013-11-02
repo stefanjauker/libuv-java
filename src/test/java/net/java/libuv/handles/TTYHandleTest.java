@@ -33,6 +33,8 @@ import org.testng.annotations.Test;
 import net.java.libuv.NativeException;
 import net.java.libuv.cb.StreamCallback;
 import net.java.libuv.TestBase;
+import net.java.libuv.cb.StreamReadCallback;
+import net.java.libuv.cb.StreamWriteCallback;
 
 public class TTYHandleTest extends TestBase {
 
@@ -103,10 +105,12 @@ public class TTYHandleTest extends TestBase {
         if (tty == null) {
             return;
         }
-        tty.setWriteCallback(new StreamCallback() {
+        tty.setWriteCallback(new StreamWriteCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
-                System.out.println(args[0]);
+            public void onWrite(int status, Exception error) throws Exception {
+                System.out.println(status);
+                Assert.assertEquals(status, 0);
+                Assert.assertNotNull(error);
             }
         });
         tty.write("written to " + name + "\n");
@@ -121,12 +125,11 @@ public class TTYHandleTest extends TestBase {
             return;
         }
         final String prompt = "\ntype something (^D to exit) > ";
-        tty.setReadCallback(new StreamCallback() {
+        tty.setReadCallback(new StreamReadCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
-                if (args != null && args.length > 0) {
-                    final ByteBuffer buffer = (ByteBuffer) args[0];
-                    System.out.print(new String(buffer.array()));
+            public void onRead(final ByteBuffer data) throws Exception {
+                if (data != null) {
+                    System.out.print(new String(data.array()));
                     System.out.print(prompt);
                 } else {
                     System.out.print("\n");

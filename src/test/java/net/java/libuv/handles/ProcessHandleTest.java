@@ -37,6 +37,7 @@ import org.testng.annotations.Test;
 import net.java.libuv.cb.ProcessCallback;
 import net.java.libuv.cb.StreamCallback;
 import net.java.libuv.TestBase;
+import net.java.libuv.cb.StreamReadCallback;
 
 public class ProcessHandleTest extends TestBase {
 
@@ -61,11 +62,10 @@ public class ProcessHandleTest extends TestBase {
         final PipeHandle peer = new PipeHandle(loop, false);
         final PipeHandle child = new PipeHandle(loop, false);
 
-        peer.setReadCallback(new StreamCallback() {
+        peer.setReadCallback(new StreamReadCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
-                Assert.assertEquals(args.length, 1);
-                final byte[] bytes = ((ByteBuffer) args[0]).array();
+            public void onRead(final ByteBuffer data) throws Exception {
+                final byte[] bytes = data.array();
                 final String s = new String(bytes, "utf-8");
                 Assert.assertEquals(s, MESSAGE);
                 peer.close();

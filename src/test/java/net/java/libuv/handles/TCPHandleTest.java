@@ -25,6 +25,7 @@
 
 package net.java.libuv.handles;
 
+import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,6 +36,7 @@ import org.testng.annotations.Test;
 import net.java.libuv.LoggingCallback;
 import net.java.libuv.cb.StreamCallback;
 import net.java.libuv.TestBase;
+import net.java.libuv.cb.StreamReadCallback;
 
 public class TCPHandleTest extends TestBase {
 
@@ -77,13 +79,14 @@ public class TCPHandleTest extends TestBase {
             }
         });
 
-        peer.setReadCallback(new StreamCallback() {
+        peer.setReadCallback(new StreamReadCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
+            public void onRead(final ByteBuffer data) throws Exception {
                 serverRecvCount.incrementAndGet();
-                if (args[0] == null) {
+                if (data == null) {
                     peer.close();
                 } else {
+                    final Object[] args = {data};
                     serverLoggingCallback.call(args);
                     if (serverRecvCount.get() == TIMES) {
                         peer.close();
@@ -101,13 +104,14 @@ public class TCPHandleTest extends TestBase {
             }
         });
 
-        client.setReadCallback(new StreamCallback() {
+        client.setReadCallback(new StreamReadCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
+            public void onRead(final ByteBuffer data) throws Exception {
                 clientRecvCount.incrementAndGet();
-                if (args[0] == null) {
+                if (data == null) {
                     client.close();
                 } else {
+                    final Object[] args = {data};
                     clientLoggingCallback.call(args);
                     if (clientRecvCount.get() == TIMES) {
                         client.close();
@@ -188,13 +192,14 @@ public class TCPHandleTest extends TestBase {
             }
         });
 
-        peer.setReadCallback(new StreamCallback() {
+        peer.setReadCallback(new StreamReadCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
+            public void onRead(final ByteBuffer data) throws Exception {
                 serverRecvCount.incrementAndGet();
-                if (args[0] == null) {
+                if (data == null) {
                     peer.close();
                 } else {
+                    final Object[] args = {data};
                     serverLoggingCallback.call(args);
                     if (serverRecvCount.get() == TIMES) {
                         peer.close();
@@ -212,13 +217,14 @@ public class TCPHandleTest extends TestBase {
             }
         });
 
-        client.setReadCallback(new StreamCallback() {
+        client.setReadCallback(new StreamReadCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
+            public void onRead(final ByteBuffer data) throws Exception {
                 clientRecvCount.incrementAndGet();
-                if (args[0] == null) {
+                if (data == null) {
                     client.close();
                 } else {
+                    final Object[] args = {data};
                     clientLoggingCallback.call(args);
                     if (clientRecvCount.get() == TIMES) {
                         client.close();

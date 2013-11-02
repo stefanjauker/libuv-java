@@ -45,6 +45,9 @@ private:
   static jmethodID _address_init_mid;
   static jmethodID _callback_1arg_mid;
   static jmethodID _callback_narg_mid;
+  static jmethodID _call_read_callback_mid;
+  static jmethodID _call_read2_callback_mid;
+  static jmethodID _call_write_callback_mid;
 
   static JNIEnv* _env;
 

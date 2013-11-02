@@ -45,6 +45,9 @@ jmethodID StreamCallbacks::_buffer_wrap_mid = NULL;
 jmethodID StreamCallbacks::_address_init_mid = NULL;
 jmethodID StreamCallbacks::_callback_1arg_mid = NULL;
 jmethodID StreamCallbacks::_callback_narg_mid = NULL;
+jmethodID StreamCallbacks::_call_read_callback_mid = NULL;
+jmethodID StreamCallbacks::_call_read2_callback_mid = NULL;
+jmethodID StreamCallbacks::_call_write_callback_mid = NULL;
 
 JNIEnv* StreamCallbacks::_env = NULL;
 
@@ -89,6 +92,15 @@ void StreamCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _callback_narg_mid = env->GetMethodID(_stream_handle_cid, "callback", "(I[Ljava/lang/Object;)V");
   assert(_callback_narg_mid);
 
+  _call_read_callback_mid = env->GetMethodID(_stream_handle_cid, "callRead", "(Ljava/nio/ByteBuffer;)V");
+  assert(_call_read_callback_mid);
+
+  _call_read2_callback_mid = env->GetMethodID(_stream_handle_cid, "callRead2", "(Ljava/nio/ByteBuffer;JI)V");
+  assert(_call_read2_callback_mid);
+
+  _call_write_callback_mid = env->GetMethodID(_stream_handle_cid, "callWrite", "(ILjava/lang/Exception;)V");
+  assert(_call_write_callback_mid);
+
   static_initialize_address(env);
 }
 
@@ -129,8 +141,7 @@ void StreamCallbacks::on_read(uv_buf_t* buf, jsize nread) {
   if (nread < 0) {
     _env->CallVoidMethod(
         _instance,
-        _callback_1arg_mid,
-        STREAM_READ_CALLBACK,
+        _call_read_callback_mid,
         NULL);
   } else if (nread > 0) {
     jbyteArray bytes = _env->NewByteArray(nread);
@@ -138,8 +149,7 @@ void StreamCallbacks::on_read(uv_buf_t* buf, jsize nread) {
     jobject arg = _env->CallStaticObjectMethod(_buffer_cid, _buffer_wrap_mid, bytes);
     _env->CallVoidMethod(
         _instance,
-        _callback_1arg_mid,
-        STREAM_READ_CALLBACK,
+        _call_read_callback_mid,
         arg);
   }
   delete[] buf->base;
@@ -150,54 +160,41 @@ void StreamCallbacks::on_read2(uv_buf_t* buf, jsize nread, long ptr, uv_handle_t
   if (nread < 0) {
     _env->CallVoidMethod(
         _instance,
-        _callback_1arg_mid,
-        STREAM_READ_CALLBACK,
-        NULL);
+        _call_read2_callback_mid,
+        NULL,
+        ptr,
+        pending);
   } else if (nread > 0) {
     jbyteArray bytes = _env->NewByteArray(nread);
     _env->SetByteArrayRegion(bytes, 0, nread, reinterpret_cast<signed char const*>(buf->base));
     jobject array = _env->CallStaticObjectMethod(_buffer_cid, _buffer_wrap_mid, bytes);
-    jobject handle = _env->CallStaticObjectMethod(_long_cid, _long_valueof_mid, ptr);
-    jobject type = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, pending);
-    jobjectArray args = _env->NewObjectArray(3, _object_cid, 0);
-    _env->SetObjectArrayElement(args, 0, array);
-    _env->SetObjectArrayElement(args, 1, handle);
-    _env->SetObjectArrayElement(args, 2, type);
     _env->CallVoidMethod(
         _instance,
-        _callback_narg_mid,
-        STREAM_READ_CALLBACK,
-        args);
+        _call_read2_callback_mid,
+        array,
+        ptr,
+        pending);
   }
   delete[] buf->base;
 }
 
 void StreamCallbacks::on_write(int status) {
   assert(_env);
-  jobject arg = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, status);
-  assert(arg);
   _env->CallVoidMethod(
       _instance,
-      _callback_1arg_mid,
-      STREAM_WRITE_CALLBACK,
-      arg);
+      _call_write_callback_mid,
+      status,
+      NULL);
 }
 
 void StreamCallbacks::on_write(int status, int error_code) {
   assert(_env);
   assert(status < 0);
-
-  jobject status_value = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, status);
-  jthrowable exception = NewException(_env, error_code);
-  jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
-  assert(args);
-  _env->SetObjectArrayElement(args, 0, status_value);
-  _env->SetObjectArrayElement(args, 1, exception);
   _env->CallVoidMethod(
       _instance,
-      _callback_narg_mid,
-      STREAM_WRITE_CALLBACK,
-      args);
+      _call_write_callback_mid,
+      status,
+      NewException(_env, error_code));
 }
 
 void StreamCallbacks::on_connect(int status) {

@@ -25,17 +25,22 @@
 
 package net.java.libuv.handles;
 
+import java.nio.ByteBuffer;
+
+import net.java.libuv.LibUVPermission;
+import net.java.libuv.NativeException;
 import net.java.libuv.cb.CallbackExceptionHandler;
 import net.java.libuv.cb.CallbackHandler;
 import net.java.libuv.cb.CheckCallback;
 import net.java.libuv.cb.FileCallback;
 import net.java.libuv.cb.FileEventCallback;
 import net.java.libuv.cb.IdleCallback;
-import net.java.libuv.LibUVPermission;
-import net.java.libuv.NativeException;
 import net.java.libuv.cb.ProcessCallback;
 import net.java.libuv.cb.SignalCallback;
 import net.java.libuv.cb.StreamCallback;
+import net.java.libuv.cb.StreamRead2Callback;
+import net.java.libuv.cb.StreamReadCallback;
+import net.java.libuv.cb.StreamWriteCallback;
 import net.java.libuv.cb.TimerCallback;
 import net.java.libuv.cb.UDPCallback;
 
@@ -127,6 +132,33 @@ public final class LoopHandle {
             public void handleStreamCallback(final StreamCallback cb, final Object[] args) {
                 try {
                     cb.call(args);
+                } catch (final Exception ex) {
+                    exceptionHandler.handle(ex);
+                }
+            }
+
+            @Override
+            public void handleStreamReadCallback(final StreamReadCallback cb, final ByteBuffer data) {
+                try {
+                    cb.onRead(data);
+                } catch (final Exception ex) {
+                    exceptionHandler.handle(ex);
+                }
+            }
+
+            @Override
+            public void handleStreamRead2Callback(final StreamRead2Callback cb, final ByteBuffer data, final long handle, final int type) {
+                try {
+                    cb.onRead2(data, handle, type);
+                } catch (final Exception ex) {
+                    exceptionHandler.handle(ex);
+                }
+            }
+
+            @Override
+            public void handleStreamWriteCallback(final StreamWriteCallback cb, final int status, final Exception error) {
+                try {
+                    cb.onWrite(status, error);
                 } catch (final Exception ex) {
                     exceptionHandler.handle(ex);
                 }

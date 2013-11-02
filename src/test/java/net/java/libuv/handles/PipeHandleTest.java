@@ -25,6 +25,7 @@
 
 package net.java.libuv.handles;
 
+import java.nio.ByteBuffer;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -36,6 +37,7 @@ import org.testng.annotations.Test;
 import net.java.libuv.LoggingCallback;
 import net.java.libuv.cb.StreamCallback;
 import net.java.libuv.TestBase;
+import net.java.libuv.cb.StreamReadCallback;
 
 public class PipeHandleTest extends TestBase {
 
@@ -69,13 +71,14 @@ public class PipeHandleTest extends TestBase {
         final PipeHandle peer = new PipeHandle(loop, false);
         final PipeHandle client = new PipeHandle(loop, false);
 
-        peer.setReadCallback(new StreamCallback() {
+        peer.setReadCallback(new StreamReadCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
+            public void onRead(final ByteBuffer data) throws Exception {
                 serverRecvCount.incrementAndGet();
-                if (args[0] == null) {
+                if (data == null) {
                     peer.close();
                 } else {
+                    final Object[] args = {data};
                     serverLoggingCallback.call(args);
                     if (serverSendCount.get() < TIMES) {
                         peer.write("PING " + serverSendCount.incrementAndGet());
@@ -112,13 +115,14 @@ public class PipeHandleTest extends TestBase {
             }
         });
 
-        client.setReadCallback(new StreamCallback() {
+        client.setReadCallback(new StreamReadCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
+            public void onRead(final ByteBuffer data) throws Exception {
                 clientRecvCount.incrementAndGet();
-                if (args[0] == null) {
+                if (data == null) {
                     client.close();
                 } else {
+                    final Object[] args = {data};
                     clientLoggingCallback.call(args);
                     if (clientSendCount.incrementAndGet() < TIMES) {
                         client.write("PONG " + clientSendCount.get());

@@ -29,14 +29,18 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
 import net.java.libuv.cb.StreamCallback;
+import net.java.libuv.cb.StreamRead2Callback;
+import net.java.libuv.cb.StreamReadCallback;
+import net.java.libuv.cb.StreamWriteCallback;
 
 public class StreamHandle extends Handle {
 
     protected boolean closed;
     private boolean readStarted;
 
-    private StreamCallback onRead = null;
-    private StreamCallback onWrite = null;
+    private StreamReadCallback onRead = null;
+    private StreamRead2Callback onRead2 = null;
+    private StreamWriteCallback onWrite = null;
     private StreamCallback onConnect = null;
     private StreamCallback onConnection = null;
     private StreamCallback onClose = null;
@@ -46,11 +50,15 @@ public class StreamHandle extends Handle {
         _static_initialize();
     }
 
-    public void setReadCallback(final StreamCallback callback) {
+    public void setReadCallback(final StreamReadCallback callback) {
         onRead = callback;
     }
 
-    public void setWriteCallback(final StreamCallback callback) {
+    public void setRead2Callback(final StreamRead2Callback callback) {
+        onRead2 = callback;
+    }
+
+    public void setWriteCallback(final StreamWriteCallback callback) {
         onWrite = callback;
     }
 
@@ -178,8 +186,6 @@ public class StreamHandle extends Handle {
 
     private void callback(final int type, final Object... args) {
         switch (type) {
-            case 1: if (onRead != null) {call(onRead, args);} break;
-            case 2: if (onWrite != null) {call(onWrite, args);} break;
             case 3: if (onConnect != null) {call(onConnect, args);} break;
             case 4: if (onConnection != null) {call(onConnection, args);} break;
             case 5: if (onClose != null) {call(onClose, args);} break;
@@ -190,6 +196,24 @@ public class StreamHandle extends Handle {
 
     private void call(final StreamCallback callback, final Object... args) {
        loop.callbackHandler.handleStreamCallback(callback, args);
+    }
+
+    private void callRead(final ByteBuffer data) {
+        if (onRead != null) {
+            loop.callbackHandler.handleStreamReadCallback(onRead, data);
+        }
+    }
+
+    private void callRead2(final ByteBuffer data, long handle, int type) {
+        if (onRead2 != null) {
+            loop.callbackHandler.handleStreamRead2Callback(onRead2, data, handle, type);
+        }
+    }
+
+    private void callWrite(final int status, final Exception error) {
+        if (onWrite != null) {
+            loop.callbackHandler.handleStreamWriteCallback(onWrite, status, error);
+        }
     }
 
     private static native void _static_initialize();

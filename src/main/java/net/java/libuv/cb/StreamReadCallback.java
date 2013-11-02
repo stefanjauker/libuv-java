@@ -27,17 +27,8 @@ package net.java.libuv.cb;
 
 import java.nio.ByteBuffer;
 
-public interface CallbackHandler {
-    public void handleCheckCallback(CheckCallback cb, int status);
-    public void handleIdleCallback(IdleCallback cb, int status);
-    public void handleProcessCallback(ProcessCallback cb, Object[] args);
-    public void handleSignalCallback(SignalCallback cb, int signum);
-    public void handleStreamCallback(StreamCallback cb, Object[] args);
-    public void handleStreamReadCallback(StreamReadCallback cb, ByteBuffer data);
-    public void handleStreamRead2Callback(StreamRead2Callback cb, ByteBuffer data, long handle, int type);
-    public void handleStreamWriteCallback(StreamWriteCallback cb, int status, Exception error);
-    public void handleFileCallback(FileCallback cb, int id, Object[] args);
-    public void handleFileEventCallback(FileEventCallback cb, int status, String event, String filename);
-    public void handleTimerCallback(TimerCallback cb, int status);
-    public void handleUDPCallback(UDPCallback cb, Object[] args);
+public interface StreamReadCallback {
+
+    public void onRead(ByteBuffer data) throws Exception;
+
 }
