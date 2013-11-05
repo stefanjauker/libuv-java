@@ -204,6 +204,8 @@ void FileCallbacks::static_initialize(JNIEnv* env, jclass cls) {
 
   _error = _env->CallStaticObjectMethod(_int_cid, _int_valueof_mid, -1);
   assert(_error);
+  _error = env->NewGlobalRef(_error);
+  assert(_error);
 }
 
 FileCallbacks::FileCallbacks() {
@@ -338,7 +340,11 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, int errorno)
   int id = request->id();
 
   jstring path = request->path();
-  const char* cpath = _env->GetStringUTFChars(path, 0);
+  const char* cpath = NULL;
+  if (path) {
+    cpath = _env->GetStringUTFChars(path, 0);
+  }
+
   jthrowable exception = NewException(_env, errorno, NULL, NULL, cpath);
   jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
   assert(args);
@@ -350,7 +356,10 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, int errorno)
       fs_type,
       id,
       args);
-  _env->ReleaseStringUTFChars(path, cpath);
+
+  if (path) {
+    _env->ReleaseStringUTFChars(path, cpath);
+  }
 }
 
 static void _fs_cb(uv_fs_t* req) {
