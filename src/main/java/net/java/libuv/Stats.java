@@ -27,25 +27,36 @@ package net.java.libuv;
 
 public class Stats {
 
-    private final int dev;
-    private final int ino;
-    private final int mode;
-    private final int nlink;
-    private final int uid;
-    private final int gid;
-    private final int rdev;
-    private final long size;
-    private final int blksize;
-    private final long blocks;
-    private final long atime;
-    private final long mtime;
-    private final long ctime;
+    private int dev;
+    private int ino;
+    private int mode;
+    private int nlink;
+    private int uid;
+    private int gid;
+    private int rdev;
+    private long size;
+    private int blksize;
+    private long blocks;
+    private long atime;
+    private long mtime;
+    private long ctime;
+
+    public Stats() {
+    }
 
     public Stats(final int dev, final int ino, final int mode,
                  final int nlink, final int uid, final int gid,
                  final int rdev, final long size, final int blksize,
                  final long blocks, final long atime, final long mtime,
                  final long ctime) {
+        set(dev, ino, mode, nlink, uid, gid, rdev, size, blksize, blocks, atime, mtime, ctime);
+    }
+
+    public void set(final int dev, final int ino, final int mode,
+                    final int nlink, final int uid, final int gid,
+                    final int rdev, final long size, final int blksize,
+                    final long blocks, final long atime, final long mtime,
+                    final long ctime) {
         this.dev = dev;
         this.ino = ino;
         this.mode = mode;
@@ -60,7 +71,7 @@ public class Stats {
         this.mtime = mtime;
         this.ctime = ctime;
     }
-
+    
     public int getDev() {
         return dev;
     }

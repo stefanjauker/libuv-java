@@ -28,6 +28,7 @@
             <class name="net.java.libuv.Files"/>
             <class name="net.java.libuv.handles.CheckHandle"/>
             <class name="net.java.libuv.handles.FileEventHandle"/>
+            <class name="net.java.libuv.handles.FilePollHandle"/>
             <class name="net.java.libuv.handles.Handle"/>
             <class name="net.java.libuv.handles.IdleHandle"/>
             <class name="net.java.libuv.handles.LoopHandle"/>

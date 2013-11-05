@@ -29,11 +29,15 @@ import java.nio.ByteBuffer;
 
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.NativeException;
+import net.java.libuv.Stats;
+
 import net.java.libuv.cb.CallbackExceptionHandler;
 import net.java.libuv.cb.CallbackHandler;
 import net.java.libuv.cb.CheckCallback;
 import net.java.libuv.cb.FileCallback;
 import net.java.libuv.cb.FileEventCallback;
+import net.java.libuv.cb.FilePollCallback;
+import net.java.libuv.cb.FilePollStopCallback;
 import net.java.libuv.cb.IdleCallback;
 import net.java.libuv.cb.ProcessCallback;
 import net.java.libuv.cb.SignalCallback;
@@ -178,6 +182,24 @@ public final class LoopHandle {
                 try {
                     cb.call(status, event, filename);
                 } catch (final Exception ex) {
+                    exceptionHandler.handle(ex);
+                }
+            }
+
+            @Override
+            public void handleFilePollCallback(FilePollCallback cb, int status, Stats previous, Stats current) {
+                try {
+                    cb.onPoll(status, previous, current);
+                } catch (Exception ex) {
+                    exceptionHandler.handle(ex);
+                }
+            }
+
+            @Override
+            public void handleFilePollStopCallback(FilePollStopCallback cb) {
+                try {
+                    cb.onStop();
+                } catch (Exception ex) {
                     exceptionHandler.handle(ex);
                 }
             }

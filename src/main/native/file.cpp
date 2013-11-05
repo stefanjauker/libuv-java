@@ -28,6 +28,7 @@
 #include <string.h>
 
 #include "uv.h"
+#include "stats.h"
 #include "throw.h"
 #include "net_java_libuv_Files.h"
 
@@ -92,8 +93,7 @@ private:
 public:
   static jclass _object_cid;
 
-  static void static_initialize(JNIEnv *env, jclass cls);
-  static jobject build_stats(uv_statbuf_t *ptr);
+  static void static_initialize(JNIEnv *env, jclass cls);  
   static JNIEnv* env() { return _env; }
 
   FileCallbacks();
@@ -206,35 +206,6 @@ void FileCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   assert(_error);
 }
 
-jobject FileCallbacks::build_stats(uv_statbuf_t *ptr) {
-  if (ptr) {
-    int blksize = 0;
-    jlong blocks = 0;
-#ifdef __POSIX__
-    blksize = ptr->st_blksize;
-    blocks = ptr->st_blocks;
-#endif
-
-    return _env->NewObject(
-        _stats_cid,
-        _stats_init_mid,
-        ptr->st_dev,
-        ptr->st_ino,
-        ptr->st_mode,
-        ptr->st_nlink,
-        ptr->st_uid,
-        ptr->st_gid,
-        ptr->st_rdev,
-        ptr->st_size,
-        blksize,
-        blocks,
-        ptr->st_atime * 1000,     // Convert seconds to milliseconds
-        ptr->st_mtime * 1000,     // Convert seconds to milliseconds
-        ptr->st_ctime * 1000);    // Convert seconds to milliseconds
-  }
-  return NULL;
-}
-
 FileCallbacks::FileCallbacks() {
 }
 
@@ -316,7 +287,7 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t resu
     case UV_FS_STAT:
     case UV_FS_LSTAT:
     case UV_FS_FSTAT:
-      arg = build_stats(static_cast<uv_statbuf_t*>(ptr));
+      arg = Stats::create(static_cast<uv_statbuf_t*>(ptr));
       break;
 
     case UV_FS_READLINK:
@@ -724,7 +695,7 @@ JNIEXPORT jobject JNICALL Java_net_java_libuv_Files__1stat
   } else {
     uv_fs_t req;
     int r = uv_fs_stat(cb->loop(), &req, cpath, NULL);
-    stats = FileCallbacks::build_stats(static_cast<uv_statbuf_t *>(req.ptr));
+    stats = Stats::create(static_cast<uv_statbuf_t *>(req.ptr));
     uv_fs_req_cleanup(&req);
     if (r < 0) {
       ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_stat", NULL, cpath);
@@ -753,7 +724,7 @@ JNIEXPORT jobject JNICALL Java_net_java_libuv_Files__1fstat
   } else {
     uv_fs_t req;
     int r = uv_fs_fstat(cb->loop(), &req, fd, NULL);
-    stats = FileCallbacks::build_stats(static_cast<uv_statbuf_t*>(req.ptr));
+    stats = Stats::create(static_cast<uv_statbuf_t*>(req.ptr));
     uv_fs_req_cleanup(&req);
     if (r < 0) {
       ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_fstat");
@@ -1006,7 +977,7 @@ JNIEXPORT jobject JNICALL Java_net_java_libuv_Files__1lstat
   } else {
     uv_fs_t req;
     int r = uv_fs_lstat(cb->loop(), &req, cpath, NULL);
-    stats = FileCallbacks::build_stats(static_cast<uv_statbuf_t*>(req.ptr));
+    stats = Stats::create(static_cast<uv_statbuf_t*>(req.ptr));
     uv_fs_req_cleanup(&req);
     if (r < 0) {
       ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_lstat", NULL, cpath);
