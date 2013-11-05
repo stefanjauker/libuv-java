@@ -382,6 +382,7 @@ JNIEXPORT void JNICALL Java_net_java_libuv_Files__1static_1initialize
   (JNIEnv *env, jclass cls) {
 
   FileCallbacks::static_initialize(env, cls);
+  Stats::static_initialize(env);
 }
 
 /*

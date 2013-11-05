@@ -41,6 +41,9 @@ Stats::~Stats() {
 }
 
 void Stats::static_initialize(JNIEnv* env) {
+  if (_env) {
+    return;
+  }
   _env = env;
   assert(_env);
 
