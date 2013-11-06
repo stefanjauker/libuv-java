@@ -41,7 +41,10 @@ import net.java.libuv.Files;
 import net.java.libuv.NativeException;
 import net.java.libuv.Stats;
 import net.java.libuv.TestBase;
+import net.java.libuv.cb.FileReadCallback;
+import net.java.libuv.cb.FileWriteCallback;
 import net.java.libuv.handles.LoopHandle;
+import net.java.libuv.runner.TestRunner;
 
 public class FilesTest extends TestBase {
 
@@ -119,22 +122,23 @@ public class FilesTest extends TestBase {
             }
         });
 
-        handle.setWriteCallback(new FileCallback() {
+        handle.setWriteCallback(new FileWriteCallback() {
             @Override
-            public void call(final int id, final Object[] args) throws Exception {
+            public void onWrite(int callbackId, int bytesWritten, Exception error) throws Exception {
                 writeCallbackCalled.set(true);
-                checkCallbackArgs(args);
-                final long written = (Long) args[0];
-                Assert.assertTrue(written == data.getBytes().length);
+                Assert.assertNull(error);
+                Assert.assertEquals(bytesWritten, data.getBytes().length);
                 handle.read(fd.get(), readBuffer, 0, readBuffer.length, 0, CALLBACK_ID);
             }
         });
 
-        handle.setReadCallback(new FileCallback() {
+        handle.setReadCallback(new FileReadCallback() {
             @Override
-            public void call(final int id, final Object[] args) throws Exception {
+            public void onRead(int callbackId, int bytesRead, byte[] data, Exception error) throws Exception {
                 readCallbackCalled.set(true);
-                Assert.assertEquals(writeBuffer, readBuffer);
+                Assert.assertNull(error);
+                Assert.assertEquals(bytesRead, writeBuffer.length);
+                Assert.assertEquals(data, writeBuffer);
                 handle.close(fd.get(), CALLBACK_ID);
             }
         });
@@ -412,4 +416,8 @@ public class FilesTest extends TestBase {
         }
     }
 
+    public static void main(String[] args) throws Exception {
+        final String[] classes = {FilesTest.class.getName()};
+        TestRunner.main(classes);
+    }
 }

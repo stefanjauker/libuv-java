@@ -26,9 +26,9 @@
 package net.java.libuv.pummel;
 
 import net.java.libuv.Constants;
-import net.java.libuv.cb.FileCallback;
 import net.java.libuv.Files;
 import net.java.libuv.TestBase;
+import net.java.libuv.cb.FileReadCallback;
 import net.java.libuv.handles.LoopHandle;
 
 import java.io.File;
@@ -52,11 +52,11 @@ public class FileReadTest extends TestBase {
         loop = new LoopHandle();
         handle = new Files(loop);
 
-        handle.setReadCallback(new FileCallback() {
+        handle.setReadCallback(new FileReadCallback() {
             @Override
-            public void call(int id, Object[] args) throws Exception {
+            public void onRead(int callbackId, int bytesRead, byte[] data, Exception error) throws Exception {
                 if ((count % 1000) == 0) {
-                    System.out.print(" " + count + " ");
+                    System.out.print(count + " ");
                 }
                 if (count > ITERATIONS) {
                     System.out.println("Max number of ITERATIONS reached");
@@ -71,8 +71,8 @@ public class FileReadTest extends TestBase {
                     System.exit(0);
                 }
 
-                if ((Long)args[0] != BUFFER_SIZE) {
-                    System.out.println("wrong number of bytes returned " + (Long)args[0] + " ITERATIONS " + count);
+                if (bytesRead != BUFFER_SIZE) {
+                    System.out.println("wrong number of bytes returned " + bytesRead + " ITERATIONS " + count);
                     handle.close(fd);
                     handle.unlink(filename);
                     System.exit(0);

@@ -29,6 +29,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.java.libuv.cb.FileCallback;
+import net.java.libuv.cb.FileReadCallback;
+import net.java.libuv.cb.FileWriteCallback;
 import net.java.libuv.handles.LoopHandle;
 
 public final class Files {
@@ -71,8 +73,8 @@ public final class Files {
     private FileCallback onCustom = null;
     private FileCallback onOpen = null;
     private FileCallback onClose = null;
-    private FileCallback onRead = null;
-    private FileCallback onWrite = null;
+    private FileReadCallback onRead = null;
+    private FileWriteCallback onWrite = null;
     private FileCallback onSendfile = null;
     private FileCallback onStat = null;
     private FileCallback onLStat = null;
@@ -121,11 +123,11 @@ public final class Files {
         onClose = callback;
     }
 
-    public void setReadCallback(final FileCallback callback) {
+    public void setReadCallback(final FileReadCallback callback) {
         onRead = callback;
     }
 
-    public void setWriteCallback(final FileCallback callback) {
+    public void setWriteCallback(final FileWriteCallback callback) {
         onWrite = callback;
     }
 
@@ -503,22 +505,25 @@ public final class Files {
         Integer fd;
         switch (type) {
             case UV_FS_CUSTOM: if (onCustom != null) {call(onCustom, callbackId,  args);} break;
+
             case UV_FS_OPEN:
                 assert args != null && args.length == 2 && args[0] != null && args[1] != null;
                 fd = (Integer) args[0];
                 if (fd != -1) {
                     paths.put(fd, (String) args[1]);
                 }
-                if (onOpen != null) {call(onOpen, callbackId,  args);} break;
+                if (onOpen != null) {call(onOpen, callbackId,  args);}
+                break;
+
             case UV_FS_CLOSE:
                 assert args != null && args.length == 1 && args[0] != null;
                 fd = (Integer) args[0];
                 if (fd != -1) {
                     paths.remove(fd);
                 }
-                if (onClose != null) {call(onClose, callbackId,  args);} break;
-            case UV_FS_READ: if (onRead != null) {call(onRead, callbackId, args);} break;
-            case UV_FS_WRITE: if (onWrite != null) {call(onWrite, callbackId,  args);} break;
+                if (onClose != null) {call(onClose, callbackId,  args);}
+                break;
+
             case UV_FS_SENDFILE: if (onSendfile != null) {call(onSendfile, callbackId,  args);} break;
             case UV_FS_STAT: if (onStat != null) {call(onStat, callbackId,  args);} break;
             case UV_FS_LSTAT: if (onLStat != null) {call(onLStat, callbackId,  args);} break;
@@ -546,6 +551,18 @@ public final class Files {
 
     private void call(final FileCallback callback, final int callbackId, final Object... args) {
        loop.getCallbackHandler().handleFileCallback(callback, callbackId, args);
+    }
+
+    private void callRead(final int callbackId, final int bytesRead, final byte[] data, final Exception error) {
+        if (onRead != null) {
+            loop.getCallbackHandler().handleFileReadCallback(onRead, callbackId, bytesRead, data, error);
+        }
+    }
+
+    private void callWrite(final int callbackId, final int bytesWritten, final Exception error) {
+        if (onWrite != null) {
+            loop.getCallbackHandler().handleFileWriteCallback(onWrite, callbackId, bytesWritten, error);
+        }
     }
 
     private static native void _static_initialize();

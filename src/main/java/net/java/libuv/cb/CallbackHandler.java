@@ -38,6 +38,8 @@ public interface CallbackHandler {
     public void handleStreamRead2Callback(StreamRead2Callback cb, ByteBuffer data, long handle, int type);
     public void handleStreamWriteCallback(StreamWriteCallback cb, int status, Exception error);
     public void handleFileCallback(FileCallback cb, int id, Object[] args);
+    public void handleFileReadCallback(FileReadCallback cb, int callbackId, int bytesRead, byte[] data, Exception error);
+    public void handleFileWriteCallback(FileWriteCallback cb, int callbackId, int bytesWritten, Exception error);
     public void handleFileEventCallback(FileEventCallback cb, int status, String event, String filename);
     public void handleFilePollCallback(FilePollCallback cb, int status, Stats previous, Stats current);
     public void handleFilePollStopCallback(FilePollStopCallback cb);
