@@ -99,4 +99,9 @@ public final class NativeException extends RuntimeException {
         return sb.toString();
     }
 
+    public static void static_initialize() {
+        _static_initialize();
+    }
+
+    private static native void _static_initialize();
 }

@@ -29,7 +29,7 @@
 #include <vector>
 
 #include "uv.h"
-#include "throw.h"
+#include "exception.h"
 #include "handle.h"
 #include "net_java_libuv_handles_LoopHandle.h"
 

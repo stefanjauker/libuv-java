@@ -28,7 +28,7 @@
 #include <stdlib.h>
 
 #include "uv.h"
-#include "throw.h"
+#include "exception.h"
 #include "stream.h"
 #include "udp.h"
 #include "net_java_libuv_handles_UDPHandle.h"
@@ -115,6 +115,7 @@ void UDPCallbacks::on_recv(ssize_t nread, uv_buf_t buf, struct sockaddr* addr, u
   }
   jobject rinfo_arg = addr ? StreamCallbacks::_address_to_js(_env, addr) : NULL;
   jobjectArray args = _env->NewObjectArray(3, _object_cid, 0);
+  OOM(_env, args);
   _env->SetObjectArrayElement(args, 0, nread_arg);
   _env->SetObjectArrayElement(args, 1, buffer_arg);
   _env->SetObjectArrayElement(args, 2, rinfo_arg);
@@ -142,7 +143,7 @@ void UDPCallbacks::on_send(int status, int error_code) {
   jobject status_value = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, status);
   jthrowable exception = NewException(_env, error_code);
   jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
-  assert(args);
+  OOM(_env, args);
   _env->SetObjectArrayElement(args, 0, status_value);
   _env->SetObjectArrayElement(args, 1, exception);
   _env->CallVoidMethod(

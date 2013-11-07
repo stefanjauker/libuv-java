@@ -27,7 +27,7 @@
 #include <assert.h>
 
 #include "uv.h"
-#include "throw.h"
+#include "exception.h"
 #include "net_java_libuv_handles_ProcessHandle.h"
 
 class ProcessCallbacks {
@@ -118,7 +118,7 @@ void ProcessCallbacks::on_exit(int status, int signal) {
   jobject signal_arg = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, signal);
   assert(signal_arg);
   jobjectArray args = _env->NewObjectArray(2, _integer_cid, 0);
-  assert(args);
+  OOM(_env, args);
   _env->SetObjectArrayElement(args, 0, status_arg);
   _env->SetObjectArrayElement(args, 1, signal_arg);
   _env->CallVoidMethod(
@@ -138,7 +138,7 @@ void ProcessCallbacks::on_exit(int status, int signal, int error_code) {
   assert(signal_arg);
   jthrowable exception = NewException(_env, error_code);
   jobjectArray args = _env->NewObjectArray(3, _object_cid, 0);
-  assert(args);
+  OOM(_env, args);
   _env->SetObjectArrayElement(args, 0, status_arg);
   _env->SetObjectArrayElement(args, 1, signal_arg);
   _env->SetObjectArrayElement(args, 2, exception);

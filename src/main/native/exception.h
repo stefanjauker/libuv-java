@@ -29,10 +29,28 @@
 #ifndef _libuv_java_throw_h_
 #define _libuv_java_throw_h_
 
+#ifndef FUNCTION_NAME
+  #ifdef _WIN32
+    #define FUNCTION_NAME   __FUNCTION__
+  #else
+    #define FUNCTION_NAME   __func__
+  #endif
+#endif
+
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+
+#define OOM(e, p) \
+  if ((!p)) { \
+    ThrowOutOfMemoryError((e), (FUNCTION_NAME), (__FILE__), (TOSTRING(__LINE__)), (#p)); \
+    return; \
+  }
+
 const char* get_uv_errno_string(int errorno);
 const char* get_uv_errno_message(int errorno);
 jstring utf(JNIEnv* env, const std::string& s);
 jthrowable NewException(JNIEnv* env, int errorno, const char *syscall, const char *msg, const char *path);
+void ThrowOutOfMemoryError(JNIEnv* env, const char* func, const char* file, const char* line, const char* msg);
 
 inline jthrowable NewException(JNIEnv* env, int errorno) {
   return NewException(env, errorno, NULL, NULL, NULL);

@@ -52,6 +52,10 @@ import net.java.libuv.cb.UDPCallback;
 
 public final class LoopHandle {
 
+    static {
+        NativeException.static_initialize();
+    }
+
     // Track the number of created LoopHandles.
     private static int createdLoopCount = 0;
 

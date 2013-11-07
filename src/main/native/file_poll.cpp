@@ -29,7 +29,7 @@
 #include <jni.h>
 
 #include "uv.h"
-#include "throw.h"
+#include "exception.h"
 #include "stats.h"
 #include "stream.h"
 #include "net_java_libuv_handles_FilePollHandle.h"

@@ -29,7 +29,7 @@
 
 #include "uv.h"
 #include "stats.h"
-#include "throw.h"
+#include "exception.h"
 #include "net_java_libuv_Files.h"
 
 #ifdef __MACOS__
@@ -264,7 +264,7 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t resu
 
     case UV_FS_OPEN: {
       jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
-      assert(args);
+      OOM(_env, args);
       _env->SetObjectArrayElement(args, 0, _env->CallStaticObjectMethod(_int_cid, _int_valueof_mid, result));
       _env->SetObjectArrayElement(args, 1, request->path());
       _env->CallVoidMethod(
@@ -289,6 +289,7 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t resu
 
     case UV_FS_READLINK:
       arg = _env->NewStringUTF(static_cast<char*>(ptr));
+      OOM(_env, arg);
       break;
 
     case UV_FS_READDIR: {
@@ -296,9 +297,10 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t resu
       int nnames = static_cast<int>(result);
 
       jobjectArray names = _env->NewObjectArray(nnames, _object_cid, 0);
-
+      OOM(_env, names);
       for (int i = 0; i < nnames; i++) {
         jstring name = _env->NewStringUTF(namebuf);
+        OOM(_env, name);
         _env->SetObjectArrayElement(names, i, name);
 #ifndef NDEBUG
         namebuf += strlen(namebuf);
@@ -383,7 +385,7 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, int errorno)
 
     default:
       jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
-      assert(args);
+      OOM(_env, args);
       _env->SetObjectArrayElement(args, 0, _error);
       _env->SetObjectArrayElement(args, 1, exception);
       _env->CallVoidMethod(

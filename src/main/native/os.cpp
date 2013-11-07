@@ -31,7 +31,7 @@
 #endif
 
 #include "uv.h"
-#include "throw.h"
+#include "exception.h"
 #include "net_java_libuv_LibUV.h"
 
 /*

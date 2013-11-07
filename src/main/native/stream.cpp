@@ -27,7 +27,7 @@
 #include <stdlib.h>
 
 #include "uv.h"
-#include "throw.h"
+#include "exception.h"
 #include "stream.h"
 #include "udp.h"
 #include "net_java_libuv_handles_StreamHandle.h"
@@ -215,7 +215,7 @@ void StreamCallbacks::on_connect(int status, int error_code) {
   jobject status_value = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, status);
   jthrowable exception = NewException(_env, error_code);
   jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
-  assert(args);
+  OOM(_env, args);
   _env->SetObjectArrayElement(args, 0, status_value);
   _env->SetObjectArrayElement(args, 1, exception);
   _env->CallVoidMethod(
@@ -243,7 +243,7 @@ void StreamCallbacks::on_connection(int status, int error_code) {
   jobject status_value = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, status);
   jthrowable exception = NewException(_env, error_code);
   jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
-  assert(args);
+  OOM(_env, args);
   _env->SetObjectArrayElement(args, 0, status_value);
   _env->SetObjectArrayElement(args, 1, exception);
   _env->CallVoidMethod(
@@ -271,7 +271,7 @@ void StreamCallbacks::on_shutdown(int status, int error_code) {
   jobject status_value = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, status);
   jthrowable exception = NewException(_env, error_code);
   jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
-  assert(args);
+  OOM(_env, args);
   _env->SetObjectArrayElement(args, 0, status_value);
   _env->SetObjectArrayElement(args, 1, exception);
   _env->CallVoidMethod(

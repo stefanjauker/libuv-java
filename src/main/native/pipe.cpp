@@ -26,7 +26,7 @@
 #include <assert.h>
 
 #include "uv.h"
-#include "throw.h"
+#include "exception.h"
 #include "stream.h"
 #include "net_java_libuv_handles_PipeHandle.h"
 
