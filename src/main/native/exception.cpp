@@ -110,14 +110,11 @@ static jmethodID _oom_init_mid = NULL;
 void ThrowOutOfMemoryError(JNIEnv* env, const char* func, const char* file, const char* line, const char* msg) {
 #ifdef _WIN32
   const char* filename = strrchr(file, '\\');
+  _snprintf_s(_message, MESSAGE_SIZE, _TRUNCATE, "%s:%s %s.%s", filename ? filename + 1 : file, line, func, msg);
 #else
   const char* filename = strrchr(file, '/');
+  snprintf(_message, MESSAGE_SIZE, "%s:%s %s.%s", filename ? filename + 1 : file, line, func, msg);
 #endif
-  if (filename) {
-    snprintf(_message, MESSAGE_SIZE, "%s:%s %s.%s", filename + 1, line, func, msg);
-  } else {
-    snprintf(_message, MESSAGE_SIZE, "%s:%s %s.%s", file, line, func, msg);
-  }
 
   jstring message = env->NewStringUTF(_message);
   jthrowable oom = (jthrowable) env->NewObject(_oom_cid, _oom_init_mid, message);
