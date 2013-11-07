@@ -130,7 +130,8 @@ public class TestRunner {
                                         final Object instance,
                                         final Object... args) throws Exception {
         if (method != null) {
-            if (method.getParameterCount() == 0) {
+            final Class<?>[] parameterTypes = method.getParameterTypes();
+            if (parameterTypes.length == 0) {
                 method.invoke(instance);
             } else {
                 method.invoke(instance, args);
