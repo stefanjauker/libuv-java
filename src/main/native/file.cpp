@@ -259,7 +259,7 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t resu
     case UV_FS_FCHMOD:
     case UV_FS_CHOWN:
     case UV_FS_FCHOWN:
-      arg = NULL;
+      arg = _env->CallStaticObjectMethod(_int_cid, _int_valueof_mid, result);
       break;
 
     case UV_FS_OPEN: {
@@ -283,14 +283,33 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t resu
 
     case UV_FS_STAT:
     case UV_FS_LSTAT:
-    case UV_FS_FSTAT:
-      arg = Stats::create(static_cast<uv_statbuf_t*>(ptr));
-      break;
+    case UV_FS_FSTAT: {
+      jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
+      OOM(_env, args);
+      _env->SetObjectArrayElement(args, 0, _env->CallStaticObjectMethod(_int_cid, _int_valueof_mid, result));
+      _env->SetObjectArrayElement(args, 1, Stats::create(static_cast<uv_statbuf_t*>(ptr)));
+      _env->CallVoidMethod(
+          _instance,
+          _callback_narg_mid,
+          fs_type,
+          id,
+          args);
+      return;
+    }
 
-    case UV_FS_READLINK:
-      arg = _env->NewStringUTF(static_cast<char*>(ptr));
-      OOM(_env, arg);
-      break;
+    case UV_FS_READLINK: {
+      jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
+      OOM(_env, args);
+      _env->SetObjectArrayElement(args, 0, _env->CallStaticObjectMethod(_int_cid, _int_valueof_mid, result));
+      _env->SetObjectArrayElement(args, 1, _env->NewStringUTF(static_cast<char*>(ptr)));
+      _env->CallVoidMethod(
+          _instance,
+          _callback_narg_mid,
+          fs_type,
+          id,
+          args);
+      return;
+    }
 
     case UV_FS_READDIR: {
       char *namebuf = static_cast<char*>(ptr);
@@ -310,12 +329,18 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t resu
         namebuf += strlen(namebuf) + 1;
 #endif
       }
+
+      jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
+      OOM(_env, args);
+      _env->SetObjectArrayElement(args, 0, _env->CallStaticObjectMethod(_int_cid, _int_valueof_mid, result));
+      _env->SetObjectArrayElement(args, 1, names);
+
       _env->CallVoidMethod(
           _instance,
           _callback_narg_mid,
           fs_type,
           id,
-          names);
+          args);
       return;
     }
 
