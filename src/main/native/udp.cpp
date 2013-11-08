@@ -39,14 +39,12 @@ uv_buf_t _alloc_cb(uv_handle_t* handle, size_t suggested_size) {
   return uv_buf_init(new char[suggested_size], static_cast<unsigned int>(suggested_size));
 }
 
-jclass UDPCallbacks::_object_cid = NULL;
-jclass UDPCallbacks::_integer_cid = NULL;
 jclass UDPCallbacks::_udp_handle_cid = NULL;
 jclass UDPCallbacks::_buffer_cid = NULL;
 
-jmethodID UDPCallbacks::_integer_valueof_mid = NULL;
-jmethodID UDPCallbacks::_callback_1arg_mid = NULL;
-jmethodID UDPCallbacks::_callback_narg_mid = NULL;
+jmethodID UDPCallbacks::_recv_callback_mid = NULL;
+jmethodID UDPCallbacks::_send_callback_mid = NULL;
+jmethodID UDPCallbacks::_close_callback_mid = NULL;
 jmethodID UDPCallbacks::_buffer_wrap_mid = NULL;
 
 JNIEnv* UDPCallbacks::_env = NULL;
@@ -55,23 +53,10 @@ void UDPCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _env = env;
   assert(_env);
 
-  _object_cid = env->FindClass("java/lang/Object");
-  assert(_object_cid);
-  _object_cid = (jclass) env->NewGlobalRef(_object_cid);
-  assert(_object_cid);
-
-  _integer_cid = env->FindClass("java/lang/Integer");
-  assert(_integer_cid);
-  _integer_cid = (jclass) env->NewGlobalRef(_integer_cid);
-  assert(_integer_cid);
-
   _buffer_cid = env->FindClass("java/nio/ByteBuffer");
   assert(_buffer_cid);
   _buffer_cid = (jclass) env->NewGlobalRef(_buffer_cid);
   assert(_buffer_cid);
-
-  _integer_valueof_mid = env->GetStaticMethodID(_integer_cid, "valueOf", "(I)Ljava/lang/Integer;");
-  assert(_integer_valueof_mid);
 
   _buffer_wrap_mid = env->GetStaticMethodID(_buffer_cid, "wrap", "([B)Ljava/nio/ByteBuffer;");
   assert(_buffer_wrap_mid);
@@ -79,10 +64,12 @@ void UDPCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _udp_handle_cid = (jclass) env->NewGlobalRef(cls);
   assert(_udp_handle_cid);
 
-  _callback_1arg_mid = env->GetMethodID(_udp_handle_cid, "callback", "(ILjava/lang/Object;)V");
-  assert(_callback_1arg_mid);
-  _callback_narg_mid = env->GetMethodID(_udp_handle_cid, "callback", "(I[Ljava/lang/Object;)V");
-  assert(_callback_narg_mid);
+  _recv_callback_mid = env->GetMethodID(_udp_handle_cid, "callRecv", "(ILjava/nio/ByteBuffer;Lnet/java/libuv/Address;)V");
+  assert(_recv_callback_mid);
+  _send_callback_mid = env->GetMethodID(_udp_handle_cid, "callSend", "(ILjava/lang/Exception;)V");
+  assert(_send_callback_mid);
+  _close_callback_mid = env->GetMethodID(_udp_handle_cid, "callClose", "()V");
+  assert(_close_callback_mid);
 
   // ensure JNI ids used by StreamCallbacks::_address_to_js are initialized
   StreamCallbacks::static_initialize_address(env);
@@ -103,8 +90,6 @@ UDPCallbacks::~UDPCallbacks() {
 
 void UDPCallbacks::on_recv(ssize_t nread, uv_buf_t buf, struct sockaddr* addr, unsigned flags) {
   if (nread == 0) return;
-  jobject nread_arg = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, nread);
-  assert(nread_arg);
   jobject buffer_arg = NULL;
   if (nread > 0) {
     jsize size = static_cast<jsize>(nread);
@@ -114,51 +99,29 @@ void UDPCallbacks::on_recv(ssize_t nread, uv_buf_t buf, struct sockaddr* addr, u
     free(buf.base);
   }
   jobject rinfo_arg = addr ? StreamCallbacks::_address_to_js(_env, addr) : NULL;
-  jobjectArray args = _env->NewObjectArray(3, _object_cid, 0);
-  OOM(_env, args);
-  _env->SetObjectArrayElement(args, 0, nread_arg);
-  _env->SetObjectArrayElement(args, 1, buffer_arg);
-  _env->SetObjectArrayElement(args, 2, rinfo_arg);
   _env->CallVoidMethod(
       _instance,
-      _callback_narg_mid,
-      UDP_RECV_CALLBACK,
-      args);
-}
-
-void UDPCallbacks::on_send(int status) {
-  jobject arg = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, status);
-  assert(arg);
-  _env->CallVoidMethod(
-      _instance,
-      _callback_1arg_mid,
-      UDP_SEND_CALLBACK,
-      arg);
+      _recv_callback_mid,
+      nread,
+      buffer_arg,
+      rinfo_arg);
 }
 
 void UDPCallbacks::on_send(int status, int error_code) {
   assert(_env);
-  assert(status < 0);
 
-  jobject status_value = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, status);
-  jthrowable exception = NewException(_env, error_code);
-  jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
-  OOM(_env, args);
-  _env->SetObjectArrayElement(args, 0, status_value);
-  _env->SetObjectArrayElement(args, 1, exception);
+  jthrowable exception = error_code ? NewException(_env, error_code) : NULL;
   _env->CallVoidMethod(
       _instance,
-      _callback_narg_mid,
-      UDP_SEND_CALLBACK,
-      args);
+      _send_callback_mid,
+      status,
+      exception);
 }
 
 void UDPCallbacks::on_close() {
   _env->CallVoidMethod(
       _instance,
-      _callback_1arg_mid,
-      UDP_CLOSE_CALLBACK,
-      NULL);
+      _close_callback_mid);
 }
 
 static void _close_cb(uv_handle_t* handle) {
@@ -183,12 +146,7 @@ static void _send_cb(uv_udp_send_t* req, int status) {
   assert(req->handle->data);
   assert(req->data);
   UDPCallbacks* cb = reinterpret_cast<UDPCallbacks*>(req->handle->data);
-  if (status < 0) {
-    int error_code = uv_last_error(req->handle->loop).code;
-    cb->on_send(status, error_code);
-  } else {
-    cb->on_send(status);
-  }
+  cb->on_send(status, status < 0 ? uv_last_error(req->handle->loop).code : 0);
   delete[] reinterpret_cast<jbyte*>(req->data);
   delete req;
 }

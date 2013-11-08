@@ -26,18 +26,22 @@
 package net.java.libuv.handles;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 
 import net.java.libuv.Address;
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.cb.UDPCallback;
+import net.java.libuv.cb.UDPCloseCallback;
+import net.java.libuv.cb.UDPRecvCallback;
+import net.java.libuv.cb.UDPSendCallback;
 
 public final class UDPHandle extends Handle {
 
     private boolean closed;
 
-    private UDPCallback onRecv = null;
-    private UDPCallback onSend = null;
-    private UDPCallback onClose = null;
+    private UDPRecvCallback onRecv = null;
+    private UDPSendCallback onSend = null;
+    private UDPCloseCallback onClose = null;
 
     public enum Membership {
         // must be equal to uv_membership values in uv.h
@@ -55,15 +59,15 @@ public final class UDPHandle extends Handle {
         _static_initialize();
     }
 
-    public void setRecvCallback(final UDPCallback callback) {
+    public void setRecvCallback(final UDPRecvCallback callback) {
         onRecv = callback;
     }
 
-    public void setSendCallback(final UDPCallback callback) {
+    public void setSendCallback(final UDPSendCallback callback) {
         onSend = callback;
     }
 
-    public void setCloseCallback(final UDPCallback callback) {
+    public void setCloseCallback(final UDPCloseCallback callback) {
         onClose = callback;
     }
 
@@ -202,22 +206,22 @@ public final class UDPHandle extends Handle {
         super.finalize();
     }
 
-    private void callback(final int type, final Object arg) {
-        final Object[] args = {arg};
-        callback(type, args);
-    }
-
-    private void callback(final int type, final Object... args) {
-        switch (type) {
-            case 1: if (onRecv != null) {call(onRecv, args);} break;
-            case 2: if (onSend != null) {call(onSend, args);} break;
-            case 3: if (onClose != null) {call(onClose, args);} break;
-            default: assert false : "unsupported callback type " + type;
+    private void callRecv(final int nread, final ByteBuffer data, final Address address) {
+        if (onRecv != null) {
+            loop.callbackHandler.handleUDPRecvCallback(onRecv, nread, data, address);
         }
     }
 
-    private void call(final UDPCallback callback, final Object... args) {
-       loop.callbackHandler.handleUDPCallback(callback, args);
+    private void callSend(final int status, final Exception error) {
+        if (onSend != null) {
+            loop.callbackHandler.handleUDPSendCallback(onSend, status, error);
+        }
+    }
+
+    private void callClose() {
+        if (onClose != null) {
+            loop.callbackHandler.handleUDPCloseCallback(onClose);
+        }
     }
 
     private static native long _new(final long loop);

@@ -26,6 +26,8 @@
 package net.java.libuv.cb;
 
 import java.nio.ByteBuffer;
+
+import net.java.libuv.Address;
 import net.java.libuv.Stats;
 
 public interface CallbackHandler {
@@ -44,5 +46,7 @@ public interface CallbackHandler {
     public void handleFilePollCallback(FilePollCallback cb, int status, Stats previous, Stats current);
     public void handleFilePollStopCallback(FilePollStopCallback cb);
     public void handleTimerCallback(TimerCallback cb, int status);
-    public void handleUDPCallback(UDPCallback cb, Object[] args);
+    public void handleUDPRecvCallback(UDPRecvCallback cb, int nread, ByteBuffer data, Address address);
+    public void handleUDPSendCallback(UDPSendCallback cb, int status, Exception error);
+    public void handleUDPCloseCallback(UDPCloseCallback cb);
 }

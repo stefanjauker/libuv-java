@@ -27,6 +27,7 @@ package net.java.libuv.handles;
 
 import java.nio.ByteBuffer;
 
+import net.java.libuv.Address;
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.NativeException;
 import net.java.libuv.Stats;
@@ -49,6 +50,9 @@ import net.java.libuv.cb.StreamReadCallback;
 import net.java.libuv.cb.StreamWriteCallback;
 import net.java.libuv.cb.TimerCallback;
 import net.java.libuv.cb.UDPCallback;
+import net.java.libuv.cb.UDPCloseCallback;
+import net.java.libuv.cb.UDPRecvCallback;
+import net.java.libuv.cb.UDPSendCallback;
 
 public final class LoopHandle {
 
@@ -238,9 +242,27 @@ public final class LoopHandle {
             }
 
             @Override
-            public void handleUDPCallback(final UDPCallback cb, final Object[] args) {
+            public void handleUDPRecvCallback(final UDPRecvCallback cb, final int nread, final ByteBuffer data, final Address address) {
                 try {
-                    cb.call(args);
+                    cb.onRecv(nread, data, address);
+                } catch (final Exception ex) {
+                    exceptionHandler.handle(ex);
+                }
+            }
+
+            @Override
+            public void handleUDPSendCallback(final UDPSendCallback cb, final int status, final Exception error) {
+                try {
+                    cb.onSend(status, error);
+                } catch (final Exception ex) {
+                    exceptionHandler.handle(ex);
+                }
+            }
+
+            @Override
+            public void handleUDPCloseCallback(final UDPCloseCallback cb) {
+                try {
+                    cb.onClose();
                 } catch (final Exception ex) {
                     exceptionHandler.handle(ex);
                 }

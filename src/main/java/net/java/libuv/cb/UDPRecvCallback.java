@@ -23,38 +23,14 @@
  * questions.
  */
 
-#ifndef _libuv_java_udp_h_
-#define _libuv_java_udp_h_
+package net.java.libuv.cb;
 
-#include <jni.h>
+import java.nio.ByteBuffer;
 
-#include "uv.h"
+import net.java.libuv.Address;
 
-class UDPCallbacks {
-private:
-  static jclass _udp_handle_cid;
-  static jclass _buffer_cid;
+public interface UDPRecvCallback {
 
-  static jmethodID _recv_callback_mid;
-  static jmethodID _send_callback_mid;
-  static jmethodID _close_callback_mid;
-  static jmethodID _buffer_wrap_mid;
+    public void onRecv(int nread, ByteBuffer data, Address address) throws Exception;
 
-  static JNIEnv* _env;
-
-  jobject _instance;
-
-public:
-  static void static_initialize(JNIEnv* env, jclass cls);
-
-  UDPCallbacks();
-  ~UDPCallbacks();
-
-  void initialize(jobject instance);
-
-  void on_recv(ssize_t nread, uv_buf_t buf, struct sockaddr* addr, unsigned flags);
-  void on_send(int status, int error_code);
-  void on_close();
-};
-
-#endif // _libuv_java_udp_h_
+}

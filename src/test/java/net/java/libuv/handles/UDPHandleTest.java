@@ -25,15 +25,19 @@
 
 package net.java.libuv.handles;
 
+import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import net.java.libuv.Address;
 import net.java.libuv.LoggingCallback;
 import net.java.libuv.TestBase;
 import net.java.libuv.cb.UDPCallback;
+import net.java.libuv.cb.UDPRecvCallback;
+import net.java.libuv.cb.UDPSendCallback;
 
 public class UDPHandleTest extends TestBase {
 
@@ -57,10 +61,11 @@ public class UDPHandleTest extends TestBase {
 
         final UDPCallback serverLoggingCallback = new LoggingCallback("s: ");
 
-        server.setRecvCallback(new UDPCallback() {
+        server.setRecvCallback(new UDPRecvCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
+            public void onRecv(int nread, ByteBuffer data, Address address) throws Exception {
                 if (serverRecvCount.incrementAndGet() < TIMES) {
+                    Object[] args = {nread, data, address};
                     serverLoggingCallback.call(args);
                 } else {
                     server.close();
@@ -69,9 +74,9 @@ public class UDPHandleTest extends TestBase {
             }
         });
 
-        client.setSendCallback(new UDPCallback() {
+        client.setSendCallback(new UDPSendCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
+            public void onSend(int status, Exception error) throws Exception {
                 if (clientSendCount.incrementAndGet() < TIMES) {
                 } else {
                     client.close();
@@ -86,10 +91,6 @@ public class UDPHandleTest extends TestBase {
         for (int i=0; i < TIMES; i++) {
             client.send("PING." + i, PORT, HOST);
         }
-
-        // On Mac, server never receives the message if closed before messages
-        // are sent.
-        //client.close();
 
         final long start = System.currentTimeMillis();
         while (!serverDone.get()) {
@@ -120,10 +121,11 @@ public class UDPHandleTest extends TestBase {
 
         final UDPCallback serverLoggingCallback = new LoggingCallback("s6: ");
 
-        server.setRecvCallback(new UDPCallback() {
+        server.setRecvCallback(new UDPRecvCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
+            public void onRecv(int nread, ByteBuffer data, Address address) throws Exception {
                 if (serverRecvCount.incrementAndGet() < TIMES) {
+                    Object[] args = {nread, data, address};
                     serverLoggingCallback.call(args);
                 } else {
                     server.close();
@@ -132,9 +134,9 @@ public class UDPHandleTest extends TestBase {
             }
         });
 
-        client.setSendCallback(new UDPCallback() {
+        client.setSendCallback(new UDPSendCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
+            public void onSend(int status, Exception error) throws Exception {
                 if (clientSendCount.incrementAndGet() < TIMES) {
                 } else {
                     client.close();
@@ -149,10 +151,6 @@ public class UDPHandleTest extends TestBase {
         for (int i=0; i < TIMES; i++) {
             client.send6("PING." + i, PORT6, HOST6);
         }
-
-        // On Mac, server never receives the message if closed before messages
-        // are sent.
-        //client.close();
 
         final long start = System.currentTimeMillis();
         while (!serverDone.get()) {
