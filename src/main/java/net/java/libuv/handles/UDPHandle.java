@@ -30,7 +30,6 @@ import java.nio.ByteBuffer;
 
 import net.java.libuv.Address;
 import net.java.libuv.LibUVPermission;
-import net.java.libuv.cb.UDPCallback;
 import net.java.libuv.cb.UDPCloseCallback;
 import net.java.libuv.cb.UDPRecvCallback;
 import net.java.libuv.cb.UDPSendCallback;

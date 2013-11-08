@@ -33,9 +33,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import net.java.libuv.Address;
-import net.java.libuv.LoggingCallback;
 import net.java.libuv.TestBase;
-import net.java.libuv.cb.UDPCallback;
 import net.java.libuv.cb.UDPRecvCallback;
 import net.java.libuv.cb.UDPSendCallback;
 
@@ -59,14 +57,11 @@ public class UDPHandleTest extends TestBase {
         final UDPHandle server = new UDPHandle(loop);
         final UDPHandle client = new UDPHandle(loop);
 
-        final UDPCallback serverLoggingCallback = new LoggingCallback("s: ");
-
         server.setRecvCallback(new UDPRecvCallback() {
             @Override
             public void onRecv(int nread, ByteBuffer data, Address address) throws Exception {
                 if (serverRecvCount.incrementAndGet() < TIMES) {
-                    Object[] args = {nread, data, address};
-                    serverLoggingCallback.call(args);
+                    System.out.printf("server.onRecv nread: %d, data: %s, addr: %s\n", nread, new String(data.array()), address);
                 } else {
                     server.close();
                     serverDone.set(true);
@@ -119,14 +114,11 @@ public class UDPHandleTest extends TestBase {
         final UDPHandle server = new UDPHandle(loop);
         final UDPHandle client = new UDPHandle(loop);
 
-        final UDPCallback serverLoggingCallback = new LoggingCallback("s6: ");
-
         server.setRecvCallback(new UDPRecvCallback() {
             @Override
             public void onRecv(int nread, ByteBuffer data, Address address) throws Exception {
                 if (serverRecvCount.incrementAndGet() < TIMES) {
-                    Object[] args = {nread, data, address};
-                    serverLoggingCallback.call(args);
+                    System.out.printf("server6.onRecv nread: %d, data: %s, addr: %s\n", nread, new String(data.array()), address);
                 } else {
                     server.close();
                     serverDone.set(true);

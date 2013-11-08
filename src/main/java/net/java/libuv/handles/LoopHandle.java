@@ -49,7 +49,6 @@ import net.java.libuv.cb.StreamRead2Callback;
 import net.java.libuv.cb.StreamReadCallback;
 import net.java.libuv.cb.StreamWriteCallback;
 import net.java.libuv.cb.TimerCallback;
-import net.java.libuv.cb.UDPCallback;
 import net.java.libuv.cb.UDPCloseCallback;
 import net.java.libuv.cb.UDPRecvCallback;
 import net.java.libuv.cb.UDPSendCallback;
