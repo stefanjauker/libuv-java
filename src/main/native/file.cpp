@@ -214,16 +214,16 @@ void FileCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _read_callback_mid = env->GetMethodID(_files_cid, "callRead", "(II[BLjava/lang/Exception;)V");
   assert(_read_callback_mid);
 
-  _readdir_callback_mid = env->GetMethodID(_files_cid, "callReaddir", "(I[Ljava/lang/String;Ljava/lang/Exception;)V");
+  _readdir_callback_mid = env->GetMethodID(_files_cid, "callReadDir", "(I[Ljava/lang/String;Ljava/lang/Exception;)V");
   assert(_readdir_callback_mid);
 
-  _readlink_callback_mid = env->GetMethodID(_files_cid, "callReadlink", "(ILjava/lang/String;Ljava/lang/Exception;)V");
+  _readlink_callback_mid = env->GetMethodID(_files_cid, "callReadLink", "(ILjava/lang/String;Ljava/lang/Exception;)V");
   assert(_readlink_callback_mid);
 
   _stats_callback_mid = env->GetMethodID(_files_cid, "callStats", "(IILnet/java/libuv/Stats;Ljava/lang/Exception;)V");
   assert(_stats_callback_mid);
 
-  _utime_callback_mid = env->GetMethodID(_files_cid, "callUtime", "(IIJLjava/lang/Exception;)V");
+  _utime_callback_mid = env->GetMethodID(_files_cid, "callUTime", "(IIJLjava/lang/Exception;)V");
   assert(_utime_callback_mid);
 
   _write_callback_mid = env->GetMethodID(_files_cid, "callWrite", "(IILjava/lang/Exception;)V");

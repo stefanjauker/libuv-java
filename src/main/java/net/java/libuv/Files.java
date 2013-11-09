@@ -601,13 +601,13 @@ public final class Files {
         }
     }
 
-    private void callReaddir(final int callbackId, final String[] names, final Exception error) {
+    private void callReadDir(final int callbackId, final String[] names, final Exception error) {
         if (onReadDir != null) {
             loop.getCallbackHandler().handleFileReadDirCallback(onReadDir, callbackId, names, error);
         }
     }
 
-    private void callReadlink(final int callbackId, final String name, final Exception error) {
+    private void callReadLink(final int callbackId, final String name, final Exception error) {
         if (onReadLink != null) {
             loop.getCallbackHandler().handleFileReadLinkCallback(onReadLink, callbackId, name, error);
         }
@@ -634,7 +634,7 @@ public final class Files {
         }
     }
 
-    private void callUtime(final int type, final int callbackId, final long time, final Exception error) {
+    private void callUTime(final int type, final int callbackId, final long time, final Exception error) {
         switch(type) {
             case UV_FS_UTIME:
                 if (onUTime != null) {
