@@ -34,9 +34,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import net.java.libuv.LoggingCallback;
-import net.java.libuv.cb.StreamCallback;
+import net.java.libuv.Logger;
 import net.java.libuv.TestBase;
+import net.java.libuv.cb.StreamCloseCallback;
+import net.java.libuv.cb.StreamConnectCallback;
+import net.java.libuv.cb.StreamConnectionCallback;
 import net.java.libuv.cb.StreamReadCallback;
 
 public class PipeHandleTest extends TestBase {
@@ -63,8 +65,8 @@ public class PipeHandleTest extends TestBase {
         final AtomicBoolean serverDone = new AtomicBoolean(false);
         final AtomicBoolean clientDone = new AtomicBoolean(false);
 
-        final StreamCallback serverLoggingCallback = new LoggingCallback("S: ");
-        final StreamCallback clientLoggingCallback = new LoggingCallback("C: ");
+        final Logger serverLoggingCallback = new Logger("S: ");
+        final Logger clientLoggingCallback = new Logger("C: ");
 
         final LoopHandle loop = new LoopHandle();
         final PipeHandle server = new PipeHandle(loop, false);
@@ -79,7 +81,7 @@ public class PipeHandleTest extends TestBase {
                     peer.close();
                 } else {
                     final Object[] args = {data};
-                    serverLoggingCallback.call(args);
+                    serverLoggingCallback.log(args);
                     if (serverSendCount.get() < TIMES) {
                         peer.write("PING " + serverSendCount.incrementAndGet());
                     } else {
@@ -89,17 +91,17 @@ public class PipeHandleTest extends TestBase {
             }
         });
 
-        peer.setCloseCallback(new StreamCallback() {
+        peer.setCloseCallback(new StreamCloseCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
+            public void onClose() throws Exception {
                 serverDone.set(true);
             }
         });
 
-        server.setConnectionCallback(new StreamCallback() {
+        server.setConnectionCallback(new StreamConnectionCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
-                serverLoggingCallback.call(args);
+            public void onConnection(int status, Exception error) throws Exception {
+                serverLoggingCallback.log(status, error);
                 server.accept(peer);
                 peer.readStart();
                 peer.write("INIT " + serverSendCount.incrementAndGet());
@@ -107,10 +109,10 @@ public class PipeHandleTest extends TestBase {
             }
         });
 
-        client.setConnectCallback(new StreamCallback() {
+        client.setConnectCallback(new StreamConnectCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
-                clientLoggingCallback.call(args);
+            public void onConnect(int status, Exception error) throws Exception {
+                clientLoggingCallback.log(status, error);
                 client.readStart();
             }
         });
@@ -123,7 +125,7 @@ public class PipeHandleTest extends TestBase {
                     client.close();
                 } else {
                     final Object[] args = {data};
-                    clientLoggingCallback.call(args);
+                    clientLoggingCallback.log(args);
                     if (clientSendCount.incrementAndGet() < TIMES) {
                         client.write("PONG " + clientSendCount.get());
                     } else {
@@ -133,9 +135,9 @@ public class PipeHandleTest extends TestBase {
             }
         });
 
-        client.setCloseCallback(new StreamCallback() {
+        client.setCloseCallback(new StreamCloseCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
+            public void onClose() throws Exception {
                 clientDone.set(true);
             }
         });

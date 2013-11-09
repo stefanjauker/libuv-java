@@ -32,22 +32,19 @@
 #include "udp.h"
 #include "net_java_libuv_handles_StreamHandle.h"
 
-jclass StreamCallbacks::_integer_cid = NULL;
-jclass StreamCallbacks::_long_cid = NULL;
-jclass StreamCallbacks::_object_cid = NULL;
 jclass StreamCallbacks::_buffer_cid = NULL;
 jclass StreamCallbacks::_address_cid = NULL;
 jclass StreamCallbacks::_stream_handle_cid = NULL;
 
-jmethodID StreamCallbacks::_integer_valueof_mid = NULL;
-jmethodID StreamCallbacks::_long_valueof_mid = NULL;
 jmethodID StreamCallbacks::_buffer_wrap_mid = NULL;
 jmethodID StreamCallbacks::_address_init_mid = NULL;
-jmethodID StreamCallbacks::_callback_1arg_mid = NULL;
-jmethodID StreamCallbacks::_callback_narg_mid = NULL;
 jmethodID StreamCallbacks::_call_read_callback_mid = NULL;
 jmethodID StreamCallbacks::_call_read2_callback_mid = NULL;
 jmethodID StreamCallbacks::_call_write_callback_mid = NULL;
+jmethodID StreamCallbacks::_call_connect_callback_mid = NULL;
+jmethodID StreamCallbacks::_call_connection_callback_mid = NULL;
+jmethodID StreamCallbacks::_call_close_callback_mid = NULL;
+jmethodID StreamCallbacks::_call_shutdown_callback_mid = NULL;
 
 JNIEnv* StreamCallbacks::_env = NULL;
 
@@ -55,42 +52,16 @@ void StreamCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _env = env;
   assert(_env);
 
-  _integer_cid = env->FindClass("java/lang/Integer");
-  assert(_integer_cid);
-  _integer_cid = (jclass) env->NewGlobalRef(_integer_cid);
-  assert(_integer_cid);
-
-  _long_cid = env->FindClass("java/lang/Long");
-  assert(_long_cid);
-  _long_cid = (jclass) env->NewGlobalRef(_long_cid);
-  assert(_long_cid);
-
-  _object_cid = env->FindClass("java/lang/Object");
-  assert(_object_cid);
-  _object_cid = (jclass) env->NewGlobalRef(_object_cid);
-  assert(_object_cid);
-
   _buffer_cid = env->FindClass("java/nio/ByteBuffer");
   assert(_buffer_cid);
   _buffer_cid = (jclass) env->NewGlobalRef(_buffer_cid);
   assert(_buffer_cid);
-
-  _integer_valueof_mid = env->GetStaticMethodID(_integer_cid, "valueOf", "(I)Ljava/lang/Integer;");
-  assert(_integer_valueof_mid);
-
-  _long_valueof_mid = env->GetStaticMethodID(_long_cid, "valueOf", "(J)Ljava/lang/Long;");
-  assert(_long_valueof_mid);
 
   _buffer_wrap_mid = env->GetStaticMethodID(_buffer_cid, "wrap", "([B)Ljava/nio/ByteBuffer;");
   assert(_buffer_wrap_mid);
 
   _stream_handle_cid = (jclass) env->NewGlobalRef(cls);
   assert(_stream_handle_cid);
-
-  _callback_1arg_mid = env->GetMethodID(_stream_handle_cid, "callback", "(ILjava/lang/Object;)V");
-  assert(_callback_1arg_mid);
-  _callback_narg_mid = env->GetMethodID(_stream_handle_cid, "callback", "(I[Ljava/lang/Object;)V");
-  assert(_callback_narg_mid);
 
   _call_read_callback_mid = env->GetMethodID(_stream_handle_cid, "callRead", "(Ljava/nio/ByteBuffer;)V");
   assert(_call_read_callback_mid);
@@ -100,6 +71,18 @@ void StreamCallbacks::static_initialize(JNIEnv* env, jclass cls) {
 
   _call_write_callback_mid = env->GetMethodID(_stream_handle_cid, "callWrite", "(ILjava/lang/Exception;)V");
   assert(_call_write_callback_mid);
+
+  _call_connect_callback_mid = env->GetMethodID(_stream_handle_cid, "callConnect", "(ILjava/lang/Exception;)V");
+  assert(_call_connect_callback_mid);
+
+  _call_connection_callback_mid = env->GetMethodID(_stream_handle_cid, "callConnection", "(ILjava/lang/Exception;)V");
+  assert(_call_connection_callback_mid);
+
+  _call_close_callback_mid = env->GetMethodID(_stream_handle_cid, "callClose", "()V");
+  assert(_call_close_callback_mid);
+
+  _call_shutdown_callback_mid = env->GetMethodID(_stream_handle_cid, "callShutdown", "(ILjava/lang/Exception;)V");
+  assert(_call_shutdown_callback_mid);
 
   static_initialize_address(env);
 }
@@ -178,116 +161,47 @@ void StreamCallbacks::on_read2(uv_buf_t* buf, jsize nread, long ptr, uv_handle_t
   delete[] buf->base;
 }
 
-void StreamCallbacks::on_write(int status) {
-  assert(_env);
-  _env->CallVoidMethod(
-      _instance,
-      _call_write_callback_mid,
-      status,
-      NULL);
-}
-
 void StreamCallbacks::on_write(int status, int error_code) {
   assert(_env);
-  assert(status < 0);
   _env->CallVoidMethod(
       _instance,
       _call_write_callback_mid,
       status,
-      NewException(_env, error_code));
-}
-
-void StreamCallbacks::on_connect(int status) {
-  assert(_env);
-  jobject arg = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, status);
-  assert(arg);
-  _env->CallVoidMethod(
-      _instance,
-      _callback_1arg_mid,
-      STREAM_CONNECT_CALLBACK,
-      arg);
+      error_code ? NewException(_env, error_code) : NULL);
 }
 
 void StreamCallbacks::on_connect(int status, int error_code) {
   assert(_env);
-  assert(status < 0);
-
-  jobject status_value = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, status);
-  jthrowable exception = NewException(_env, error_code);
-  jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
-  OOM(_env, args);
-  _env->SetObjectArrayElement(args, 0, status_value);
-  _env->SetObjectArrayElement(args, 1, exception);
   _env->CallVoidMethod(
       _instance,
-      _callback_narg_mid,
-      STREAM_CONNECT_CALLBACK,
-      args);
-}
-
-void StreamCallbacks::on_connection(int status) {
-  assert(_env);
-  jobject arg = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, status);
-  assert(arg);
-  _env->CallVoidMethod(
-      _instance,
-      _callback_1arg_mid,
-      STREAM_CONNECTION_CALLBACK,
-      arg);
+      _call_connect_callback_mid,
+      status,
+      error_code ? NewException(_env, error_code) : NULL);
 }
 
 void StreamCallbacks::on_connection(int status, int error_code) {
   assert(_env);
-  assert(status < 0);
-
-  jobject status_value = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, status);
-  jthrowable exception = NewException(_env, error_code);
-  jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
-  OOM(_env, args);
-  _env->SetObjectArrayElement(args, 0, status_value);
-  _env->SetObjectArrayElement(args, 1, exception);
   _env->CallVoidMethod(
       _instance,
-      _callback_narg_mid,
-      STREAM_CONNECTION_CALLBACK,
-      args);
-}
-
-void StreamCallbacks::on_shutdown(int status) {
-  assert(_env);
-  jobject arg = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, status);
-  assert(arg);
-  _env->CallVoidMethod(
-      _instance,
-      _callback_1arg_mid,
-      STREAM_SHUTDOWN_CALLBACK,
-      arg);
+      _call_connection_callback_mid,
+      status,
+      error_code ? NewException(_env, error_code) : NULL);
 }
 
 void StreamCallbacks::on_shutdown(int status, int error_code) {
   assert(_env);
-  assert(status < 0);
-
-  jobject status_value = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, status);
-  jthrowable exception = NewException(_env, error_code);
-  jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
-  OOM(_env, args);
-  _env->SetObjectArrayElement(args, 0, status_value);
-  _env->SetObjectArrayElement(args, 1, exception);
   _env->CallVoidMethod(
       _instance,
-      _callback_narg_mid,
-      STREAM_SHUTDOWN_CALLBACK,
-      args);
+      _call_shutdown_callback_mid,
+      status,
+      error_code ? NewException(_env, error_code) : NULL);
 }
 
 void StreamCallbacks::on_close() {
   assert(_env);
   _env->CallVoidMethod(
       _instance,
-      _callback_1arg_mid,
-      STREAM_CLOSE_CALLBACK,
-      NULL);
+      _call_close_callback_mid);
 }
 
 // used in tcp.cpp and udp.cpp
@@ -340,12 +254,7 @@ static void _shutdown_cb(uv_shutdown_t* req, int status) {
   assert(req->handle);
   assert(req->handle->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(req->handle->data);
-  if (status < 0) {
-    int error_code = uv_last_error(req->handle->loop).code;
-    cb->on_shutdown(status, error_code);
-  } else {
-    cb->on_shutdown(status);
-  }
+  cb->on_shutdown(status, status < 0 ? uv_last_error(req->handle->loop).code : 0);
   delete req;
 }
 
@@ -416,12 +325,7 @@ static void _write_cb(uv_write_t* req, int status) {
   assert(req->handle->data);
   assert(req->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(req->handle->data);
-  if (status < 0) {
-    int error_code = uv_last_error(req->handle->loop).code;
-    cb->on_write(status, error_code);
-  } else {
-    cb->on_write(status);
-  }
+  cb->on_write(status, status < 0 ? uv_last_error(req->handle->loop).code : 0);
   delete[] reinterpret_cast<jbyte*>(req->data);
   delete req;
 }
@@ -430,12 +334,7 @@ static void _connection_cb(uv_stream_t* stream, int status) {
   assert(stream);
   assert(stream->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(stream->data);
-  if (status < 0) {
-    int error_code = uv_last_error(stream->loop).code;
-    cb->on_connection(status, error_code);
-  } else {
-    cb->on_connection(status);
-  }
+  cb->on_connection(status, status < 0 ? uv_last_error(stream->loop).code : 0);
 }
 
 /*

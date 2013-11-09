@@ -35,12 +35,7 @@ static void _pipe_connect_cb(uv_connect_t* req, int status) {
   assert(req->handle);
   assert(req->handle->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(req->handle->data);
-  if (status < 0) {
-    int error_code = uv_last_error(req->handle->loop).code;
-    cb->on_connect(status, error_code);
-  } else {
-    cb->on_connect(status);
-  }
+  cb->on_connect(status, status < 0 ? uv_last_error(req->handle->loop).code : 0);
   delete req;
 }
 

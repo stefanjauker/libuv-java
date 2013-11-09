@@ -25,8 +25,8 @@
 
 package net.java.libuv.cb;
 
-public interface StreamCallback {
+public interface StreamConnectionCallback {
 
-    public void call(Object[] args) throws Exception;
+    public void onConnection(int status, Exception error) throws Exception;
 
 }

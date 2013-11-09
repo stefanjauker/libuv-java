@@ -32,22 +32,19 @@
 
 class StreamCallbacks {
 private:
-  static jclass _integer_cid;
-  static jclass _long_cid;
-  static jclass _object_cid;
   static jclass _buffer_cid;
   static jclass _address_cid;
   static jclass _stream_handle_cid;
 
-  static jmethodID _integer_valueof_mid;
-  static jmethodID _long_valueof_mid;
   static jmethodID _buffer_wrap_mid;
   static jmethodID _address_init_mid;
-  static jmethodID _callback_1arg_mid;
-  static jmethodID _callback_narg_mid;
   static jmethodID _call_read_callback_mid;
   static jmethodID _call_read2_callback_mid;
   static jmethodID _call_write_callback_mid;
+  static jmethodID _call_connect_callback_mid;
+  static jmethodID _call_connection_callback_mid;
+  static jmethodID _call_close_callback_mid;
+  static jmethodID _call_shutdown_callback_mid;
 
   static JNIEnv* _env;
 
@@ -66,24 +63,11 @@ public:
 
   void on_read(uv_buf_t* buf, jsize nread);
   void on_read2(uv_buf_t* buf, jsize nread, long ptr, uv_handle_type pending);
-  void on_write(int status);
   void on_write(int status, int error_code);
-  void on_shutdown(int status);
   void on_shutdown(int status, int error_code);
-  void on_connect(int status);
   void on_connect(int status, int error_code);
-  void on_connection(int status);
   void on_connection(int status, int error_code);
   void on_close();
 };
-
-typedef enum {
-  STREAM_READ_CALLBACK = 1,
-  STREAM_WRITE_CALLBACK,
-  STREAM_CONNECT_CALLBACK,
-  STREAM_CONNECTION_CALLBACK,
-  STREAM_CLOSE_CALLBACK,
-  STREAM_SHUTDOWN_CALLBACK
-} StreamHandleCallbackType;
 
 #endif // _libuv_java_stream_h_

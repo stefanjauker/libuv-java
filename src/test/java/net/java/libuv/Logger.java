@@ -27,23 +27,19 @@ package net.java.libuv;
 
 import java.nio.ByteBuffer;
 
-import net.java.libuv.cb.ProcessCallback;
-import net.java.libuv.cb.StreamCallback;
-
-public final class LoggingCallback implements StreamCallback, ProcessCallback {
+public final class Logger {
 
     private final String prefix;
 
-    public LoggingCallback() {
+    public Logger() {
         this.prefix = null;
     }
 
-    public LoggingCallback(final String prefix) {
+    public Logger(final String prefix) {
         this.prefix = prefix;
     }
 
-    @Override
-    public void call(final Object[] args) throws Exception {
+    public void log(final Object... args) throws Exception {
         System.out.print(prefix == null ? "" : prefix);
         if (args != null) {
             for (final Object arg : args) {

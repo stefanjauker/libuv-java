@@ -28,9 +28,12 @@ package net.java.libuv.handles;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
-import net.java.libuv.cb.StreamCallback;
+import net.java.libuv.cb.StreamCloseCallback;
+import net.java.libuv.cb.StreamConnectCallback;
+import net.java.libuv.cb.StreamConnectionCallback;
 import net.java.libuv.cb.StreamRead2Callback;
 import net.java.libuv.cb.StreamReadCallback;
+import net.java.libuv.cb.StreamShutdownCallback;
 import net.java.libuv.cb.StreamWriteCallback;
 
 public class StreamHandle extends Handle {
@@ -41,10 +44,10 @@ public class StreamHandle extends Handle {
     private StreamReadCallback onRead = null;
     private StreamRead2Callback onRead2 = null;
     private StreamWriteCallback onWrite = null;
-    private StreamCallback onConnect = null;
-    private StreamCallback onConnection = null;
-    private StreamCallback onClose = null;
-    private StreamCallback onShutdown = null;
+    private StreamConnectCallback onConnect = null;
+    private StreamConnectionCallback onConnection = null;
+    private StreamCloseCallback onClose = null;
+    private StreamShutdownCallback onShutdown = null;
 
     static {
         _static_initialize();
@@ -62,19 +65,19 @@ public class StreamHandle extends Handle {
         onWrite = callback;
     }
 
-    public void setConnectCallback(final StreamCallback callback) {
+    public void setConnectCallback(final StreamConnectCallback callback) {
         onConnect = callback;
     }
 
-    public void setConnectionCallback(final StreamCallback callback) {
+    public void setConnectionCallback(final StreamConnectionCallback callback) {
         onConnection = callback;
     }
 
-    public void setCloseCallback(final StreamCallback callback) {
+    public void setCloseCallback(final StreamCloseCallback callback) {
         onClose = callback;
     }
 
-    public void setShutdownCallback(final StreamCallback callback) {
+    public void setShutdownCallback(final StreamShutdownCallback callback) {
         onShutdown = callback;
     }
 
@@ -179,25 +182,6 @@ public class StreamHandle extends Handle {
         super.finalize();
     }
 
-    private void callback(final int type, final Object arg) {
-        final Object[] args = {arg};
-        callback(type, args);
-    }
-
-    private void callback(final int type, final Object... args) {
-        switch (type) {
-            case 3: if (onConnect != null) {call(onConnect, args);} break;
-            case 4: if (onConnection != null) {call(onConnection, args);} break;
-            case 5: if (onClose != null) {call(onClose, args);} break;
-            case 6: if (onShutdown != null) {call(onShutdown, args);} break;
-            default: assert false : "unsupported callback type " + type;
-        }
-    }
-
-    private void call(final StreamCallback callback, final Object... args) {
-       loop.callbackHandler.handleStreamCallback(callback, args);
-    }
-
     private void callRead(final ByteBuffer data) {
         if (onRead != null) {
             loop.callbackHandler.handleStreamReadCallback(onRead, data);
@@ -213,6 +197,30 @@ public class StreamHandle extends Handle {
     private void callWrite(final int status, final Exception error) {
         if (onWrite != null) {
             loop.callbackHandler.handleStreamWriteCallback(onWrite, status, error);
+        }
+    }
+
+    private void callConnect(final int status, final Exception error) {
+        if (onConnect != null) {
+            loop.callbackHandler.handleStreamConnectCallback(onConnect, status, error);
+        }
+    }
+
+    private void callConnection(final int status, final Exception error) {
+        if (onConnection != null) {
+            loop.callbackHandler.handleStreamConnectionCallback(onConnection, status, error);
+        }
+    }
+
+    private void callClose() {
+        if (onClose != null) {
+            loop.callbackHandler.handleStreamCloseCallback(onClose);
+        }
+    }
+
+    private void callShutdown(final int status, final Exception error) {
+        if (onShutdown != null) {
+            loop.callbackHandler.handleStreamShutdownCallback(onShutdown, status, error);
         }
     }
 

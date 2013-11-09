@@ -48,12 +48,12 @@ import org.testng.annotations.Test;
 
 import net.java.libuv.Constants;
 import net.java.libuv.Files;
+import net.java.libuv.cb.StreamConnectionCallback;
 import net.java.libuv.file.FilesTest;
 import net.java.libuv.LibUV;
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.NativeException;
 import net.java.libuv.Stats;
-import net.java.libuv.cb.StreamCallback;
 import net.java.libuv.TestBase;
 import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.handles.PipeHandle;
@@ -315,9 +315,9 @@ public class PermissionTest extends TestBase {
             }
         });
 
-        server.setConnectionCallback(new StreamCallback() {
+        server.setConnectionCallback(new StreamConnectionCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
+            public void onConnection(int status, Exception error) throws Exception {
                 testSuccess(new Runnable() {
                     @Override
                     public void run() {
@@ -418,10 +418,9 @@ public class PermissionTest extends TestBase {
         final TCPHandle client = new TCPHandle(lh);
         final TCPHandle peer = new TCPHandle(lh);
 
-        server.setConnectionCallback(new StreamCallback() {
+        server.setConnectionCallback(new StreamConnectionCallback() {
             @Override
-            public void call(final Object[] args) throws Exception { // connection
-
+            public void onConnection(int status, Exception error) throws Exception {
                 testSuccess(new Runnable() {
                     @Override
                     public void run() {
@@ -500,9 +499,9 @@ public class PermissionTest extends TestBase {
         final TCPHandle client = new TCPHandle(lh);
         final TCPHandle peer = new TCPHandle(lh);
 
-        server.setConnectionCallback(new StreamCallback() {
+        server.setConnectionCallback(new StreamConnectionCallback() {
             @Override
-            public void call(final Object[] args) throws Exception { // connection
+            public void onConnection(int status, Exception error) throws Exception {
                 testSuccess(new Runnable() {
                     @Override
                     public void run() {

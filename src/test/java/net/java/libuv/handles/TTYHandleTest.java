@@ -31,7 +31,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import net.java.libuv.NativeException;
-import net.java.libuv.cb.StreamCallback;
 import net.java.libuv.TestBase;
 import net.java.libuv.cb.StreamReadCallback;
 import net.java.libuv.cb.StreamWriteCallback;

@@ -35,8 +35,9 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import net.java.libuv.cb.ProcessCallback;
-import net.java.libuv.cb.StreamCallback;
 import net.java.libuv.TestBase;
+import net.java.libuv.cb.StreamConnectCallback;
+import net.java.libuv.cb.StreamConnectionCallback;
 import net.java.libuv.cb.StreamReadCallback;
 
 public class ProcessHandleTest extends TestBase {
@@ -73,18 +74,18 @@ public class ProcessHandleTest extends TestBase {
             }
         });
 
-        parent.setConnectionCallback(new StreamCallback() {
+        parent.setConnectionCallback(new StreamConnectionCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
+            public void onConnection(int status, Exception error) throws Exception {
                 parent.accept(peer);
                 peer.readStart();
                 parent.close();
             }
         });
 
-        child.setConnectCallback(new StreamCallback() {
+        child.setConnectCallback(new StreamConnectCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
+            public void onConnect(int status, Exception error) throws Exception {
                 child.write(MESSAGE);
                 child.close();
             }

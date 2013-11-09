@@ -33,9 +33,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import net.java.libuv.LoggingCallback;
-import net.java.libuv.cb.StreamCallback;
+import net.java.libuv.Logger;
 import net.java.libuv.TestBase;
+import net.java.libuv.cb.StreamCloseCallback;
+import net.java.libuv.cb.StreamConnectCallback;
+import net.java.libuv.cb.StreamConnectionCallback;
 import net.java.libuv.cb.StreamReadCallback;
 
 public class TCPHandleTest extends TestBase {
@@ -62,15 +64,15 @@ public class TCPHandleTest extends TestBase {
         final TCPHandle peer = new TCPHandle(loop);
         final TCPHandle client = new TCPHandle(loop);
 
-        final StreamCallback serverLoggingCallback = new LoggingCallback("s: ");
-        final StreamCallback clientLoggingCallback = new LoggingCallback("c: ");
+        final Logger serverLoggingCallback = new Logger("s: ");
+        final Logger clientLoggingCallback = new Logger("c: ");
 
         final Random random = new Random();
 
-        server.setConnectionCallback(new StreamCallback() {
+        server.setConnectionCallback(new StreamConnectionCallback() {
             @Override
-            public void call(final Object[] args) throws Exception { // connection
-                serverLoggingCallback.call(args);
+            public void onConnection(int status, Exception error) throws Exception {
+                serverLoggingCallback.log(status, error);
                 server.accept(peer);
                 peer.readStart();
                 System.out.println("s: " + server.getSocketName() + " connected to " + peer.getPeerName());
@@ -87,7 +89,7 @@ public class TCPHandleTest extends TestBase {
                     peer.close();
                 } else {
                     final Object[] args = {data};
-                    serverLoggingCallback.call(args);
+                    serverLoggingCallback.log(args);
                     if (serverRecvCount.get() == TIMES) {
                         peer.close();
                     } else {
@@ -97,9 +99,9 @@ public class TCPHandleTest extends TestBase {
             }
         });
 
-        peer.setCloseCallback(new StreamCallback() {
+        peer.setCloseCallback(new StreamCloseCallback() {
             @Override
-            public void call(final Object[] args) throws Exception { // close
+            public void onClose() throws Exception { // close
                 serverDone.set(true);
             }
         });
@@ -112,7 +114,7 @@ public class TCPHandleTest extends TestBase {
                     client.close();
                 } else {
                     final Object[] args = {data};
-                    clientLoggingCallback.call(args);
+                    clientLoggingCallback.log(args);
                     if (clientRecvCount.get() == TIMES) {
                         client.close();
                     } else {
@@ -122,19 +124,19 @@ public class TCPHandleTest extends TestBase {
             }
         });
 
-        client.setConnectCallback(new StreamCallback() {
+        client.setConnectCallback(new StreamConnectCallback() {
             @Override
-            public void call(final Object[] args) throws Exception { // connect
-                clientLoggingCallback.call(args);
+            public void onConnect(int status, Exception error) throws Exception { // connect
+                clientLoggingCallback.log(status, error);
                 System.out.println("c: " + client.getSocketName() + " connected to " + client.getPeerName());
                 client.readStart();
                 client.write("message " + clientSendCount.getAndIncrement() + " from client");
             }
         });
 
-        client.setCloseCallback(new StreamCallback() {
+        client.setCloseCallback(new StreamCloseCallback() {
             @Override
-            public void call(final Object[] args) throws Exception { // close
+            public void onClose() throws Exception { // close
                 clientDone.set(true);
             }
         });
@@ -175,15 +177,15 @@ public class TCPHandleTest extends TestBase {
         final TCPHandle peer = new TCPHandle(loop);
         final TCPHandle client = new TCPHandle(loop);
 
-        final StreamCallback serverLoggingCallback = new LoggingCallback("s: ");
-        final StreamCallback clientLoggingCallback = new LoggingCallback("c: ");
+        final Logger serverLoggingCallback = new Logger("s: ");
+        final Logger clientLoggingCallback = new Logger("c: ");
 
         final Random random = new Random();
 
-        server.setConnectionCallback(new StreamCallback() {
+        server.setConnectionCallback(new StreamConnectionCallback() {
             @Override
-            public void call(final Object[] args) throws Exception { // connection
-                serverLoggingCallback.call(args);
+            public void onConnection(int status, Exception error) throws Exception {
+                serverLoggingCallback.log(status, error);
                 server.accept(peer);
                 peer.readStart();
                 System.out.println("s: " + server.getSocketName() + " connected to " + peer.getPeerName());
@@ -200,7 +202,7 @@ public class TCPHandleTest extends TestBase {
                     peer.close();
                 } else {
                     final Object[] args = {data};
-                    serverLoggingCallback.call(args);
+                    serverLoggingCallback.log(args);
                     if (serverRecvCount.get() == TIMES) {
                         peer.close();
                     } else {
@@ -210,9 +212,9 @@ public class TCPHandleTest extends TestBase {
             }
         });
 
-        peer.setCloseCallback(new StreamCallback() {
+        peer.setCloseCallback(new StreamCloseCallback() {
             @Override
-            public void call(final Object[] args) throws Exception { // close
+            public void onClose() throws Exception { // close
                 serverDone.set(true);
             }
         });
@@ -225,7 +227,7 @@ public class TCPHandleTest extends TestBase {
                     client.close();
                 } else {
                     final Object[] args = {data};
-                    clientLoggingCallback.call(args);
+                    clientLoggingCallback.log(args);
                     if (clientRecvCount.get() == TIMES) {
                         client.close();
                     } else {
@@ -235,19 +237,19 @@ public class TCPHandleTest extends TestBase {
             }
         });
 
-        client.setConnectCallback(new StreamCallback() {
+        client.setConnectCallback(new StreamConnectCallback() {
             @Override
-            public void call(final Object[] args) throws Exception { // connect
-                clientLoggingCallback.call(args);
+            public void onConnect(int status, Exception error) throws Exception {
+                clientLoggingCallback.log(status, error);
                 System.out.println("c: " + client.getSocketName() + " connected to " + client.getPeerName());
                 client.readStart();
                 client.write("message " + clientSendCount.getAndIncrement() + " from client");
             }
         });
 
-        client.setCloseCallback(new StreamCallback() {
+        client.setCloseCallback(new StreamCloseCallback() {
             @Override
-            public void call(final Object[] args) throws Exception { // close
+            public void onClose() throws Exception { // close
                 clientDone.set(true);
             }
         });
