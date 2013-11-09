@@ -80,21 +80,24 @@ private:
   static jclass _stats_cid;
 
   static jmethodID _int_valueof_mid;
-  static jmethodID _long_valueof_mid;
-  static jmethodID _callback_1arg_mid;
-  static jmethodID _callback_narg_mid;
+  static jmethodID _close_callback_mid;
+  static jmethodID _file_callback_mid;
+  static jmethodID _open_callback_mid;
   static jmethodID _read_callback_mid;
+  static jmethodID _readdir_callback_mid;
+  static jmethodID _readlink_callback_mid;
+  static jmethodID _stats_callback_mid;
+  static jmethodID _utime_callback_mid;
   static jmethodID _write_callback_mid;
   static jmethodID _stats_init_mid;
 
   static JNIEnv* _env;
-  static jobject _error;
 
   jobject _instance;
   uv_loop_t* _loop;
 
 public:
-  static jclass _object_cid;
+  static jclass _string_cid;
 
   static void static_initialize(JNIEnv *env, jclass cls);
   static JNIEnv* env() { return _env; }
@@ -112,19 +115,22 @@ public:
 jclass FileCallbacks::_int_cid = NULL;
 jclass FileCallbacks::_long_cid = NULL;
 jclass FileCallbacks::_files_cid = NULL;
-jclass FileCallbacks::_object_cid = NULL;
 jclass FileCallbacks::_stats_cid = NULL;
+jclass FileCallbacks::_string_cid = NULL;
 
 jmethodID FileCallbacks::_int_valueof_mid = NULL;
-jmethodID FileCallbacks::_long_valueof_mid = NULL;
-jmethodID FileCallbacks::_callback_1arg_mid = NULL;
-jmethodID FileCallbacks::_callback_narg_mid = NULL;
+jmethodID FileCallbacks::_close_callback_mid = NULL;
+jmethodID FileCallbacks::_file_callback_mid = NULL;
+jmethodID FileCallbacks::_open_callback_mid = NULL;
 jmethodID FileCallbacks::_read_callback_mid = NULL;
+jmethodID FileCallbacks::_readdir_callback_mid = NULL;
+jmethodID FileCallbacks::_readlink_callback_mid = NULL;
+jmethodID FileCallbacks::_stats_callback_mid = NULL;
+jmethodID FileCallbacks::_utime_callback_mid = NULL;
 jmethodID FileCallbacks::_write_callback_mid = NULL;
 jmethodID FileCallbacks::_stats_init_mid = NULL;
 
 JNIEnv* FileCallbacks::_env = NULL;
-jobject FileCallbacks::_error = NULL;
 
 FileRequest::FileRequest(FileCallbacks* ptr, jint id, jint fd, jstring path) {
   _callback = ptr;
@@ -180,32 +186,45 @@ void FileCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _long_cid = (jclass) env->NewGlobalRef(_long_cid);
   assert(_long_cid);
 
-  _object_cid = env->FindClass("java/lang/Object");
-  assert(_object_cid);
-  _object_cid = (jclass) env->NewGlobalRef(_object_cid);
-  assert(_object_cid);
-
   _stats_cid = env->FindClass("net/java/libuv/Stats");
   assert(_stats_cid);
   _stats_cid = (jclass) env->NewGlobalRef(_stats_cid);
   assert(_stats_cid);
 
+  _string_cid = env->FindClass("java/lang/String");
+  assert(_string_cid);
+  _string_cid = (jclass) env->NewGlobalRef(_string_cid);
+  assert(_string_cid);
+
   _int_valueof_mid = env->GetStaticMethodID(_int_cid, "valueOf", "(I)Ljava/lang/Integer;");
   assert(_int_valueof_mid);
-
-  _long_valueof_mid = env->GetStaticMethodID(_long_cid, "valueOf", "(J)Ljava/lang/Long;");
-  assert(_long_valueof_mid);
 
   _files_cid = (jclass) env->NewGlobalRef(cls);
   assert(_files_cid);
 
-  _callback_1arg_mid = env->GetMethodID(_files_cid, "callback", "(IILjava/lang/Object;)V");
-  assert(_callback_1arg_mid);
-  _callback_narg_mid = env->GetMethodID(_files_cid, "callback", "(II[Ljava/lang/Object;)V");
-  assert(_callback_narg_mid);
+  _close_callback_mid = env->GetMethodID(_files_cid, "callClose", "(IILjava/lang/Exception;)V");
+  assert(_close_callback_mid);
+
+  _file_callback_mid = env->GetMethodID(_files_cid, "callback", "(IILjava/lang/Exception;)V");
+  assert(_file_callback_mid);
+
+  _open_callback_mid = env->GetMethodID(_files_cid, "callOpen", "(IILjava/lang/String;Ljava/lang/Exception;)V");
+  assert(_open_callback_mid);
 
   _read_callback_mid = env->GetMethodID(_files_cid, "callRead", "(II[BLjava/lang/Exception;)V");
   assert(_read_callback_mid);
+
+  _readdir_callback_mid = env->GetMethodID(_files_cid, "callReaddir", "(I[Ljava/lang/String;Ljava/lang/Exception;)V");
+  assert(_readdir_callback_mid);
+
+  _readlink_callback_mid = env->GetMethodID(_files_cid, "callReadlink", "(ILjava/lang/String;Ljava/lang/Exception;)V");
+  assert(_readlink_callback_mid);
+
+  _stats_callback_mid = env->GetMethodID(_files_cid, "callStats", "(IILnet/java/libuv/Stats;Ljava/lang/Exception;)V");
+  assert(_stats_callback_mid);
+
+  _utime_callback_mid = env->GetMethodID(_files_cid, "callUtime", "(IIJLjava/lang/Exception;)V");
+  assert(_utime_callback_mid);
 
   _write_callback_mid = env->GetMethodID(_files_cid, "callWrite", "(IILjava/lang/Exception;)V");
   assert(_write_callback_mid);
@@ -213,10 +232,6 @@ void FileCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _stats_init_mid = env->GetMethodID(_stats_cid, "<init>", "(IIIIIIIJIJJJJ)V");
   assert(_stats_init_mid);
 
-  _error = _env->CallStaticObjectMethod(_int_cid, _int_valueof_mid, -1);
-  assert(_error);
-  _error = env->NewGlobalRef(_error);
-  assert(_error);
 }
 
 FileCallbacks::FileCallbacks() {
@@ -237,14 +252,18 @@ void FileCallbacks::initialize(jobject instance, uv_loop_t* loop) {
 
 void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t result, void *ptr) {
   assert(_env);
-  jobject arg;
 
   int id = request->id();
 
   switch (fs_type) {
     case UV_FS_CLOSE:
-      arg = _env->CallStaticObjectMethod(_int_cid, _int_valueof_mid, request->fd());
-      break;
+      _env->CallVoidMethod(
+          _instance,
+          _close_callback_mid,
+          id,
+          request->fd(),
+          NULL);
+      return;
 
     case UV_FS_RENAME:
     case UV_FS_UNLINK:
@@ -259,63 +278,61 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t resu
     case UV_FS_FCHMOD:
     case UV_FS_CHOWN:
     case UV_FS_FCHOWN:
-      arg = _env->CallStaticObjectMethod(_int_cid, _int_valueof_mid, result);
-      break;
-
-    case UV_FS_OPEN: {
-      jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
-      OOM(_env, args);
-      _env->SetObjectArrayElement(args, 0, _env->CallStaticObjectMethod(_int_cid, _int_valueof_mid, result));
-      _env->SetObjectArrayElement(args, 1, request->path());
       _env->CallVoidMethod(
           _instance,
-          _callback_narg_mid,
+          _file_callback_mid,
           fs_type,
           id,
-          args);
+          NULL);
       return;
-    }
+
+    case UV_FS_OPEN:
+      _env->CallVoidMethod(
+          _instance,
+          _open_callback_mid,
+          id,
+          result,
+          request->path(),
+          NULL);
+      return;
 
     case UV_FS_UTIME:
     case UV_FS_FUTIME:
-      arg = _env->CallStaticObjectMethod(_long_cid, _long_valueof_mid, result);
-      break;
+      _env->CallVoidMethod(
+          _instance,
+          _utime_callback_mid,
+          fs_type,
+          id,
+          result,
+          NULL);
+      return;
 
     case UV_FS_STAT:
     case UV_FS_LSTAT:
-    case UV_FS_FSTAT: {
-      jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
-      OOM(_env, args);
-      _env->SetObjectArrayElement(args, 0, _env->CallStaticObjectMethod(_int_cid, _int_valueof_mid, result));
-      _env->SetObjectArrayElement(args, 1, Stats::create(static_cast<uv_statbuf_t*>(ptr)));
+    case UV_FS_FSTAT:
       _env->CallVoidMethod(
           _instance,
-          _callback_narg_mid,
+          _stats_callback_mid,
           fs_type,
           id,
-          args);
+          Stats::create(static_cast<uv_statbuf_t*>(ptr)),
+          NULL);
       return;
-    }
 
-    case UV_FS_READLINK: {
-      jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
-      OOM(_env, args);
-      _env->SetObjectArrayElement(args, 0, _env->CallStaticObjectMethod(_int_cid, _int_valueof_mid, result));
-      _env->SetObjectArrayElement(args, 1, _env->NewStringUTF(static_cast<char*>(ptr)));
+    case UV_FS_READLINK:
       _env->CallVoidMethod(
           _instance,
-          _callback_narg_mid,
-          fs_type,
+          _readlink_callback_mid,
           id,
-          args);
+          _env->NewStringUTF(static_cast<char*>(ptr)),
+          NULL);
       return;
-    }
 
     case UV_FS_READDIR: {
       char *namebuf = static_cast<char*>(ptr);
       int nnames = static_cast<int>(result);
 
-      jobjectArray names = _env->NewObjectArray(nnames, _object_cid, 0);
+      jobjectArray names = _env->NewObjectArray(nnames, _string_cid, 0);
       OOM(_env, names);
       for (int i = 0; i < nnames; i++) {
         jstring name = _env->NewStringUTF(namebuf);
@@ -330,17 +347,12 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t resu
 #endif
       }
 
-      jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
-      OOM(_env, args);
-      _env->SetObjectArrayElement(args, 0, _env->CallStaticObjectMethod(_int_cid, _int_valueof_mid, result));
-      _env->SetObjectArrayElement(args, 1, names);
-
       _env->CallVoidMethod(
           _instance,
-          _callback_narg_mid,
-          fs_type,
+          _readdir_callback_mid,
           id,
-          args);
+          names,
+          NULL);
       return;
     }
 
@@ -366,13 +378,6 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, ssize_t resu
     default:
       assert(0 && "Unhandled eio response");
   }
-
-  _env->CallVoidMethod(
-      _instance,
-      _callback_1arg_mid,
-      fs_type,
-      id,
-      arg);
 }
 
 void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, int errorno) {
@@ -389,6 +394,87 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, int errorno)
   jthrowable exception = NewException(_env, errorno, NULL, NULL, cpath);
 
   switch (fs_type) {
+    case UV_FS_CLOSE:
+      _env->CallVoidMethod(
+          _instance,
+          _close_callback_mid,
+          id,
+          -1,
+          exception);
+      break;
+
+    case UV_FS_RENAME:
+    case UV_FS_UNLINK:
+    case UV_FS_RMDIR:
+    case UV_FS_MKDIR:
+    case UV_FS_FTRUNCATE:
+    case UV_FS_FSYNC:
+    case UV_FS_FDATASYNC:
+    case UV_FS_LINK:
+    case UV_FS_SYMLINK:
+    case UV_FS_CHMOD:
+    case UV_FS_FCHMOD:
+    case UV_FS_CHOWN:
+    case UV_FS_FCHOWN:
+      _env->CallVoidMethod(
+          _instance,
+          _file_callback_mid,
+          fs_type,
+          id,
+          exception);
+      break;
+
+    case UV_FS_OPEN:
+      _env->CallVoidMethod(
+          _instance,
+          _open_callback_mid,
+          id,
+          -1,
+          NULL,
+          exception);
+      break;
+
+    case UV_FS_UTIME:
+    case UV_FS_FUTIME:
+      _env->CallVoidMethod(
+          _instance,
+          _utime_callback_mid,
+          fs_type,
+          id,
+          -1,
+          exception);
+      break;
+
+    case UV_FS_STAT:
+    case UV_FS_LSTAT:
+    case UV_FS_FSTAT:
+      _env->CallVoidMethod(
+          _instance,
+          _stats_callback_mid,
+          fs_type,
+          id,
+          NULL,
+          exception);
+      break;
+
+    case UV_FS_READLINK:
+      _env->CallVoidMethod(
+          _instance,
+          _readlink_callback_mid,
+          id,
+          NULL,
+          exception);
+      break;
+
+    case UV_FS_READDIR:
+      _env->CallVoidMethod(
+          _instance,
+          _readdir_callback_mid,
+          id,
+          NULL,
+          exception);
+      break;
+
     case UV_FS_READ:
       _env->CallVoidMethod(
           _instance,
@@ -397,7 +483,7 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, int errorno)
           -1,
           request->buffer(),
           exception);
-      return;
+      break;
 
     case UV_FS_WRITE:
       _env->CallVoidMethod(
@@ -406,19 +492,10 @@ void FileCallbacks::fs_cb(FileRequest *request, uv_fs_type fs_type, int errorno)
           id,
           -1,
           exception);
-    return;
+      break;
 
     default:
-      jobjectArray args = _env->NewObjectArray(2, _object_cid, 0);
-      OOM(_env, args);
-      _env->SetObjectArrayElement(args, 0, _error);
-      _env->SetObjectArrayElement(args, 1, exception);
-      _env->CallVoidMethod(
-          _instance,
-          _callback_narg_mid,
-          fs_type,
-          id,
-          args);
+      assert(0 && "Unhandled eio response");
   }
 
   if (path) {
@@ -727,7 +804,7 @@ JNIEXPORT jobjectArray JNICALL Java_net_java_libuv_Files__1readdir
     if (r >= 0) {
         char *namebuf = static_cast<char*>(req.ptr);
         int nnames = static_cast<int>(req.result);
-        names = env->NewObjectArray(nnames, FileCallbacks::_object_cid, 0);
+        names = env->NewObjectArray(nnames, FileCallbacks::_string_cid, 0);
 
         for (int i = 0; i < nnames; i++) {
           jstring name = env->NewStringUTF(namebuf);

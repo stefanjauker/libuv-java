@@ -25,8 +25,10 @@
 
 package net.java.libuv.cb;
 
-public interface FileCallback {
+import net.java.libuv.Stats;
 
-    public void call(int id, Exception error) throws Exception;
+public interface FileStatsCallback {
+
+    public void onStats(int callbackId, Stats stats, Exception error) throws Exception;
 
 }

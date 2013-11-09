@@ -28,9 +28,8 @@ package net.java.libuv;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.java.libuv.cb.FileCallback;
-import net.java.libuv.cb.FileReadCallback;
-import net.java.libuv.cb.FileWriteCallback;
+import net.java.libuv.cb.*;
+import net.java.libuv.cb.FileReadLinkCallback;
 import net.java.libuv.handles.LoopHandle;
 
 public final class Files {
@@ -71,29 +70,29 @@ public final class Files {
     private static final int UV_FS_FCHOWN    = 25;
 
     private FileCallback onCustom = null;
-    private FileCallback onOpen = null;
-    private FileCallback onClose = null;
+    private FileOpenCallback onOpen = null;
+    private FileCloseCallback onClose = null;
     private FileReadCallback onRead = null;
     private FileWriteCallback onWrite = null;
     private FileCallback onSendfile = null;
-    private FileCallback onStat = null;
-    private FileCallback onLStat = null;
-    private FileCallback onFStat = null;
+    private FileStatsCallback onStat = null;
+    private FileStatsCallback onLStat = null;
+    private FileStatsCallback onFStat = null;
     private FileCallback onFTruncate = null;
-    private FileCallback onUtime = null;
-    private FileCallback onFUtime = null;
+    private FileUTimeCallback onUTime = null;
+    private FileUTimeCallback onFUTime = null;
     private FileCallback onChmod = null;
     private FileCallback onFChmod = null;
     private FileCallback onFSync = null;
     private FileCallback onFDatasync = null;
     private FileCallback onUnlink = null;
-    private FileCallback onRmdir = null;
-    private FileCallback onMkdir = null;
+    private FileCallback onRmDir = null;
+    private FileCallback onMkDir = null;
     private FileCallback onRename = null;
-    private FileCallback onReaddir = null;
+    private FileReadDirCallback onReadDir = null;
     private FileCallback onLink = null;
-    private FileCallback onSymlink = null;
-    private FileCallback onReadlink = null;
+    private FileCallback onSymLink = null;
+    private FileReadLinkCallback onReadLink = null;
     private FileCallback onChown = null;
     private FileCallback onFChown = null;
 
@@ -115,11 +114,11 @@ public final class Files {
         onCustom = callback;
     }
 
-    public void setOpenCallback(final FileCallback callback) {
+    public void setOpenCallback(final FileOpenCallback callback) {
         onOpen = callback;
     }
 
-    public void setCloseCallback(final FileCallback callback) {
+    public void setCloseCallback(final FileCloseCallback callback) {
         onClose = callback;
     }
 
@@ -135,15 +134,15 @@ public final class Files {
         onSendfile = callback;
     }
 
-    public void setStatCallback(final FileCallback callback) {
+    public void setStatCallback(final FileStatsCallback callback) {
         onStat = callback;
     }
 
-    public void setLStatCallback(final FileCallback callback) {
+    public void setLStatCallback(final FileStatsCallback callback) {
         onLStat = callback;
     }
 
-    public void setFStatCallback(final FileCallback callback) {
+    public void setFStatCallback(final FileStatsCallback callback) {
         onFStat = callback;
     }
 
@@ -151,12 +150,12 @@ public final class Files {
         onFTruncate = callback;
     }
 
-    public void setUtimeCallback(final FileCallback callback) {
-        onUtime = callback;
+    public void setUTimeCallback(final FileUTimeCallback callback) {
+        onUTime = callback;
     }
 
-    public void setFUtimeCallback(final FileCallback callback) {
-        onFUtime = callback;
+    public void setFUTimeCallback(final FileUTimeCallback callback) {
+        onFUTime = callback;
     }
 
     public void setChmodCallback(final FileCallback callback) {
@@ -179,32 +178,32 @@ public final class Files {
         onUnlink = callback;
     }
 
-    public void setRmdirCallback(final FileCallback callback) {
-        onRmdir = callback;
+    public void setRmDirCallback(final FileCallback callback) {
+        onRmDir = callback;
     }
 
-    public void setMkdirCallback(final FileCallback callback) {
-        onMkdir = callback;
+    public void setMkDirCallback(final FileCallback callback) {
+        onMkDir = callback;
     }
 
     public void setRenameCallback(final FileCallback callback) {
         onRename = callback;
     }
 
-    public void setReaddirCallback(final FileCallback callback) {
-        onReaddir = callback;
+    public void setReadDirCallback(final FileReadDirCallback callback) {
+        onReadDir = callback;
     }
 
     public void setLinkCallback(final FileCallback callback) {
         onLink = callback;
     }
 
-    public void setSymlinkCallback(final FileCallback callback) {
-        onSymlink = callback;
+    public void setSymLinkCallback(final FileCallback callback) {
+        onSymLink = callback;
     }
 
-    public void setReadlinkCallback(final FileCallback callback) {
-        onReadlink = callback;
+    public void setReadLinkCallback(final FileReadLinkCallback callback) {
+        onReadLink = callback;
     }
 
     public void setChownCallback(final FileCallback callback) {
@@ -496,66 +495,158 @@ public final class Files {
         return paths.get(fd);
     }
 
-    private void callback(final int type, final int callbackId, final Object arg) {
-        final Object[] args = {arg};
-        callback(type, callbackId, args);
-    }
-
-    private void callback(final int type, final int callbackId, final Object... args) {
+    private void callback(final int type, final int callbackId, final Exception error) {
         Integer fd;
         switch (type) {
-            case UV_FS_CUSTOM: if (onCustom != null) {call(onCustom, callbackId,  args);} break;
-
-            case UV_FS_OPEN:
-                assert args != null && args.length == 2 && args[0] != null && args[1] != null;
-                fd = (Integer) args[0];
-                if (fd != -1) {
-                    paths.put(fd, (String) args[1]);
+            case UV_FS_CUSTOM:
+                if (onCustom != null) {
+                    loop.getCallbackHandler().handleFileCallback(onCustom, callbackId,  error);
                 }
-                if (onOpen != null) {call(onOpen, callbackId,  args);}
                 break;
-
-            case UV_FS_CLOSE:
-                assert args != null && args.length == 1 && args[0] != null;
-                fd = (Integer) args[0];
-                if (fd != -1) {
-                    paths.remove(fd);
+            case UV_FS_SENDFILE:
+                if (onSendfile != null) {
+                    loop.getCallbackHandler().handleFileCallback(onSendfile, callbackId,  error);
                 }
-                if (onClose != null) {call(onClose, callbackId,  args);}
                 break;
-
-            case UV_FS_SENDFILE: if (onSendfile != null) {call(onSendfile, callbackId,  args);} break;
-            case UV_FS_STAT: if (onStat != null) {call(onStat, callbackId,  args);} break;
-            case UV_FS_LSTAT: if (onLStat != null) {call(onLStat, callbackId,  args);} break;
-            case UV_FS_FSTAT: if (onFStat != null) {call(onFStat, callbackId,  args);} break;
-            case UV_FS_FTRUNCATE: if (onFTruncate != null) {call(onFTruncate, callbackId,  args);} break;
-            case UV_FS_UTIME: if (onUtime != null) {call(onUtime, callbackId,  args);} break;
-            case UV_FS_FUTIME: if (onFUtime != null) {call(onFUtime, callbackId,  args);} break;
-            case UV_FS_CHMOD: if (onChmod != null) {call(onChmod, callbackId,  args);} break;
-            case UV_FS_FCHMOD: if (onFChmod != null) {call(onFChmod, callbackId,  args);} break;
-            case UV_FS_FSYNC: if (onFSync != null) {call(onFSync, callbackId,  args);} break;
-            case UV_FS_FDATASYNC: if (onFDatasync != null) {call(onFDatasync, callbackId,  args);} break;
-            case UV_FS_UNLINK: if (onUnlink != null) {call(onUnlink, callbackId,  args);} break;
-            case UV_FS_RMDIR: if (onRmdir != null) {call(onRmdir, callbackId,  args);} break;
-            case UV_FS_MKDIR: if (onMkdir != null) { call(onMkdir, callbackId,  args);} break;
-            case UV_FS_RENAME: if (onRename != null) {call(onRename, callbackId,  args);} break;
-            case UV_FS_READDIR: if (onReaddir != null) {call(onReaddir, callbackId,  args);} break;
-            case UV_FS_LINK: if (onLink != null) {call(onLink, callbackId,  args);} break;
-            case UV_FS_SYMLINK: if (onSymlink != null) {call(onSymlink, callbackId,  args);} break;
-            case UV_FS_READLINK: if (onReadlink != null) {call(onReadlink, callbackId,  args);} break;
-            case UV_FS_CHOWN: if (onChown != null) {call(onChown, callbackId,  args);} break;
-            case UV_FS_FCHOWN: if (onFChown != null) {call(onFChown, callbackId,  args);} break;
+            case UV_FS_FTRUNCATE:
+                if (onFTruncate != null) {
+                    loop.getCallbackHandler().handleFileCallback(onFTruncate, callbackId,  error);
+                }
+                break;
+            case UV_FS_CHMOD:
+                if (onChmod != null) {
+                    loop.getCallbackHandler().handleFileCallback(onChmod, callbackId,  error);
+                }
+                break;
+            case UV_FS_FCHMOD:
+                if (onFChmod != null) {
+                    loop.getCallbackHandler().handleFileCallback(onFChmod, callbackId,  error);
+                }
+                break;
+            case UV_FS_FSYNC:
+                if (onFSync != null) {
+                    loop.getCallbackHandler().handleFileCallback(onFSync, callbackId,  error);
+                }
+                break;
+            case UV_FS_FDATASYNC:
+                if (onFDatasync != null) {
+                    loop.getCallbackHandler().handleFileCallback(onFDatasync, callbackId,  error);
+                }
+                break;
+            case UV_FS_UNLINK:
+                if (onUnlink != null) {
+                    loop.getCallbackHandler().handleFileCallback(onUnlink, callbackId,  error);
+                }
+                break;
+            case UV_FS_RMDIR:
+                if (onRmDir != null) {
+                    loop.getCallbackHandler().handleFileCallback(onRmDir, callbackId,  error);
+                }
+                break;
+            case UV_FS_MKDIR:
+                if (onMkDir != null) {
+                    loop.getCallbackHandler().handleFileCallback(onMkDir, callbackId,  error);
+                }
+                break;
+            case UV_FS_RENAME:
+                if (onRename != null) {
+                    loop.getCallbackHandler().handleFileCallback(onRename, callbackId,  error);
+                }
+                break;
+            case UV_FS_LINK:
+                if (onLink != null) {
+                    loop.getCallbackHandler().handleFileCallback(onLink, callbackId,  error);
+                }
+                break;
+            case UV_FS_SYMLINK:
+                if (onSymLink != null) {
+                    loop.getCallbackHandler().handleFileCallback(onSymLink, callbackId,  error);
+                }
+                break;
+            case UV_FS_CHOWN:
+                if (onChown != null) {
+                    loop.getCallbackHandler().handleFileCallback(onChown, callbackId,  error);
+                }
+                break;
+            case UV_FS_FCHOWN:
+                if (onFChown != null) {
+                    loop.getCallbackHandler().handleFileCallback(onFChown, callbackId,  error);
+                }
+                break;
             default: assert false : "unsupported callback type " + type;
         }
     }
 
-    private void call(final FileCallback callback, final int callbackId, final Object... args) {
-       loop.getCallbackHandler().handleFileCallback(callback, callbackId, args);
+    private void callClose(final int callbackId, final int fd, final Exception error) {
+        if (fd != -1) {
+            paths.remove(fd);
+        }
+        if (onClose != null) {
+            loop.getCallbackHandler().handleFileCloseCallback(onClose, callbackId, fd, error);
+        }
+    }
+
+    private void callOpen(final int callbackId, final int fd, final String path, final Exception error) {
+        if (fd != -1) {
+            paths.put(fd, path);
+        }
+        if (onOpen != null) {
+            loop.getCallbackHandler().handleFileOpenCallback(onOpen, callbackId, fd, error);
+        }
     }
 
     private void callRead(final int callbackId, final int bytesRead, final byte[] data, final Exception error) {
         if (onRead != null) {
             loop.getCallbackHandler().handleFileReadCallback(onRead, callbackId, bytesRead, data, error);
+        }
+    }
+
+    private void callReaddir(final int callbackId, final String[] names, final Exception error) {
+        if (onReadDir != null) {
+            loop.getCallbackHandler().handleFileReadDirCallback(onReadDir, callbackId, names, error);
+        }
+    }
+
+    private void callReadlink(final int callbackId, final String name, final Exception error) {
+        if (onReadLink != null) {
+            loop.getCallbackHandler().handleFileReadLinkCallback(onReadLink, callbackId, name, error);
+        }
+    }
+
+    private void callStats(final int type, final int callbackId, final Stats stats, final Exception error) {
+        switch(type) {
+            case UV_FS_FSTAT:
+                if (onFStat != null) {
+                    loop.getCallbackHandler().handleFileStatsCallback(onFStat, callbackId, stats, error);
+                }
+                break;
+            case UV_FS_LSTAT:
+                if (onLStat != null) {
+                    loop.getCallbackHandler().handleFileStatsCallback(onLStat, callbackId, stats, error);
+                }
+                break;
+            case UV_FS_STAT:
+                if (onStat != null) {
+                    loop.getCallbackHandler().handleFileStatsCallback(onStat, callbackId, stats, error);
+                }
+                break;
+            default: assert false : "unsupported callback type " + type;
+        }
+    }
+
+    private void callUtime(final int type, final int callbackId, final long time, final Exception error) {
+        switch(type) {
+            case UV_FS_UTIME:
+                if (onUTime != null) {
+                    loop.getCallbackHandler().handleFileUTimeCallback(onUTime, callbackId, time, error);
+                }
+                break;
+            case UV_FS_FUTIME:
+                if (onFUTime != null) {
+                    loop.getCallbackHandler().handleFileUTimeCallback(onFUTime, callbackId, time, error);
+                }
+                break;
+            default: assert false : "unsupported callback type " + type;
         }
     }
 

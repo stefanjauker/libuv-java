@@ -105,7 +105,6 @@ jthrowable NewException(JNIEnv* env, int errorno, const char *syscall, const cha
 
 static char _message[MESSAGE_SIZE];
 static jclass _oom_cid = NULL;
-static jmethodID _oom_init_mid = NULL;
 
 void ThrowOutOfMemoryError(JNIEnv* env, const char* func, const char* file, const char* line, const char* msg) {
 #ifdef _WIN32
@@ -116,9 +115,7 @@ void ThrowOutOfMemoryError(JNIEnv* env, const char* func, const char* file, cons
   snprintf(_message, MESSAGE_SIZE, "%s:%s %s.%s", filename ? filename + 1 : file, line, func, msg);
 #endif
 
-  jstring message = env->NewStringUTF(_message);
-  jthrowable oom = (jthrowable) env->NewObject(_oom_cid, _oom_init_mid, message);
-  env->Throw(oom);
+  env->ThrowNew(_oom_cid, _message);
 }
 
 /*
@@ -135,7 +132,4 @@ JNIEXPORT void JNICALL Java_net_java_libuv_NativeException__1static_1initialize
   assert(_oom_cid);
   _oom_cid = (jclass) env->NewGlobalRef(_oom_cid);
   assert(_oom_cid);
-
-  _oom_init_mid = env->GetMethodID(_oom_cid, "<init>", "(Ljava/lang/String;)V");
-  assert(_oom_init_mid);
 }

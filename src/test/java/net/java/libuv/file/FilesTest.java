@@ -30,19 +30,17 @@ import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import net.java.libuv.cb.*;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import net.java.libuv.Constants;
-import net.java.libuv.cb.FileCallback;
+import net.java.libuv.cb.FileReadDirCallback;
 import net.java.libuv.Files;
-import net.java.libuv.NativeException;
 import net.java.libuv.Stats;
 import net.java.libuv.TestBase;
-import net.java.libuv.cb.FileReadCallback;
-import net.java.libuv.cb.FileWriteCallback;
 import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.runner.TestRunner;
 
@@ -111,12 +109,12 @@ public class FilesTest extends TestBase {
         final AtomicBoolean readCallbackCalled = new AtomicBoolean(false);
         final AtomicBoolean closeCallbackCalled = new AtomicBoolean(false);
 
-        handle.setOpenCallback(new FileCallback() {
+        handle.setOpenCallback(new FileOpenCallback() {
             @Override
-            public void call(final int id, final Object[] args) throws Exception {
+            public void onOpen(final int id, final int file, final Exception error) throws Exception {
                 openCallbackCalled.set(true);
-                checkCallbackArgs(args);
-                fd.set((Integer)args[0]);
+                checkException(error);
+                fd.set(file);
                 Assert.assertTrue(fd.get() > 0);
                 handle.write(fd.get(), writeBuffer, 0, writeBuffer.length, 0, CALLBACK_ID);
             }
@@ -143,12 +141,12 @@ public class FilesTest extends TestBase {
             }
         });
 
-        handle.setCloseCallback(new FileCallback() {
+        handle.setCloseCallback(new FileCloseCallback() {
             @Override
-            public void call(final int id, final Object[] args) throws Exception {
+            public void onClose(final int id, final int file, final Exception error) throws Exception {
                 closeCallbackCalled.set(true);
-                checkCallbackArgs(args);
-                Assert.assertEquals(args[0], fd.get());
+                checkException(error);
+                Assert.assertEquals(file, fd.get());
                 cleanupFiles(handle, filename);
             }
         });
@@ -182,10 +180,9 @@ public class FilesTest extends TestBase {
 
         handle.setUnlinkCallback(new FileCallback() {
             @Override
-            public void call(final int id, final Object[] args) throws Exception {
+            public void call(final int id, final Exception error) throws Exception {
                 unlinkCallbackCalled.set(true);
-                checkCallbackArgs(args);
-                Assert.assertTrue((Integer)args[0] == 0);
+                checkException(error);
             }
         });
 
@@ -215,20 +212,20 @@ public class FilesTest extends TestBase {
         final AtomicBoolean mkdirCallbackCalled = new AtomicBoolean(false);
         final AtomicBoolean rmdirCallbackCalled = new AtomicBoolean(false);
 
-        handle.setMkdirCallback( new FileCallback() {
+        handle.setMkDirCallback( new FileCallback() {
             @Override
-            public void call(final int id, final Object[] args) throws Exception {
+            public void call(final int id, final Exception error) throws Exception {
                 mkdirCallbackCalled.set(true);
-                checkCallbackArgs(args);
+                checkException(error);
                 handle.rmdir(dirname, CALLBACK_ID);
             }
         });
 
-        handle.setRmdirCallback(new FileCallback() {
+        handle.setRmDirCallback(new FileCallback() {
             @Override
-            public void call(final int id, final Object[] args) throws Exception {
+            public void call(final int id, final Exception error) throws Exception {
                 rmdirCallbackCalled.set(true);
-                checkCallbackArgs(args);
+                checkException(error);
             }
         });
 
@@ -256,11 +253,11 @@ public class FilesTest extends TestBase {
         final String filename = "src";
         final AtomicBoolean readdirCallbackCalled = new AtomicBoolean(false);
 
-        handle.setReaddirCallback(new FileCallback() {
+        handle.setReadDirCallback(new FileReadDirCallback() {
             @Override
-            public void call(final int id, final Object[] args) throws Exception {
+            public void onReadDir(int callbackId, String[] names, Exception error) throws Exception {
                 readdirCallbackCalled.set(true);
-                Assert.assertEquals(args.length, 2);
+                Assert.assertEquals(names.length, 2);
             }
         });
 
@@ -295,9 +292,9 @@ public class FilesTest extends TestBase {
 
         handle.setRenameCallback(new FileCallback() {
             @Override
-            public void call(final int id, final Object[] args) throws Exception {
+            public void call(final int id, final Exception error) throws Exception {
                 renameCallbackCalled.set(true);
-                checkCallbackArgs(args);
+                checkException(error);
                 Assert.assertTrue (handle.open(newName, Constants.O_RDONLY, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO) > 0);
                 cleanupFiles(handle, newName);
             }
@@ -333,9 +330,9 @@ public class FilesTest extends TestBase {
 
         handle.setFTruncateCallback(new FileCallback() {
             @Override
-            public void call(final int id, final Object[] args) throws Exception {
+            public void call(final int id, final Exception error) throws Exception {
                 ftruncateCallbackCalled.set(true);
-                checkCallbackArgs(args);
+                checkException(error);
                 final Stats stats = handle.fstat(fd.get());
                 Assert.assertEquals(stats.getSize(), 1000);
                 cleanupFiles(handle, filename);
@@ -376,7 +373,7 @@ public class FilesTest extends TestBase {
 
         handle.setLinkCallback(new FileCallback() {
             @Override
-            public void call(final int id, final Object[] args) throws Exception {
+            public void call(final int id, final Exception error) throws Exception {
                 linkCallbackCalled.set(true);
                 final Stats stats = handle.stat(filename2);
                 Assert.assertEquals(stats.getSize(), b.length);
@@ -407,12 +404,9 @@ public class FilesTest extends TestBase {
         }
     }
 
-    private void checkCallbackArgs(final Object[] args) {
-        if (args.length == 2) {
-            if ((Integer)args[0] == -1 && args[1] instanceof NativeException) {
-                final NativeException exception = (NativeException) args[1];
-                Assert.fail(exception.getMessage());
-            }
+    private void checkException(final Exception error) {
+        if (error != null) {
+            Assert.fail(error.getMessage());
         }
     }
 
