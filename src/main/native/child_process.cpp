@@ -32,13 +32,10 @@
 
 class ProcessCallbacks {
 private:
-  static jclass _integer_cid;
-  static jclass _object_cid;
   static jclass _process_handle_cid;
 
-  static jmethodID _integer_valueof_mid;
-  static jmethodID _callback_1arg_mid;
-  static jmethodID _callback_narg_mid;
+  static jmethodID _process_close_mid;
+  static jmethodID _process_exit_mid;
 
   static JNIEnv* _env;
 
@@ -62,13 +59,10 @@ typedef enum {
   PROCESS_EXIT_CALLBACK
 } ProcessHandleCallbackType;
 
-jclass ProcessCallbacks::_integer_cid = NULL;
-jclass ProcessCallbacks::_object_cid = NULL;
 jclass ProcessCallbacks::_process_handle_cid = NULL;
 
-jmethodID ProcessCallbacks::_integer_valueof_mid = NULL;
-jmethodID ProcessCallbacks::_callback_1arg_mid = NULL;
-jmethodID ProcessCallbacks::_callback_narg_mid = NULL;
+jmethodID ProcessCallbacks::_process_close_mid = NULL;
+jmethodID ProcessCallbacks::_process_exit_mid = NULL;
 
 JNIEnv* ProcessCallbacks::_env = NULL;
 
@@ -76,26 +70,13 @@ void ProcessCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _env = env;
   assert(_env);
 
-  _integer_cid = env->FindClass("java/lang/Integer");
-  assert(_integer_cid);
-  _integer_cid = (jclass) env->NewGlobalRef(_integer_cid);
-  assert(_integer_cid);
-
-  _integer_valueof_mid = env->GetStaticMethodID(_integer_cid, "valueOf", "(I)Ljava/lang/Integer;");
-  assert(_integer_valueof_mid);
-
-  _object_cid = env->FindClass("java/lang/Object");
-  assert(_object_cid);
-  _object_cid = (jclass) env->NewGlobalRef(_object_cid);
-  assert(_object_cid);
-
   _process_handle_cid = (jclass) env->NewGlobalRef(cls);
   assert(_process_handle_cid);
 
-  _callback_1arg_mid = env->GetMethodID(_process_handle_cid, "callback", "(ILjava/lang/Object;)V");
-  assert(_callback_1arg_mid);
-  _callback_narg_mid = env->GetMethodID(_process_handle_cid, "callback", "(I[Ljava/lang/Object;)V");
-  assert(_callback_narg_mid);
+  _process_close_mid = env->GetMethodID(_process_handle_cid, "callClose", "()V");
+  assert(_process_close_mid);
+  _process_exit_mid = env->GetMethodID(_process_handle_cid, "callExit", "(IILjava/lang/Exception;)V");
+  assert(_process_exit_mid);
 }
 
 void ProcessCallbacks::initialize(jobject instance) {
@@ -113,49 +94,32 @@ ProcessCallbacks::~ProcessCallbacks() {
 
 void ProcessCallbacks::on_exit(int status, int signal) {
   assert(_env);
-  jobject status_arg = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, status);
-  assert(status_arg);
-  jobject signal_arg = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, signal);
-  assert(signal_arg);
-  jobjectArray args = _env->NewObjectArray(2, _integer_cid, 0);
-  OOM(_env, args);
-  _env->SetObjectArrayElement(args, 0, status_arg);
-  _env->SetObjectArrayElement(args, 1, signal_arg);
+
   _env->CallVoidMethod(
       _instance,
-      _callback_narg_mid,
-      PROCESS_EXIT_CALLBACK,
-      args);
+      _process_exit_mid,
+      status,
+      signal,
+      NULL);
 }
 
 void ProcessCallbacks::on_exit(int status, int signal, int error_code) {
   assert(_env);
   assert(status < 0);
 
-  jobject status_arg = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, status);
-  assert(status_arg);
-  jobject signal_arg = _env->CallStaticObjectMethod(_integer_cid, _integer_valueof_mid, signal);
-  assert(signal_arg);
-  jthrowable exception = NewException(_env, error_code);
-  jobjectArray args = _env->NewObjectArray(3, _object_cid, 0);
-  OOM(_env, args);
-  _env->SetObjectArrayElement(args, 0, status_arg);
-  _env->SetObjectArrayElement(args, 1, signal_arg);
-  _env->SetObjectArrayElement(args, 2, exception);
   _env->CallVoidMethod(
       _instance,
-      _callback_narg_mid,
-      PROCESS_EXIT_CALLBACK,
-      args);
+      _process_exit_mid,
+      status,
+      signal,
+      NewException(_env, error_code));
 }
 
 void ProcessCallbacks::on_close() {
   assert(_env);
   _env->CallVoidMethod(
       _instance,
-      _callback_1arg_mid,
-      PROCESS_CLOSE_CALLBACK,
-      NULL);
+      _process_close_mid);
 }
 
 static void _close_cb(uv_handle_t* handle) {

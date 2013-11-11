@@ -34,7 +34,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import net.java.libuv.cb.ProcessCallback;
+import net.java.libuv.cb.ProcessCloseCallback;
+import net.java.libuv.cb.ProcessExitCallback;
 import net.java.libuv.TestBase;
 import net.java.libuv.cb.StreamConnectCallback;
 import net.java.libuv.cb.StreamConnectionCallback;
@@ -91,18 +92,18 @@ public class ProcessHandleTest extends TestBase {
             }
         });
 
-        process.setExitCallback(new ProcessCallback() {
+        process.setExitCallback(new ProcessExitCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
-                System.out.println("status " + args[0] + ", signal " + args[1]);
+            public void onExit(final int status, final int signal, final Exception error) throws Exception {
+                System.out.println("status " + status + ", signal " + signal);
                 child.connect(PIPE_NAME);
                 exitCalled.set(true);
             }
         });
 
-        process.setCloseCallback(new ProcessCallback() {
+        process.setCloseCallback(new ProcessCloseCallback() {
             @Override
-            public void call(final Object[] args) throws Exception {
+            public void onClose() throws Exception {
                 closeCalled.set(true);
             }
         });

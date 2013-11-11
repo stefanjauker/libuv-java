@@ -25,8 +25,8 @@
 
 package net.java.libuv.cb;
 
-public interface ProcessCallback {
+public interface ProcessExitCallback {
 
-    public void call(Object[] args) throws Exception;
+    public void onExit(int status, int signal, Exception error) throws Exception;
 
 }

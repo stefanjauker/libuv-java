@@ -28,7 +28,8 @@ package net.java.libuv.handles;
 import java.util.EnumSet;
 
 import net.java.libuv.LibUVPermission;
-import net.java.libuv.cb.ProcessCallback;
+import net.java.libuv.cb.ProcessCloseCallback;
+import net.java.libuv.cb.ProcessExitCallback;
 
 public final class ProcessHandle extends Handle {
 
@@ -55,8 +56,8 @@ public final class ProcessHandle extends Handle {
         _static_initialize();
     }
 
-    private ProcessCallback onClose = null;
-    private ProcessCallback onExit = null;
+    private ProcessCloseCallback onClose = null;
+    private ProcessExitCallback onExit = null;
 
     public ProcessHandle(final LoopHandle loop) {
         super(_new(loop.pointer()), loop);
@@ -64,11 +65,11 @@ public final class ProcessHandle extends Handle {
         _initialize(pointer);
     }
 
-    public void setCloseCallback(final ProcessCallback callback) {
+    public void setCloseCallback(final ProcessCloseCallback callback) {
         onClose = callback;
     }
 
-    public void setExitCallback(final ProcessCallback callback) {
+    public void setExitCallback(final ProcessExitCallback callback) {
         onExit = callback;
     }
 
@@ -145,21 +146,16 @@ public final class ProcessHandle extends Handle {
         super.finalize();
     }
 
-    private void callback(final int type, final Object arg) {
-        final Object[] args = {arg};
-        callback(type, args);
-    }
-
-    private void callback(final int type, final Object... args) {
-        switch (type) {
-            case 1: if (onClose != null) {call(onClose, args);} break;
-            case 2: if (onExit != null) {call(onExit, args);} break;
-            default: assert false : "unsupported callback type " + type;
+    private void callClose() {
+        if (onClose != null) {
+            loop.getCallbackHandler().handleProcessCloseCallback(onClose);
         }
     }
 
-    private void call(final ProcessCallback callback, final Object... args) {
-       loop.callbackHandler.handleProcessCallback(callback, args);
+    private void callExit(final int status, final int signal, final Exception error) {
+        if (onExit != null) {
+            loop.getCallbackHandler().handleProcessExitCallback(onExit, status, signal, error);
+        }
     }
 
     private static native long _new(final long loop);
