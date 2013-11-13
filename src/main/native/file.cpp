@@ -74,12 +74,9 @@ public:
 
 class FileCallbacks {
 private:
-  static jclass _int_cid;
-  static jclass _long_cid;
   static jclass _files_cid;
   static jclass _stats_cid;
 
-  static jmethodID _int_valueof_mid;
   static jmethodID _close_callback_mid;
   static jmethodID _file_callback_mid;
   static jmethodID _open_callback_mid;
@@ -112,13 +109,10 @@ public:
   void fs_cb(FileRequest *request, uv_fs_type fs_type, int errorno);
 };
 
-jclass FileCallbacks::_int_cid = NULL;
-jclass FileCallbacks::_long_cid = NULL;
 jclass FileCallbacks::_files_cid = NULL;
 jclass FileCallbacks::_stats_cid = NULL;
 jclass FileCallbacks::_string_cid = NULL;
 
-jmethodID FileCallbacks::_int_valueof_mid = NULL;
 jmethodID FileCallbacks::_close_callback_mid = NULL;
 jmethodID FileCallbacks::_file_callback_mid = NULL;
 jmethodID FileCallbacks::_open_callback_mid = NULL;
@@ -176,16 +170,6 @@ void FileCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _env = env;
   assert(_env);
 
-  _int_cid = env->FindClass("java/lang/Integer");
-  assert(_int_cid);
-  _int_cid = (jclass) env->NewGlobalRef(_int_cid);
-  assert(_int_cid);
-
-  _long_cid = env->FindClass("java/lang/Long");
-  assert(_long_cid);
-  _long_cid = (jclass) env->NewGlobalRef(_long_cid);
-  assert(_long_cid);
-
   _stats_cid = env->FindClass("net/java/libuv/Stats");
   assert(_stats_cid);
   _stats_cid = (jclass) env->NewGlobalRef(_stats_cid);
@@ -195,9 +179,6 @@ void FileCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   assert(_string_cid);
   _string_cid = (jclass) env->NewGlobalRef(_string_cid);
   assert(_string_cid);
-
-  _int_valueof_mid = env->GetStaticMethodID(_int_cid, "valueOf", "(I)Ljava/lang/Integer;");
-  assert(_int_valueof_mid);
 
   _files_cid = (jclass) env->NewGlobalRef(cls);
   assert(_files_cid);
