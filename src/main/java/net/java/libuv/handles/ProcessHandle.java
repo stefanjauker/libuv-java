@@ -87,13 +87,14 @@ public final class ProcessHandle extends Handle {
         assert args != null;
         assert args.length > 0;
 
-        char[] c = args[0].toCharArray();
+        char[] cmdChars = args[0].toCharArray();
         boolean inQuote = false;
-        StringBuilder sb = new StringBuilder();
-        List<String> list = new ArrayList<String>();
+        List<String> javaArgs = new ArrayList<String>();
+        int start = 0;
+        int end = 0;
 
-        for (int i = 0; i < c.length; i++) {
-            switch(c[i]) {
+        for (int i = 0; i < cmdChars.length; i++) {
+            switch(cmdChars[i]) {
                 case '\"': {
                     if (inQuote) {
                         // Closing quote
@@ -106,21 +107,20 @@ public final class ProcessHandle extends Handle {
                 }
                 case ' ': {
                     if (!inQuote) {
-                        list.add(sb.toString());
-                        sb.delete(0, sb.length());
+                        javaArgs.add(args[0].substring(start, end));
+                        start = ++end;
                         continue;
                     }
                     break;
                 }
             }
-            sb.append(c[i]);
+            end++;
         }
-        list.add(sb.toString());
-        sb.delete(0, sb.length());
+        javaArgs.add(args[0].substring(start, end));
 
-        final String[] arguments = new String[args.length + list.size() - 1];
-        System.arraycopy(list.toArray(), 0, arguments, 0, list.size());
-        System.arraycopy(args, 1, arguments, list.size(), args.length - 1);
+        final String[] arguments = new String[args.length + javaArgs.size() - 1];
+        System.arraycopy(javaArgs.toArray(), 0, arguments, 0, javaArgs.size());
+        System.arraycopy(args, 1, arguments, javaArgs.size(), args.length - 1);
 
         int[] stdioFlags = null;
         long[] streamPointers = null;
