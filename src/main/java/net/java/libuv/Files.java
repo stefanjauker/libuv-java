@@ -237,7 +237,11 @@ public final class Files {
     }
 
     public int close(final int fd, final int callbackId) {
-        return _close(pointer, fd, callbackId);
+        final int r = _close(pointer, fd, callbackId);
+        if (r != -1) {
+            paths.remove(fd);
+        }
+        return r;
     }
 
     public int open(final String path, final int flags, final int mode) {
