@@ -47,9 +47,7 @@ const char* get_uv_errno_message(int errorno) {
   return uv_strerror(err);
 }
 
-// utility methods
-
-jstring utf(JNIEnv* env, const std::string& s) {
+static inline jstring utf(JNIEnv* env, const std::string& s) {
     return env->NewStringUTF(s.data());
 }
 
@@ -115,6 +113,7 @@ void ThrowOutOfMemoryError(JNIEnv* env, const char* func, const char* file, cons
   snprintf(_message, MESSAGE_SIZE, "%s:%s %s.%s", filename ? filename + 1 : file, line, func, msg);
 #endif
 
+  assert(_oom_cid);
   env->ThrowNew(_oom_cid, _message);
 }
 
