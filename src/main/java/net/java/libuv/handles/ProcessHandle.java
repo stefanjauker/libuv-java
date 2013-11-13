@@ -25,7 +25,9 @@
 
 package net.java.libuv.handles;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.cb.ProcessCloseCallback;
@@ -85,10 +87,40 @@ public final class ProcessHandle extends Handle {
         assert args != null;
         assert args.length > 0;
 
-        final String[] args0 = args[0].split(" ");
-        final String[] arguments = new String[args.length + args0.length - 1];
-        System.arraycopy(args0, 0, arguments, 0, args0.length);
-        System.arraycopy(args, 1, arguments, args0.length, args.length - 1);
+        char[] c = args[0].toCharArray();
+        boolean inQuote = false;
+        StringBuilder sb = new StringBuilder();
+        List<String> list = new ArrayList<String>();
+
+        for (int i = 0; i < c.length; i++) {
+            switch(c[i]) {
+                case '\"': {
+                    if (inQuote) {
+                        // Closing quote
+                        inQuote = false;
+                    } else {
+                        // Opening quote
+                        inQuote = true;
+                    }
+                    break;
+                }
+                case ' ': {
+                    if (!inQuote) {
+                        list.add(sb.toString());
+                        sb.delete(0, sb.length());
+                        continue;
+                    }
+                    break;
+                }
+            }
+            sb.append(c[i]);
+        }
+        list.add(sb.toString());
+        sb.delete(0, sb.length());
+
+        final String[] arguments = new String[args.length + list.size() - 1];
+        System.arraycopy(list.toArray(), 0, arguments, 0, list.size());
+        System.arraycopy(args, 1, arguments, list.size(), args.length - 1);
 
         int[] stdioFlags = null;
         long[] streamPointers = null;
