@@ -32,80 +32,88 @@ import net.java.libuv.cb.FileReadCallback;
 import net.java.libuv.handles.LoopHandle;
 
 import java.io.File;
+import java.util.Arrays;
 
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 
 public class FileReadTest extends TestBase {
 
     private int count = 0;
     private final String filename = (TestBase.TMPDIR.endsWith(File.separator) ? TestBase.TMPDIR : TestBase.TMPDIR + File.separator) + "FileReadTest.txt";
     private final LoopHandle loop;
-    private final Files handle;
+    private final Files files;
     private long startTime;
 
-    private final static int ITERATIONS = 100000;
+    private final static int ITERATIONS = 10000;
     private final static long DURATION = 300000;  // DURATION after 5 minutes
     private final static int BUFFER_SIZE = 16 * 1024 * 1024;
 
     private byte[] readBuffer = new byte[BUFFER_SIZE];
     private int fd;
 
+    @AfterMethod
+    public void cleanup() {
+        if (files != null) {
+            files.close(fd);
+            files.unlink(filename);
+        }
+    }
+
     public FileReadTest() {
         loop = new LoopHandle();
-        handle = new Files(loop);
+        files = new Files(loop);
 
-        handle.setReadCallback(new FileReadCallback() {
+        files.setReadCallback(new FileReadCallback() {
             @Override
             public void onRead(Object context, int bytesRead, byte[] data, Exception error) throws Exception {
                 Assert.assertEquals(context, FileReadTest.this);
+                Assert.assertEquals(data, readBuffer);
+                for (int i = 0; i < bytesRead; i++) {
+                    Assert.assertEquals(data[i], (byte) i);
+                }
+                Assert.assertEquals(bytesRead, BUFFER_SIZE);
+
                 if ((count % 1000) == 0) {
                     System.out.print(count + " ");
                 }
                 if (count > ITERATIONS) {
                     System.out.println("Max number of ITERATIONS reached");
-                    handle.close(fd);
-                    handle.unlink(filename);
-                    System.exit(0);
+                    return;
                 }
                 if (System.currentTimeMillis() - startTime > DURATION) {
                     System.out.println("Test complete total ITERATIONS: " + count);
-                    handle.close(fd);
-                    handle.unlink(filename);
-                    System.exit(0);
-                }
-
-                if (bytesRead != BUFFER_SIZE) {
-                    System.out.println("wrong number of bytes returned " + bytesRead + " ITERATIONS " + count);
-                    handle.close(fd);
-                    handle.unlink(filename);
-                    System.exit(0);
+                    return;
                 }
 
                 count++;
-                for (int i = 0; i < BUFFER_SIZE; i++) {
-                    readBuffer[i] = 0;
-                }
-                handle.read(fd, readBuffer, 0, BUFFER_SIZE, 0, FileReadTest.this);
+                Arrays.fill(readBuffer, (byte) 0);
+                files.read(fd, readBuffer, 0, BUFFER_SIZE, 0, FileReadTest.this);
             }
         });
     }
 
     public void readFile() throws Exception {
         startTime = System.currentTimeMillis();
-        fd = handle.open(filename, Constants.O_WRONLY | Constants.O_CREAT, Constants.S_IRWXU);
+        Arrays.fill(readBuffer, (byte) 0);
+        fd = files.open(filename, Constants.O_WRONLY | Constants.O_CREAT, Constants.S_IRWXU);
         byte[] b = new byte[BUFFER_SIZE];
         for (int i = 0; i < BUFFER_SIZE; i++) {
-            b[i] = (byte)'x';
+            b[i] = (byte) i;
         }
-        handle.write(fd, b, 0, BUFFER_SIZE, 0);
-        handle.close(fd);
-        fd = handle.open(filename, Constants.O_RDONLY, Constants.S_IRWXU);
-        handle.read(fd, readBuffer, 0, BUFFER_SIZE, 0, this.hashCode());
+        files.write(fd, b, 0, BUFFER_SIZE, 0);
+        files.close(fd);
+        fd = files.open(filename, Constants.O_RDONLY, Constants.S_IRWXU);
+        files.read(fd, readBuffer, 0, BUFFER_SIZE, 0, FileReadTest.this);
         loop.run();
     }
 
     public static void main(final String[] args) throws Exception {
         FileReadTest f = new FileReadTest();
-        f.readFile();
+        try {
+            f.readFile();
+        } finally {
+            f.cleanup();
+        }
     }
 }
