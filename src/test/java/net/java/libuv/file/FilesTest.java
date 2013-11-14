@@ -30,24 +30,27 @@ import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import net.java.libuv.cb.*;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import net.java.libuv.Constants;
+import net.java.libuv.cb.FileCallback;
+import net.java.libuv.cb.FileCloseCallback;
+import net.java.libuv.cb.FileOpenCallback;
+import net.java.libuv.cb.FileReadCallback;
 import net.java.libuv.cb.FileReadDirCallback;
 import net.java.libuv.Files;
 import net.java.libuv.Stats;
 import net.java.libuv.TestBase;
+import net.java.libuv.cb.FileWriteCallback;
 import net.java.libuv.handles.LoopHandle;
 import net.java.libuv.runner.TestRunner;
 
 public class FilesTest extends TestBase {
 
     private String testName;
-    private static final int CALLBACK_ID = 1;
 
     @BeforeMethod
     public void startSession(final Method method) throws Exception {
@@ -111,39 +114,43 @@ public class FilesTest extends TestBase {
 
         handle.setOpenCallback(new FileOpenCallback() {
             @Override
-            public void onOpen(final int id, final int file, final Exception error) throws Exception {
+            public void onOpen(final Object context, final int file, final Exception error) throws Exception {
+                Assert.assertEquals(context, FilesTest.this);
                 openCallbackCalled.set(true);
                 checkException(error);
                 fd.set(file);
                 Assert.assertTrue(fd.get() > 0);
-                handle.write(fd.get(), writeBuffer, 0, writeBuffer.length, 0, CALLBACK_ID);
+                handle.write(fd.get(), writeBuffer, 0, writeBuffer.length, 0, FilesTest.this);
             }
         });
 
         handle.setWriteCallback(new FileWriteCallback() {
             @Override
-            public void onWrite(int callbackId, int bytesWritten, Exception error) throws Exception {
+            public void onWrite(Object context, int bytesWritten, Exception error) throws Exception {
+                Assert.assertEquals(context, FilesTest.this);
                 writeCallbackCalled.set(true);
                 Assert.assertNull(error);
                 Assert.assertEquals(bytesWritten, data.getBytes().length);
-                handle.read(fd.get(), readBuffer, 0, readBuffer.length, 0, CALLBACK_ID);
+                handle.read(fd.get(), readBuffer, 0, readBuffer.length, 0, FilesTest.this);
             }
         });
 
         handle.setReadCallback(new FileReadCallback() {
             @Override
-            public void onRead(int callbackId, int bytesRead, byte[] data, Exception error) throws Exception {
+            public void onRead(Object context, int bytesRead, byte[] data, Exception error) throws Exception {
+                Assert.assertEquals(context, FilesTest.this);
                 readCallbackCalled.set(true);
                 Assert.assertNull(error);
                 Assert.assertEquals(bytesRead, writeBuffer.length);
                 Assert.assertEquals(data, writeBuffer);
-                handle.close(fd.get(), CALLBACK_ID);
+                handle.close(fd.get(), FilesTest.this);
             }
         });
 
         handle.setCloseCallback(new FileCloseCallback() {
             @Override
-            public void onClose(final int id, final int file, final Exception error) throws Exception {
+            public void onClose(final Object context, final int file, final Exception error) throws Exception {
+                Assert.assertEquals(context, FilesTest.this);
                 closeCallbackCalled.set(true);
                 checkException(error);
                 Assert.assertEquals(file, fd.get());
@@ -151,7 +158,7 @@ public class FilesTest extends TestBase {
             }
         });
 
-        handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO, CALLBACK_ID);
+        handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO, FilesTest.this);
         loop.run();
         Assert.assertTrue(openCallbackCalled.get());
         Assert.assertTrue(writeCallbackCalled.get());
@@ -180,14 +187,15 @@ public class FilesTest extends TestBase {
 
         handle.setUnlinkCallback(new FileCallback() {
             @Override
-            public void call(final int id, final Exception error) throws Exception {
+            public void call(final Object context, final Exception error) throws Exception {
+                Assert.assertEquals(context, FilesTest.this);
                 unlinkCallbackCalled.set(true);
                 checkException(error);
             }
         });
 
         handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
-        handle.unlink(filename, CALLBACK_ID);
+        handle.unlink(filename, FilesTest.this);
         loop.run();
         Assert.assertTrue(unlinkCallbackCalled.get());
     }
@@ -214,22 +222,24 @@ public class FilesTest extends TestBase {
 
         handle.setMkDirCallback( new FileCallback() {
             @Override
-            public void call(final int id, final Exception error) throws Exception {
+            public void call(final Object context, final Exception error) throws Exception {
+                Assert.assertEquals(context, FilesTest.this);
                 mkdirCallbackCalled.set(true);
                 checkException(error);
-                handle.rmdir(dirname, CALLBACK_ID);
+                handle.rmdir(dirname, FilesTest.this);
             }
         });
 
         handle.setRmDirCallback(new FileCallback() {
             @Override
-            public void call(final int id, final Exception error) throws Exception {
+            public void call(final Object context, final Exception error) throws Exception {
+                Assert.assertEquals(context, FilesTest.this);
                 rmdirCallbackCalled.set(true);
                 checkException(error);
             }
         });
 
-        final int status = handle.mkdir(dirname, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO, CALLBACK_ID);
+        final int status = handle.mkdir(dirname, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO, FilesTest.this);
         Assert.assertTrue(status == 0);
         loop.run();
         Assert.assertTrue(mkdirCallbackCalled.get());
@@ -255,13 +265,14 @@ public class FilesTest extends TestBase {
 
         handle.setReadDirCallback(new FileReadDirCallback() {
             @Override
-            public void onReadDir(int callbackId, String[] names, Exception error) throws Exception {
+            public void onReadDir(Object context, String[] names, Exception error) throws Exception {
+                Assert.assertEquals(context, FilesTest.this);
                 readdirCallbackCalled.set(true);
                 Assert.assertEquals(names.length, 2);
             }
         });
 
-        final String[] names = handle.readdir(filename, Constants.O_RDONLY, CALLBACK_ID);
+        final String[] names = handle.readdir(filename, Constants.O_RDONLY, FilesTest.this);
         Assert.assertEquals(names, null);
         loop.run();
         Assert.assertTrue(readdirCallbackCalled.get());
@@ -292,7 +303,8 @@ public class FilesTest extends TestBase {
 
         handle.setRenameCallback(new FileCallback() {
             @Override
-            public void call(final int id, final Exception error) throws Exception {
+            public void call(final Object context, final Exception error) throws Exception {
+                Assert.assertEquals(context, FilesTest.this);
                 renameCallbackCalled.set(true);
                 checkException(error);
                 Assert.assertTrue (handle.open(newName, Constants.O_RDONLY, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO) > 0);
@@ -302,7 +314,7 @@ public class FilesTest extends TestBase {
 
         final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
         handle.close(fd);
-        handle.rename(filename, newName, CALLBACK_ID);
+        handle.rename(filename, newName, FilesTest.this);
         loop.run();
         Assert.assertTrue(renameCallbackCalled.get());
     }
@@ -330,7 +342,8 @@ public class FilesTest extends TestBase {
 
         handle.setFTruncateCallback(new FileCallback() {
             @Override
-            public void call(final int id, final Exception error) throws Exception {
+            public void call(final Object context, final Exception error) throws Exception {
+                Assert.assertEquals(context, FilesTest.this);
                 ftruncateCallbackCalled.set(true);
                 checkException(error);
                 final Stats stats = handle.fstat(fd.get());
@@ -340,7 +353,7 @@ public class FilesTest extends TestBase {
         });
 
         fd.set(handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO));
-        handle.ftruncate(fd.get(), 1000, CALLBACK_ID);
+        handle.ftruncate(fd.get(), 1000, FilesTest.this);
         loop.run();
         Assert.assertTrue(ftruncateCallbackCalled.get());
     }
@@ -373,7 +386,8 @@ public class FilesTest extends TestBase {
 
         handle.setLinkCallback(new FileCallback() {
             @Override
-            public void call(final int id, final Exception error) throws Exception {
+            public void call(final Object context, final Exception error) throws Exception {
+                Assert.assertEquals(context, FilesTest.this);
                 linkCallbackCalled.set(true);
                 final Stats stats = handle.stat(filename2);
                 Assert.assertEquals(stats.getSize(), b.length);
@@ -384,7 +398,7 @@ public class FilesTest extends TestBase {
         final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
         handle.write(fd, b, 0, b.length, 0);
         handle.close(fd);
-        handle.link(filename, filename2, CALLBACK_ID);
+        handle.link(filename, filename2, FilesTest.this);
         loop.run();
         Assert.assertTrue(linkCallbackCalled.get());
     }

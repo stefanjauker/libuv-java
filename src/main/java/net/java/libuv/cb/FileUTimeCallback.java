@@ -27,6 +27,6 @@ package net.java.libuv.cb;
 
 public interface FileUTimeCallback {
 
-    public void onUTime(int callbackId, long time, Exception error) throws Exception;
+    public void onUTime(Object context, long time, Exception error) throws Exception;
 
 }

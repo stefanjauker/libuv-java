@@ -27,6 +27,6 @@ package net.java.libuv.cb;
 
 public interface FileOpenCallback {
 
-    public void onOpen(int callbackId, int fd, Exception error) throws Exception;
+    public void onOpen(Object context, int fd, Exception error) throws Exception;
 
 }

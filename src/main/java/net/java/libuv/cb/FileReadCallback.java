@@ -27,6 +27,6 @@ package net.java.libuv.cb;
 
 public interface FileReadCallback {
 
-    public void onRead(int callbackId, int bytesRead, byte[] data, Exception error) throws Exception;
+    public void onRead(Object context, int bytesRead, byte[] data, Exception error) throws Exception;
 
 }

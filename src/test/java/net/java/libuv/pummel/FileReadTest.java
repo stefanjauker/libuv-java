@@ -33,6 +33,8 @@ import net.java.libuv.handles.LoopHandle;
 
 import java.io.File;
 
+import org.testng.Assert;
+
 public class FileReadTest extends TestBase {
 
     private int count = 0;
@@ -54,7 +56,8 @@ public class FileReadTest extends TestBase {
 
         handle.setReadCallback(new FileReadCallback() {
             @Override
-            public void onRead(int callbackId, int bytesRead, byte[] data, Exception error) throws Exception {
+            public void onRead(Object context, int bytesRead, byte[] data, Exception error) throws Exception {
+                Assert.assertEquals(context, FileReadTest.this);
                 if ((count % 1000) == 0) {
                     System.out.print(count + " ");
                 }
@@ -82,7 +85,7 @@ public class FileReadTest extends TestBase {
                 for (int i = 0; i < BUFFER_SIZE; i++) {
                     readBuffer[i] = 0;
                 }
-                handle.read(fd, readBuffer, 0, BUFFER_SIZE, 0, this.hashCode());
+                handle.read(fd, readBuffer, 0, BUFFER_SIZE, 0, FileReadTest.this);
             }
         });
     }

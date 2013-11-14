@@ -27,6 +27,6 @@ package net.java.libuv.cb;
 
 public interface FileCloseCallback {
 
-    public void onClose(int callbackId, int fd, Exception error) throws Exception;
+    public void onClose(Object context, int fd, Exception error) throws Exception;
 
 }

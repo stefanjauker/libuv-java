@@ -29,6 +29,6 @@ import net.java.libuv.Stats;
 
 public interface FileStatsCallback {
 
-    public void onStats(int callbackId, Stats stats, Exception error) throws Exception;
+    public void onStats(Object context, Stats stats, Exception error) throws Exception;
 
 }

@@ -27,6 +27,6 @@ package net.java.libuv.cb;
 
 public interface FileWriteCallback {
 
-    public void onWrite(int callbackId, int bytesWritten, Exception error) throws Exception;
+    public void onWrite(Object context, int bytesWritten, Exception error) throws Exception;
 
 }

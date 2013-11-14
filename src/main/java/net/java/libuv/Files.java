@@ -28,8 +28,15 @@ package net.java.libuv;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.java.libuv.cb.*;
+import net.java.libuv.cb.FileCallback;
+import net.java.libuv.cb.FileCloseCallback;
+import net.java.libuv.cb.FileOpenCallback;
+import net.java.libuv.cb.FileReadCallback;
+import net.java.libuv.cb.FileReadDirCallback;
 import net.java.libuv.cb.FileReadLinkCallback;
+import net.java.libuv.cb.FileStatsCallback;
+import net.java.libuv.cb.FileUTimeCallback;
+import net.java.libuv.cb.FileWriteCallback;
 import net.java.libuv.handles.LoopHandle;
 
 public final class Files {
@@ -38,7 +45,7 @@ public final class Files {
         _static_initialize();
     }
 
-    private static final int SYNC_MODE = 0;
+    private static final Object SYNC_MODE = null;
 
     // must be equal to values in uv.h
     private static final int UV_FS_UNKNOWN   = -1;
@@ -236,8 +243,8 @@ public final class Files {
         return r;
     }
 
-    public int close(final int fd, final int callbackId) {
-        final int r = _close(pointer, fd, callbackId);
+    public int close(final int fd, final Object context) {
+        final int r = _close(pointer, fd, context);
         if (r != -1) {
             paths.remove(fd);
         }
@@ -253,9 +260,9 @@ public final class Files {
         return fd;
     }
 
-    public int open(final String path, final int flags, final int mode, final int callbackId) {
+    public int open(final String path, final int flags, final int mode, final Object context) {
         LibUVPermission.checkOpenFile(path, flags);
-        return _open(pointer, path, flags, mode, callbackId);
+        return _open(pointer, path, flags, mode, context);
     }
 
     public int read(final int fd, final byte[] buffer, final long offset, final long length, final long position) {
@@ -263,9 +270,9 @@ public final class Files {
         return _read(pointer, fd, buffer, length, offset, position, SYNC_MODE);
     }
 
-    public int read(final int fd, final byte[] buffer, final long offset, final long length, final long position, final int callbackId) {
+    public int read(final int fd, final byte[] buffer, final long offset, final long length, final long position, final Object context) {
         // Open has checked that fd is readable.
-        return _read(pointer, fd, buffer, length, offset, position, callbackId);
+        return _read(pointer, fd, buffer, length, offset, position, context);
     }
 
     public int unlink(final String path) {
@@ -273,9 +280,9 @@ public final class Files {
         return _unlink(pointer, path, SYNC_MODE);
     }
 
-    public int unlink(final String path, final int callbackId) {
+    public int unlink(final String path, final Object context) {
         LibUVPermission.checkDeleteFile(path);
-        return _unlink(pointer, path, callbackId);
+        return _unlink(pointer, path, context);
     }
 
     public int write(final int fd, final byte[] buffer, final long offset, final long length, final long position) {
@@ -285,11 +292,11 @@ public final class Files {
         return _write(pointer, fd, buffer, length, offset, position, SYNC_MODE);
     }
 
-    public int write(final int fd, final byte[] buffer, final long offset, final long length, final long position, final int callbackId) {
+    public int write(final int fd, final byte[] buffer, final long offset, final long length, final long position, final Object context) {
         // Open has checked that fd is writable.
         assert(offset < buffer.length);
         assert(offset + length <= buffer.length);
-        return _write(pointer, fd, buffer, length, offset, position, callbackId);
+        return _write(pointer, fd, buffer, length, offset, position, context);
     }
 
     public int mkdir(final String path, final int mode) {
@@ -297,9 +304,9 @@ public final class Files {
         return _mkdir(pointer, path, mode, SYNC_MODE);
     }
 
-    public int mkdir(final String path, final int mode, final int callbackId) {
+    public int mkdir(final String path, final int mode, final Object context) {
         LibUVPermission.checkWriteFile(path);
-        return _mkdir(pointer, path, mode, callbackId);
+        return _mkdir(pointer, path, mode, context);
     }
 
     public int rmdir(final String path) {
@@ -307,9 +314,9 @@ public final class Files {
         return _rmdir(pointer, path, SYNC_MODE);
     }
 
-    public int rmdir(final String path, final int callbackId) {
+    public int rmdir(final String path, final Object context) {
         LibUVPermission.checkDeleteFile(path);
-        return _rmdir(pointer, path, callbackId);
+        return _rmdir(pointer, path, context);
     }
 
     public String[] readdir(final String path, final int flags) {
@@ -317,9 +324,9 @@ public final class Files {
         return _readdir(pointer, path, flags, SYNC_MODE);
     }
 
-    public String[] readdir(final String path, final int flags, final int callbackId) {
+    public String[] readdir(final String path, final int flags, final Object context) {
         LibUVPermission.checkReadFile(path);
-        return _readdir(pointer, path, flags, callbackId);
+        return _readdir(pointer, path, flags, context);
     }
 
     public Stats stat(final String path) {
@@ -327,9 +334,9 @@ public final class Files {
         return _stat(pointer, path, SYNC_MODE);
     }
 
-    public Stats stat(final String path, final int callbackId) {
+    public Stats stat(final String path, final Object context) {
         LibUVPermission.checkReadFile(path);
-        return _stat(pointer, path, callbackId);
+        return _stat(pointer, path, context);
     }
 
     public Stats fstat(final int fd) {
@@ -337,9 +344,9 @@ public final class Files {
         return _fstat(pointer, fd, SYNC_MODE);
     }
 
-    public Stats fstat(final int fd, final int callbackId) {
+    public Stats fstat(final int fd, final Object context) {
         LibUVPermission.checkReadFile(fd, getPath(fd));
-        return _fstat(pointer, fd, callbackId);
+        return _fstat(pointer, fd, context);
     }
 
     public int rename(final String path, final String newPath) {
@@ -348,10 +355,10 @@ public final class Files {
         return _rename(pointer, path, newPath, SYNC_MODE);
     }
 
-    public int rename(final String path, final String newPath, final int callbackId) {
+    public int rename(final String path, final String newPath, final Object context) {
         LibUVPermission.checkWriteFile(path);
         LibUVPermission.checkWriteFile(newPath);
-        return _rename(pointer, path, newPath, callbackId);
+        return _rename(pointer, path, newPath, context);
     }
 
     public int fsync(final int fd) {
@@ -359,9 +366,9 @@ public final class Files {
         return _fsync(pointer, fd, SYNC_MODE);
     }
 
-    public int fsync(final int fd, final int callbackId) {
+    public int fsync(final int fd, final Object context) {
         // If a file is open, it can be synced, no security check.
-        return _fsync(pointer, fd, callbackId);
+        return _fsync(pointer, fd, context);
     }
 
     public int fdatasync(final int fd) {
@@ -369,9 +376,9 @@ public final class Files {
         return _fdatasync(pointer, fd, SYNC_MODE);
     }
 
-    public int fdatasync(final int fd, final int callbackId) {
+    public int fdatasync(final int fd, final Object context) {
         // If a file is open, it can be synced, no security check.
-        return _fdatasync(pointer, fd, callbackId);
+        return _fdatasync(pointer, fd, context);
     }
 
     public int ftruncate(final int fd, final long offset) {
@@ -379,9 +386,9 @@ public final class Files {
         return _ftruncate(pointer, fd, offset, SYNC_MODE);
     }
 
-    public int ftruncate(final int fd, final long offset, final int callbackId) {
+    public int ftruncate(final int fd, final long offset, final Object context) {
         // Open has checked that fd is writable.
-        return _ftruncate(pointer, fd, offset, callbackId);
+        return _ftruncate(pointer, fd, offset, context);
     }
 
     public int sendfile(final int outFd, final int inFd, final long offset, final long length) {
@@ -389,9 +396,9 @@ public final class Files {
         return _sendfile(pointer, outFd, inFd, offset, length, SYNC_MODE);
     }
 
-    public int sendfile(final int outFd, final int inFd, final long offset, final long length, final int callbackId) {
+    public int sendfile(final int outFd, final int inFd, final long offset, final long length, final Object context) {
         // No security check required.
-        return _sendfile(pointer, outFd, inFd, offset, length, callbackId);
+        return _sendfile(pointer, outFd, inFd, offset, length, context);
     }
 
     public int chmod(final String path, final int mode) {
@@ -399,9 +406,9 @@ public final class Files {
         return _chmod(pointer, path, mode, SYNC_MODE);
     }
 
-    public int chmod(final String path, final int mode, final int callbackId) {
+    public int chmod(final String path, final int mode, final Object context) {
         LibUVPermission.checkWriteFile(path);
-        return _chmod(pointer, path, mode, callbackId);
+        return _chmod(pointer, path, mode, context);
     }
 
     public int utime(final String path, final double atime, final double mtime) {
@@ -409,9 +416,9 @@ public final class Files {
         return _utime(pointer, path, atime, mtime, SYNC_MODE);
     }
 
-    public int utime(final String path, final double atime, final double mtime, final int callbackId) {
+    public int utime(final String path, final double atime, final double mtime, final Object context) {
         LibUVPermission.checkWriteFile(path);
-        return _utime(pointer, path, atime, mtime, callbackId);
+        return _utime(pointer, path, atime, mtime, context);
     }
 
     public int futime(final int fd, final double atime, final double mtime) {
@@ -419,9 +426,9 @@ public final class Files {
         return _futime(pointer, fd, atime, mtime, SYNC_MODE);
     }
 
-    public int futime(final int fd, final double atime, final double mtime, final int callbackId) {
+    public int futime(final int fd, final double atime, final double mtime, final Object context) {
         LibUVPermission.checkWriteFile(fd, getPath(fd));
-        return _futime(pointer, fd, atime, mtime, callbackId);
+        return _futime(pointer, fd, atime, mtime, context);
     }
 
     public Stats lstat(final String path) {
@@ -429,9 +436,9 @@ public final class Files {
         return _lstat(pointer, path, SYNC_MODE);
     }
 
-    public Stats lstat(final String path, final int callbackId) {
+    public Stats lstat(final String path, final Object context) {
         LibUVPermission.checkReadFile(path);
-        return _lstat(pointer, path, callbackId);
+        return _lstat(pointer, path, context);
     }
 
     public int link(final String path, final String newPath) {
@@ -439,9 +446,9 @@ public final class Files {
         return _link(pointer, path, newPath, SYNC_MODE);
     }
 
-    public int link(final String path, final String newPath, final int callbackId) {
+    public int link(final String path, final String newPath, final Object context) {
         LibUVPermission.checkHardLink(path, newPath);
-        return _link(pointer, path, newPath, callbackId);
+        return _link(pointer, path, newPath, context);
     }
 
     public int symlink(final String path, final String newPath, final int flags) {
@@ -449,9 +456,9 @@ public final class Files {
         return _symlink(pointer, path, newPath, flags, SYNC_MODE);
     }
 
-    public int symlink(final String path, final String newPath, final int flags, final int callbackId) {
+    public int symlink(final String path, final String newPath, final int flags, final Object context) {
         LibUVPermission.checkSymbolicLink(path, newPath);
-        return _symlink(pointer, path, newPath, flags, callbackId);
+        return _symlink(pointer, path, newPath, flags, context);
     }
 
     public String readlink(final String path) {
@@ -459,9 +466,9 @@ public final class Files {
         return _readlink(pointer, path, SYNC_MODE);
     }
 
-    public String readlink(final String path, final int callbackId) {
+    public String readlink(final String path, final Object context) {
         LibUVPermission.checkReadFile(path);
-        return _readlink(pointer, path, callbackId);
+        return _readlink(pointer, path, context);
     }
 
     public int fchmod(final int fd, final int mode) {
@@ -469,9 +476,9 @@ public final class Files {
         return _fchmod(pointer, fd, mode, SYNC_MODE);
     }
 
-    public int fchmod(final int fd, final int mode, final int callbackId) {
+    public int fchmod(final int fd, final int mode, final Object context) {
         LibUVPermission.checkWriteFile(fd, getPath(fd));
-        return _fchmod(pointer, fd, mode, callbackId);
+        return _fchmod(pointer, fd, mode, context);
     }
 
     public int chown(final String path, final int uid, final int gid) {
@@ -479,9 +486,9 @@ public final class Files {
         return _chown(pointer, path, uid, gid, SYNC_MODE);
     }
 
-    public int chown(final String path, final int uid, final int gid, final int callbackId) {
+    public int chown(final String path, final int uid, final int gid, final Object context) {
         LibUVPermission.checkWriteFile(path);
-        return _chown(pointer, path, uid, gid, callbackId);
+        return _chown(pointer, path, uid, gid, context);
     }
 
     public int fchown(final int fd, final int uid, final int gid) {
@@ -489,9 +496,9 @@ public final class Files {
         return _fchown(pointer, fd, uid, gid, SYNC_MODE);
     }
 
-    public int fchown(final int fd, final int uid, final int gid, final int callbackId) {
+    public int fchown(final int fd, final int uid, final int gid, final Object context) {
         LibUVPermission.checkWriteFile(fd, getPath(fd));
-        return _fchown(pointer, fd, uid, gid, callbackId);
+        return _fchown(pointer, fd, uid, gid, context);
     }
 
     public String getPath(final int fd) {
@@ -499,164 +506,164 @@ public final class Files {
         return paths.get(fd);
     }
 
-    private void callback(final int type, final int callbackId, final Exception error) {
+    private void callback(final int type, final Object context, final Exception error) {
         Integer fd;
         switch (type) {
             case UV_FS_CUSTOM:
                 if (onCustom != null) {
-                    loop.getCallbackHandler().handleFileCallback(onCustom, callbackId,  error);
+                    loop.getCallbackHandler().handleFileCallback(onCustom, context, error);
                 }
                 break;
             case UV_FS_SENDFILE:
                 if (onSendfile != null) {
-                    loop.getCallbackHandler().handleFileCallback(onSendfile, callbackId,  error);
+                    loop.getCallbackHandler().handleFileCallback(onSendfile, context, error);
                 }
                 break;
             case UV_FS_FTRUNCATE:
                 if (onFTruncate != null) {
-                    loop.getCallbackHandler().handleFileCallback(onFTruncate, callbackId,  error);
+                    loop.getCallbackHandler().handleFileCallback(onFTruncate, context, error);
                 }
                 break;
             case UV_FS_CHMOD:
                 if (onChmod != null) {
-                    loop.getCallbackHandler().handleFileCallback(onChmod, callbackId,  error);
+                    loop.getCallbackHandler().handleFileCallback(onChmod, context, error);
                 }
                 break;
             case UV_FS_FCHMOD:
                 if (onFChmod != null) {
-                    loop.getCallbackHandler().handleFileCallback(onFChmod, callbackId,  error);
+                    loop.getCallbackHandler().handleFileCallback(onFChmod, context, error);
                 }
                 break;
             case UV_FS_FSYNC:
                 if (onFSync != null) {
-                    loop.getCallbackHandler().handleFileCallback(onFSync, callbackId,  error);
+                    loop.getCallbackHandler().handleFileCallback(onFSync, context, error);
                 }
                 break;
             case UV_FS_FDATASYNC:
                 if (onFDatasync != null) {
-                    loop.getCallbackHandler().handleFileCallback(onFDatasync, callbackId,  error);
+                    loop.getCallbackHandler().handleFileCallback(onFDatasync, context, error);
                 }
                 break;
             case UV_FS_UNLINK:
                 if (onUnlink != null) {
-                    loop.getCallbackHandler().handleFileCallback(onUnlink, callbackId,  error);
+                    loop.getCallbackHandler().handleFileCallback(onUnlink, context, error);
                 }
                 break;
             case UV_FS_RMDIR:
                 if (onRmDir != null) {
-                    loop.getCallbackHandler().handleFileCallback(onRmDir, callbackId,  error);
+                    loop.getCallbackHandler().handleFileCallback(onRmDir, context, error);
                 }
                 break;
             case UV_FS_MKDIR:
                 if (onMkDir != null) {
-                    loop.getCallbackHandler().handleFileCallback(onMkDir, callbackId,  error);
+                    loop.getCallbackHandler().handleFileCallback(onMkDir, context, error);
                 }
                 break;
             case UV_FS_RENAME:
                 if (onRename != null) {
-                    loop.getCallbackHandler().handleFileCallback(onRename, callbackId,  error);
+                    loop.getCallbackHandler().handleFileCallback(onRename, context, error);
                 }
                 break;
             case UV_FS_LINK:
                 if (onLink != null) {
-                    loop.getCallbackHandler().handleFileCallback(onLink, callbackId,  error);
+                    loop.getCallbackHandler().handleFileCallback(onLink, context, error);
                 }
                 break;
             case UV_FS_SYMLINK:
                 if (onSymLink != null) {
-                    loop.getCallbackHandler().handleFileCallback(onSymLink, callbackId,  error);
+                    loop.getCallbackHandler().handleFileCallback(onSymLink, context, error);
                 }
                 break;
             case UV_FS_CHOWN:
                 if (onChown != null) {
-                    loop.getCallbackHandler().handleFileCallback(onChown, callbackId,  error);
+                    loop.getCallbackHandler().handleFileCallback(onChown, context, error);
                 }
                 break;
             case UV_FS_FCHOWN:
                 if (onFChown != null) {
-                    loop.getCallbackHandler().handleFileCallback(onFChown, callbackId,  error);
+                    loop.getCallbackHandler().handleFileCallback(onFChown, context, error);
                 }
                 break;
             default: assert false : "unsupported callback type " + type;
         }
     }
 
-    private void callClose(final int callbackId, final int fd, final Exception error) {
+    private void callClose(final Object context, final int fd, final Exception error) {
         if (fd != -1) {
             paths.remove(fd);
         }
         if (onClose != null) {
-            loop.getCallbackHandler().handleFileCloseCallback(onClose, callbackId, fd, error);
+            loop.getCallbackHandler().handleFileCloseCallback(onClose, context, fd, error);
         }
     }
 
-    private void callOpen(final int callbackId, final int fd, final String path, final Exception error) {
+    private void callOpen(final Object context, final int fd, final String path, final Exception error) {
         if (fd != -1) {
             paths.put(fd, path);
         }
         if (onOpen != null) {
-            loop.getCallbackHandler().handleFileOpenCallback(onOpen, callbackId, fd, error);
+            loop.getCallbackHandler().handleFileOpenCallback(onOpen, context, fd, error);
         }
     }
 
-    private void callRead(final int callbackId, final int bytesRead, final byte[] data, final Exception error) {
+    private void callRead(final Object context, final int bytesRead, final byte[] data, final Exception error) {
         if (onRead != null) {
-            loop.getCallbackHandler().handleFileReadCallback(onRead, callbackId, bytesRead, data, error);
+            loop.getCallbackHandler().handleFileReadCallback(onRead, context, bytesRead, data, error);
         }
     }
 
-    private void callReadDir(final int callbackId, final String[] names, final Exception error) {
+    private void callReadDir(final Object context, final String[] names, final Exception error) {
         if (onReadDir != null) {
-            loop.getCallbackHandler().handleFileReadDirCallback(onReadDir, callbackId, names, error);
+            loop.getCallbackHandler().handleFileReadDirCallback(onReadDir, context, names, error);
         }
     }
 
-    private void callReadLink(final int callbackId, final String name, final Exception error) {
+    private void callReadLink(final Object context, final String name, final Exception error) {
         if (onReadLink != null) {
-            loop.getCallbackHandler().handleFileReadLinkCallback(onReadLink, callbackId, name, error);
+            loop.getCallbackHandler().handleFileReadLinkCallback(onReadLink, context, name, error);
         }
     }
 
-    private void callStats(final int type, final int callbackId, final Stats stats, final Exception error) {
+    private void callStats(final int type, final Object context, final Stats stats, final Exception error) {
         switch(type) {
             case UV_FS_FSTAT:
                 if (onFStat != null) {
-                    loop.getCallbackHandler().handleFileStatsCallback(onFStat, callbackId, stats, error);
+                    loop.getCallbackHandler().handleFileStatsCallback(onFStat, context, stats, error);
                 }
                 break;
             case UV_FS_LSTAT:
                 if (onLStat != null) {
-                    loop.getCallbackHandler().handleFileStatsCallback(onLStat, callbackId, stats, error);
+                    loop.getCallbackHandler().handleFileStatsCallback(onLStat, context, stats, error);
                 }
                 break;
             case UV_FS_STAT:
                 if (onStat != null) {
-                    loop.getCallbackHandler().handleFileStatsCallback(onStat, callbackId, stats, error);
+                    loop.getCallbackHandler().handleFileStatsCallback(onStat, context, stats, error);
                 }
                 break;
             default: assert false : "unsupported callback type " + type;
         }
     }
 
-    private void callUTime(final int type, final int callbackId, final long time, final Exception error) {
+    private void callUTime(final int type, final Object context, final long time, final Exception error) {
         switch(type) {
             case UV_FS_UTIME:
                 if (onUTime != null) {
-                    loop.getCallbackHandler().handleFileUTimeCallback(onUTime, callbackId, time, error);
+                    loop.getCallbackHandler().handleFileUTimeCallback(onUTime, context, time, error);
                 }
                 break;
             case UV_FS_FUTIME:
                 if (onFUTime != null) {
-                    loop.getCallbackHandler().handleFileUTimeCallback(onFUTime, callbackId, time, error);
+                    loop.getCallbackHandler().handleFileUTimeCallback(onFUTime, context, time, error);
                 }
                 break;
             default: assert false : "unsupported callback type " + type;
         }
     }
 
-    private void callWrite(final int callbackId, final int bytesWritten, final Exception error) {
+    private void callWrite(final Object context, final int bytesWritten, final Exception error) {
         if (onWrite != null) {
-            loop.getCallbackHandler().handleFileWriteCallback(onWrite, callbackId, bytesWritten, error);
+            loop.getCallbackHandler().handleFileWriteCallback(onWrite, context, bytesWritten, error);
         }
     }
 
@@ -668,54 +675,54 @@ public final class Files {
 
     private native int _close(final long ptr);
 
-    private native int _close(final long ptr, final int fd, final int callbackId);
+    private native int _close(final long ptr, final int fd, final Object context);
 
-    private native int _open(final long ptr, final String path, final int flags, final int mode, final int callbackId);
+    private native int _open(final long ptr, final String path, final int flags, final int mode, final Object context);
 
-    private native int _read(final long ptr, final int fd, final byte[] data, final long length, final long offset, final long position, final int callbackId);
+    private native int _read(final long ptr, final int fd, final byte[] data, final long length, final long offset, final long position, final Object context);
 
-    private native int _unlink(final long ptr, final String path, final int callbackId);
+    private native int _unlink(final long ptr, final String path, final Object context);
 
-    private native int _write(final long ptr, final int fd, final byte[] data, final long length, final long offset, final long position, final int callbackId);
+    private native int _write(final long ptr, final int fd, final byte[] data, final long length, final long offset, final long position, final Object context);
 
-    private native int _mkdir(final long ptr, final String path, final int mode, final int callbackId);
+    private native int _mkdir(final long ptr, final String path, final int mode, final Object context);
 
-    private native int _rmdir(final long ptr, final String path, final int callbackId);
+    private native int _rmdir(final long ptr, final String path, final Object context);
 
-    private native String[] _readdir(final long ptr, final String path, final int flags, final int callbackId);
+    private native String[] _readdir(final long ptr, final String path, final int flags, final Object context);
 
-    private native Stats _stat(final long ptr, final String path, final int callbackId);
+    private native Stats _stat(final long ptr, final String path, final Object context);
 
-    private native Stats _fstat(final long ptr, final int fd, final int callbackId);
+    private native Stats _fstat(final long ptr, final int fd, final Object context);
 
-    private native int _rename(final long ptr, final String path, final String newPath, final int callbackId);
+    private native int _rename(final long ptr, final String path, final String newPath, final Object context);
 
-    private native int _fsync(final long ptr, final int fd, final int callbackId);
+    private native int _fsync(final long ptr, final int fd, final Object context);
 
-    private native int _fdatasync(final long ptr, final int fd, final int callbackId);
+    private native int _fdatasync(final long ptr, final int fd, final Object context);
 
-    private native int _ftruncate(final long ptr, final int fd, final long offset, final int callbackId);
+    private native int _ftruncate(final long ptr, final int fd, final long offset, final Object context);
 
-    private native int _sendfile(final long ptr, final int outFd, final int inFd, final long offset, final long length, final int callbackId);
+    private native int _sendfile(final long ptr, final int outFd, final int inFd, final long offset, final long length, final Object context);
 
-    private native int _chmod(final long ptr, final String path, final int mode, final int callbackId);
+    private native int _chmod(final long ptr, final String path, final int mode, final Object context);
 
-    private native int _utime(final long ptr, final String path, final double atime, final double mtime, final int callbackId);
+    private native int _utime(final long ptr, final String path, final double atime, final double mtime, final Object context);
 
-    private native int _futime(final long ptr, final int fd, final double atime, final double mtime, final int callbackId);
+    private native int _futime(final long ptr, final int fd, final double atime, final double mtime, final Object context);
 
-    private native Stats _lstat(final long ptr, final String path, final int callbackId);
+    private native Stats _lstat(final long ptr, final String path, final Object context);
 
-    private native int _link(final long ptr, final String path, final String newPath, final int callbackId);
+    private native int _link(final long ptr, final String path, final String newPath, final Object context);
 
-    private native int _symlink(final long ptr, final String path, final String newPath, final int flags, final int callbackId);
+    private native int _symlink(final long ptr, final String path, final String newPath, final int flags, final Object context);
 
-    private native String _readlink(final long ptr, final String path, final int callbackId);
+    private native String _readlink(final long ptr, final String path, final Object context);
 
-    private native int _fchmod(final long ptr, final int fd, final int mode, final int callbackId);
+    private native int _fchmod(final long ptr, final int fd, final int mode, final Object context);
 
-    private native int _chown(final long ptr, final String path, final int uid, final int gid, final int callbackId);
+    private native int _chown(final long ptr, final String path, final int uid, final int gid, final Object context);
 
-    private native int _fchown(final long ptr, final int fd, final int uid, final int gid, final int callbackId);
+    private native int _fchown(final long ptr, final int fd, final int uid, final int gid, final Object context);
 
 }

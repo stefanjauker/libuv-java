@@ -27,6 +27,6 @@ package net.java.libuv.cb;
 
 public interface FileReadDirCallback {
 
-    public void onReadDir(int callbackId, String[] names, Exception error) throws Exception;
+    public void onReadDir(Object context, String[] names, Exception error) throws Exception;
 
 }

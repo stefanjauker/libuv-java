@@ -27,6 +27,6 @@ package net.java.libuv.cb;
 
 public interface FileReadLinkCallback {
 
-    public void onReadLink(int callbackId, String name, Exception error) throws Exception;
+    public void onReadLink(Object context, String name, Exception error) throws Exception;
 
 }

@@ -28,7 +28,6 @@ import net.java.libuv.Constants;
 import net.java.libuv.Files;
 import net.java.libuv.Stats;
 import net.java.libuv.TestBase;
-import net.java.libuv.cb.FileCallback;
 import net.java.libuv.cb.FileOpenCallback;
 import net.java.libuv.cb.FilePollCallback;
 import net.java.libuv.cb.FilePollStopCallback;
@@ -63,7 +62,7 @@ public class FilePollHandleTest extends TestBase {
 
         handle.setOpenCallback(new FileOpenCallback() {
             @Override
-            public void onOpen(final int callbackId, final int fd, final Exception error) throws Exception {
+            public void onOpen(final Object context, final int fd, final Exception error) throws Exception {
                 handle.ftruncate(fd, 1000);
                 handle.close(fd);
             }
@@ -96,7 +95,7 @@ public class FilePollHandleTest extends TestBase {
 
         pollHandle.start(testName, true, 1);
 
-        handle.open(testName, Constants.O_WRONLY | Constants.O_CREAT, Constants.S_IRWXU, this.hashCode());
+        handle.open(testName, Constants.O_WRONLY | Constants.O_CREAT, Constants.S_IRWXU, this);
 
         final long start = System.currentTimeMillis();
         while (!gotCallback.get() || !gotStop.get()) {
