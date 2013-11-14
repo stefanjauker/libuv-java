@@ -25,8 +25,6 @@
 
 package net.java.libuv.cb;
 
-import net.java.libuv.Stats;
-
 public interface FilePollStopCallback {
 
     public void onStop() throws Exception;
