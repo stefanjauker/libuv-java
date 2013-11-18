@@ -29,6 +29,7 @@ import java.nio.ByteBuffer;
 
 import net.java.libuv.Address;
 import net.java.libuv.Stats;
+import net.java.libuv.cb.AsyncCallback;
 import net.java.libuv.cb.CallbackHandler;
 import net.java.libuv.cb.CheckCallback;
 import net.java.libuv.cb.FileCallback;
@@ -65,6 +66,15 @@ final class LoopCallbackHandler implements CallbackHandler {
 
     public LoopCallbackHandler(final LoopHandle loopHandle) {
         this.loopHandle = loopHandle;
+    }
+
+    @Override
+    public void handleAsyncCallback(final AsyncCallback cb, final int status) {
+        try {
+            cb.onSend(status);
+        } catch (final Exception ex) {
+            loopHandle.exceptionHandler.handle(ex);
+        }
     }
 
     @Override

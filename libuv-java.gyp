@@ -55,6 +55,7 @@
             'conditions': [
                 ['OS == "linux"', {
                     'sources': [
+                        'async.cpp',
                         'check.cpp',
                         'child_process.cpp',
                         'constants.cpp',
@@ -97,6 +98,7 @@
                 }],
                 ['OS == "mac"', {
                     'sources': [
+                        '<(LIBUV_PATH)/../obj.target/libuv-java/async.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/check.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/child_process.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/constants.cpp',
@@ -138,6 +140,7 @@
                         '<(LIBUV_HOME)/uv.gyp:libuv',
                     ],
                     'sources': [
+                        '<(LIBUV_PATH)/../obj.target/libuv-java/async.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/check.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/child_process.cpp',
                         '<(LIBUV_PATH)/../obj.target/libuv-java/constants.cpp',

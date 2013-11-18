@@ -31,6 +31,7 @@ import net.java.libuv.Address;
 import net.java.libuv.Stats;
 
 public interface CallbackHandler {
+    public void handleAsyncCallback(AsyncCallback cb, int status);
     public void handleCheckCallback(CheckCallback cb, int status);
     public void handleIdleCallback(IdleCallback cb, int status);
     public void handleSignalCallback(SignalCallback cb, int signum);
