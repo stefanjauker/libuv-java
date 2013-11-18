@@ -134,6 +134,8 @@ void StreamCallbacks::on_read(uv_buf_t* buf, jsize nread) {
         _instance,
         _call_read_callback_mid,
         arg);
+    _env->DeleteLocalRef(bytes);
+    _env->DeleteLocalRef(arg);
   }
   delete[] buf->base;
 }
@@ -157,6 +159,8 @@ void StreamCallbacks::on_read2(uv_buf_t* buf, jsize nread, long ptr, uv_handle_t
         array,
         ptr,
         pending);
+   _env->DeleteLocalRef(bytes);
+   _env->DeleteLocalRef(array);
   }
   delete[] buf->base;
 }
