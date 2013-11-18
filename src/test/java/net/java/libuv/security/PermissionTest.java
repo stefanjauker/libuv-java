@@ -619,7 +619,7 @@ public class PermissionTest extends TestBase {
     @Test
     public void testFileReadOnly() throws Exception {
         final Permissions permissions = new Permissions();
-        final String fileName = "testFileReaOnly.txt";
+        final String fileName = "testFileReadOnly.txt";
         permissions.add(new LibUVPermission("libuv.handle"));
         permissions.add(new FilePermission(fileName, "read"));
         permissions.add(new FilePermission(fileName, "delete"));
@@ -699,11 +699,11 @@ public class PermissionTest extends TestBase {
 
         handle.unlink(fileName);
     }
-    
+
     @Test
     public void testFileFdRWT() throws Exception {
         final Permissions permissions = new Permissions();
-        final String fileName = "testFileReaOnly.txt";
+        final String fileName = "testFileFdReadOnly.txt";
         permissions.add(new LibUVPermission("libuv.handle"));
         permissions.add(new FilePermission(fileName, "delete"));
         final File f = new File(fileName);
@@ -712,23 +712,23 @@ public class PermissionTest extends TestBase {
         final LoopHandle loop = new LoopHandle();
         final Files handle = new Files(loop);
         final int fd = handle.open(fileName, Constants.O_RDWR, Constants.S_IRWXU);
-        
+
         // Allowed without security
         handle.read(fd, new byte[5], 0, 0, 0);
         handle.write(fd, "Hello".getBytes(), 0, 2, 0);
         handle.ftruncate(fd, 1);
-        
+
         init(permissions);
-        
+
         // At this point, emulate the brute-force retrieval of fd.
-        
+
         try {
             handle.read(fd, new byte[5], 0, 0, 0);
             throw new Exception("Read should have failed");
         } catch (final AccessControlException ex) {
             // XXX OK.
         }
-        
+
         try {
             handle.write(fd, "Hello".getBytes(), 0, 2, 0);
             throw new Exception("Write should have failed");
