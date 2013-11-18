@@ -46,6 +46,12 @@
     return; \
   }
 
+#define OOME(e, p) \
+  if ((!p)) { \
+    ThrowOutOfMemoryError((e), (FUNCTION_NAME), (__FILE__), (TOSTRING(__LINE__)), (#p)); \
+    return -1; \
+  }
+
 const char* get_uv_errno_string(int errorno);
 const char* get_uv_errno_message(int errorno);
 jstring utf(JNIEnv* env, const std::string& s);

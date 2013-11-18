@@ -161,7 +161,6 @@ jbyte* FileRequest::get_bytes(jbyteArray buffer, jsize offset, jsize length) {
   _offset = offset;
   _buffer = (jbyteArray) _callback->env()->NewGlobalRef(buffer);
   _bytes = new jbyte[length];
-  _callback->env()->GetByteArrayRegion(buffer, offset, length, _bytes);
   return _bytes;
 }
 
@@ -688,20 +687,23 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1write
   FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
   int r;
 
-  jbyte* base = new jbyte[length];
-  env->GetByteArrayRegion(data, static_cast<jsize>(offset), static_cast<jsize>(length), base);
   if (context) {
     uv_fs_t* req = new uv_fs_t();
     req->data = new FileRequest(cb, context, fd, NULL);
-    r = uv_fs_write(cb->loop(), req, fd, base, length, position, _fs_cb);
+    jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
+    OOME(env, base);
+    r = uv_fs_write(cb->loop(), req, fd, base + offset, length, position, _fs_cb);
+    env->ReleasePrimitiveArrayCritical(data, base, NULL);
   } else {
     uv_fs_t req;
-    r = uv_fs_write(cb->loop(), &req, fd, base, length, position, NULL);
+    jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
+    OOME(env, base);
+    r = uv_fs_write(cb->loop(), &req, fd, base + offset, length, position, NULL);
+    env->ReleasePrimitiveArrayCritical(data, base, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
       ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_write");
     }
-    delete[] base;
   }
   return r;
 }

@@ -328,7 +328,6 @@ static void _write_cb(uv_write_t* req, int status) {
   assert(req->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(req->handle->data);
   cb->on_write(status, status < 0 ? uv_last_error(req->handle->loop).code : 0);
-  delete[] reinterpret_cast<jbyte*>(req->data);
   delete req;
 }
 
@@ -461,19 +460,20 @@ JNIEXPORT jboolean JNICALL Java_net_java_libuv_handles_StreamHandle__1writable
 JNIEXPORT jint JNICALL Java_net_java_libuv_handles_StreamHandle__1write
   (JNIEnv *env, jobject that, jlong stream, jbyteArray data, jint offset, jint length) {
 
-  jbyte* base = new jbyte[length - offset];
-  env->GetByteArrayRegion(data, offset, length, base);
-  uv_buf_t buf;
-  buf.base = reinterpret_cast<char*>(base);
-  buf.len = length - offset;
   assert(stream);
+  assert(data);
+  jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
+  OOME(env, base);
+  uv_buf_t buf;
+  buf.base = reinterpret_cast<char*>(base + offset);
+  buf.len = length;
   uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(stream);
   uv_write_t* req = new uv_write_t();
   req->handle = handle;
   req->data = base;
   int r = uv_write(req, handle, &buf, 1, _write_cb);
+  env->ReleasePrimitiveArrayCritical(data, base, NULL);
   if (r) {
-    delete[] base;
     delete req;
     ThrowException(env, handle->loop, "uv_write");
   }
@@ -488,21 +488,23 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_StreamHandle__1write
 JNIEXPORT jint JNICALL Java_net_java_libuv_handles_StreamHandle__1write2
   (JNIEnv *env, jobject that, jlong stream, jbyteArray data, jint offset, jint length, jlong send_stream) {
 
-  jbyte* base = new jbyte[length - offset];
-  env->GetByteArrayRegion(data, offset, length, base);
+  assert(stream);
+  assert(data);
+  assert(send_stream);
+  jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
+  OOME(env, base);
   uv_buf_t buf;
-  buf.base = reinterpret_cast<char*>(base);
+  buf.base = reinterpret_cast<char*>(base + offset);
   buf.len = length - offset;
   assert(stream);
   uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(stream);
   uv_write_t* req = new uv_write_t();
   req->handle = handle;
   req->data = base;
-  assert(send_stream);
   uv_stream_t* send_handle = reinterpret_cast<uv_stream_t*>(send_stream);
   int r = uv_write2(req, handle, &buf, 1, send_handle, _write_cb);
+  env->ReleasePrimitiveArrayCritical(data, base, NULL);
   if (r) {
-    delete[] base;
     delete req;
     ThrowException(env, handle->loop, "uv_write2");
   }

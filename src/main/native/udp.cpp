@@ -144,10 +144,8 @@ static void _recv_cb(uv_udp_t* udp, ssize_t nread, uv_buf_t buf, struct sockaddr
 static void _send_cb(uv_udp_send_t* req, int status) {
   assert(req->handle);
   assert(req->handle->data);
-  assert(req->data);
   UDPCallbacks* cb = reinterpret_cast<UDPCallbacks*>(req->handle->data);
   cb->on_send(status, status < 0 ? uv_last_error(req->handle->loop).code : 0);
-  delete[] reinterpret_cast<jbyte*>(req->data);
   delete req;
 }
 
@@ -274,16 +272,16 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1send
   const char* h = env->GetStringUTFChars(host, 0);
   sockaddr_in addr = uv_ip4_addr(h, port);
 
-  jbyte* base = new jbyte[length - offset];
-  env->GetByteArrayRegion(data, offset, length, base);
+  jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
+  OOME(env, base);
   uv_buf_t buf;
-  buf.base = reinterpret_cast<char*>(base);
-  buf.len = length - offset;
+  buf.base = reinterpret_cast<char*>(base + offset);
+  buf.len = length;
 
   uv_udp_send_t* req = new uv_udp_send_t();
   req->handle = handle;
-  req->data = base;
   int r = uv_udp_send(req, handle, &buf, 1, addr, _send_cb);
+  env->ReleasePrimitiveArrayCritical(data, base, NULL);
   if (r) {
     ThrowException(env, handle->loop, "uv_udp_send", h);
   }
@@ -304,16 +302,16 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1send6
   const char* h = env->GetStringUTFChars(host, 0);
   sockaddr_in6 addr = uv_ip6_addr(h, port);
 
-  jbyte* base = new jbyte[length - offset];
-  env->GetByteArrayRegion(data, offset, length, base);
+  jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
+  OOME(env, base);
   uv_buf_t buf;
-  buf.base = reinterpret_cast<char*>(base);
-  buf.len = length - offset;
+  buf.base = reinterpret_cast<char*>(base + offset);
+  buf.len = length;
 
   uv_udp_send_t* req = new uv_udp_send_t();
   req->handle = handle;
-  req->data = base;
   int r = uv_udp_send6(req, handle, &buf, 1, addr, _send_cb);
+  env->ReleasePrimitiveArrayCritical(data, base, NULL);
   if (r) {
     ThrowException(env, handle->loop, "uv_udp_send6", h);
   }
