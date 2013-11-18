@@ -658,14 +658,14 @@ public class PermissionTest extends TestBase {
         try {
             handle.write(fd, "Hello".getBytes(), 0, 2, 0);
             throw new Exception("Write should have failed");
-        } catch (final NativeException ex) {
+        } catch (final AccessControlException ex) {
             // XXX OK.
         }
 
         try {
             handle.ftruncate(fd, 1);
             throw new Exception("Write should have failed");
-        } catch (final NativeException ex) {
+        } catch (final AccessControlException ex) {
             // XXX OK.
         }
 
@@ -696,6 +696,52 @@ public class PermissionTest extends TestBase {
                 handle.futime(fd, 999, 99999);
             }
         });
+
+        handle.unlink(fileName);
+    }
+    
+    @Test
+    public void testFileFdRWT() throws Exception {
+        final Permissions permissions = new Permissions();
+        final String fileName = "testFileReaOnly.txt";
+        permissions.add(new LibUVPermission("libuv.handle"));
+        permissions.add(new FilePermission(fileName, "delete"));
+        final File f = new File(fileName);
+        f.createNewFile();
+        // Emulate codebase with the rights to open in R/W
+        final LoopHandle loop = new LoopHandle();
+        final Files handle = new Files(loop);
+        final int fd = handle.open(fileName, Constants.O_RDWR, Constants.S_IRWXU);
+        
+        // Allowed without security
+        handle.read(fd, new byte[5], 0, 0, 0);
+        handle.write(fd, "Hello".getBytes(), 0, 2, 0);
+        handle.ftruncate(fd, 1);
+        
+        init(permissions);
+        
+        // At this point, emulate the brute-force retrieval of fd.
+        
+        try {
+            handle.read(fd, new byte[5], 0, 0, 0);
+            throw new Exception("Read should have failed");
+        } catch (final AccessControlException ex) {
+            // XXX OK.
+        }
+        
+        try {
+            handle.write(fd, "Hello".getBytes(), 0, 2, 0);
+            throw new Exception("Write should have failed");
+        } catch (final AccessControlException ex) {
+            // XXX OK.
+        }
+
+        try {
+            handle.ftruncate(fd, 1);
+            throw new Exception("Truncate should have failed");
+        } catch (final AccessControlException ex) {
+            // XXX OK.
+        }
 
         handle.unlink(fileName);
     }

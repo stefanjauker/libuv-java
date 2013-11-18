@@ -266,12 +266,12 @@ public final class Files {
     }
 
     public int read(final int fd, final byte[] buffer, final long offset, final long length, final long position) {
-        // Open has checked that fd is readable.
+        LibUVPermission.checkReadFile(fd, getPath(fd));
         return _read(pointer, fd, buffer, length, offset, position, SYNC_MODE);
     }
 
     public int read(final int fd, final byte[] buffer, final long offset, final long length, final long position, final Object context) {
-        // Open has checked that fd is readable.
+        LibUVPermission.checkReadFile(fd, getPath(fd));
         return _read(pointer, fd, buffer, length, offset, position, context);
     }
 
@@ -286,14 +286,14 @@ public final class Files {
     }
 
     public int write(final int fd, final byte[] buffer, final long offset, final long length, final long position) {
-        // Open has checked that fd is writable.
+        LibUVPermission.checkWriteFile(fd, getPath(fd));
         assert(offset < buffer.length);
         assert(offset + length <= buffer.length);
         return _write(pointer, fd, buffer, length, offset, position, SYNC_MODE);
     }
 
     public int write(final int fd, final byte[] buffer, final long offset, final long length, final long position, final Object context) {
-        // Open has checked that fd is writable.
+        LibUVPermission.checkWriteFile(fd, getPath(fd));
         assert(offset < buffer.length);
         assert(offset + length <= buffer.length);
         return _write(pointer, fd, buffer, length, offset, position, context);
@@ -382,12 +382,12 @@ public final class Files {
     }
 
     public int ftruncate(final int fd, final long offset) {
-        // Open has checked that fd is writable.
+        LibUVPermission.checkWriteFile(fd, getPath(fd));
         return _ftruncate(pointer, fd, offset, SYNC_MODE);
     }
 
     public int ftruncate(final int fd, final long offset, final Object context) {
-        // Open has checked that fd is writable.
+        LibUVPermission.checkWriteFile(fd, getPath(fd));
         return _ftruncate(pointer, fd, offset, context);
     }
 
