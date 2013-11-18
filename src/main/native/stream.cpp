@@ -237,8 +237,6 @@ jobject StreamCallbacks::_address_to_js(JNIEnv* env, const sockaddr* addr) {
 }
 
 static uv_buf_t _alloc_cb(uv_handle_t* handle, size_t suggested_size) {
-  // since we do not use buffer slabs, 64k buffers are too large
-  if (suggested_size >= 64 * 1024) suggested_size = 16 * 1024;
   return uv_buf_init(new char[suggested_size], static_cast<unsigned int>(suggested_size));
 }
 
