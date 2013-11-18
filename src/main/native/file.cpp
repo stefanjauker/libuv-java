@@ -693,13 +693,13 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1write
     jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
     OOME(env, base);
     r = uv_fs_write(cb->loop(), req, fd, base + offset, length, position, _fs_cb);
-    env->ReleasePrimitiveArrayCritical(data, base, NULL);
+    env->ReleasePrimitiveArrayCritical(data, base, 0);
   } else {
     uv_fs_t req;
     jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
     OOME(env, base);
     r = uv_fs_write(cb->loop(), &req, fd, base + offset, length, position, NULL);
-    env->ReleasePrimitiveArrayCritical(data, base, NULL);
+    env->ReleasePrimitiveArrayCritical(data, base, 0);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
       ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_write");

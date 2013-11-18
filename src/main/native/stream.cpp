@@ -472,7 +472,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_StreamHandle__1write
   req->handle = handle;
   req->data = base;
   int r = uv_write(req, handle, &buf, 1, _write_cb);
-  env->ReleasePrimitiveArrayCritical(data, base, NULL);
+  env->ReleasePrimitiveArrayCritical(data, base, 0);
   if (r) {
     delete req;
     ThrowException(env, handle->loop, "uv_write");
@@ -503,7 +503,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_StreamHandle__1write2
   req->data = base;
   uv_stream_t* send_handle = reinterpret_cast<uv_stream_t*>(send_stream);
   int r = uv_write2(req, handle, &buf, 1, send_handle, _write_cb);
-  env->ReleasePrimitiveArrayCritical(data, base, NULL);
+  env->ReleasePrimitiveArrayCritical(data, base, 0);
   if (r) {
     delete req;
     ThrowException(env, handle->loop, "uv_write2");

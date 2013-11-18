@@ -281,7 +281,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1send
   uv_udp_send_t* req = new uv_udp_send_t();
   req->handle = handle;
   int r = uv_udp_send(req, handle, &buf, 1, addr, _send_cb);
-  env->ReleasePrimitiveArrayCritical(data, base, NULL);
+  env->ReleasePrimitiveArrayCritical(data, base, 0);
   if (r) {
     ThrowException(env, handle->loop, "uv_udp_send", h);
   }
@@ -311,7 +311,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1send6
   uv_udp_send_t* req = new uv_udp_send_t();
   req->handle = handle;
   int r = uv_udp_send6(req, handle, &buf, 1, addr, _send_cb);
-  env->ReleasePrimitiveArrayCritical(data, base, NULL);
+  env->ReleasePrimitiveArrayCritical(data, base, 0);
   if (r) {
     ThrowException(env, handle->loop, "uv_udp_send6", h);
   }
