@@ -30,7 +30,7 @@ import java.util.Objects;
 public final class LibUV {
 
     static {
-        System.loadLibrary("uv-java");
+        System.loadLibrary("avatar-js");
     }
 
     private LibUV() {

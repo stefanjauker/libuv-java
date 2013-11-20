@@ -99,7 +99,7 @@
         </exec>
     </target>
 
-    <target name="jar" depends="setup, compile, make">
+    <target name="jar" depends="setup, compile, make, shlib-linux, shlib-macos, shlib-windows">
         <property name="product.jar" value="${dist.dir}/${product.name}.jar"/>
         <jar basedir="${classes.dir}" destfile="${product.jar}"/>
     </target>
