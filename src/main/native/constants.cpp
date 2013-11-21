@@ -121,7 +121,9 @@
 
 #ifdef __POSIX__
 
-#define S_IFWHT 0
+#ifndef S_IFWHT
+#define S_IFWHT 0160000
+#endif
 
 #endif  /* __POSIX__ */
 
