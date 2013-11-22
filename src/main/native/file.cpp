@@ -47,7 +47,8 @@ class FileCallbacks;
 class FileRequest {
 private:
   FileCallbacks* _callback;
-  jbyteArray _buffer;
+  jobject _buffer;
+  jbyteArray _data;
   jbyte* _bytes;
   jsize _offset;
   jobject _context;
@@ -58,8 +59,8 @@ public:
   FileRequest(FileCallbacks* ptr, jobject context, jint fd, jstring path);
   ~FileRequest();
 
-  jbyte* get_bytes(jbyteArray buffer, jsize offset, jsize length);
-  jbyteArray set_bytes(jint length);
+  jbyte* get_bytes(jobject buffer, jbyteArray data, jsize offset, jsize length);
+  void set_bytes(jint length);
 
   FileCallbacks* callback() { return _callback; }
 
@@ -69,7 +70,7 @@ public:
 
   jstring path() { return _path; }
 
-  jbyteArray buffer() { return _buffer; }
+  jobject buffer() { return _buffer; }
 };
 
 class FileCallbacks {
@@ -133,13 +134,10 @@ FileRequest::FileRequest(FileCallbacks* ptr, jobject context, jint fd, jstring p
   _path = path ? (jstring) _callback->env()->NewGlobalRef(path) : NULL;
   _bytes = NULL;
   _buffer = NULL;
+  _data = NULL;
 }
 
 FileRequest::~FileRequest() {
-  if (_bytes) {
-    delete[] _bytes;
-  }
-
   if (_context) {
     _callback->env()->DeleteGlobalRef(_context);
   }
@@ -148,25 +146,39 @@ FileRequest::~FileRequest() {
     _callback->env()->DeleteGlobalRef(_buffer);
   }
 
+  if (_data) {
+    _callback->env()->DeleteGlobalRef(_data);
+    if (_bytes) {
+      delete[] _bytes;
+    }
+  }
+
   if (_path) {
     _callback->env()->DeleteGlobalRef(_path);
   }
 }
 
-jbyte* FileRequest::get_bytes(jbyteArray buffer, jsize offset, jsize length) {
+jbyte* FileRequest::get_bytes(jobject buffer, jbyteArray data, jsize offset, jsize length) {
   assert(!_bytes);
   assert(!_buffer);
   assert(buffer);
 
   _offset = offset;
-  _buffer = (jbyteArray) _callback->env()->NewGlobalRef(buffer);
-  _bytes = new jbyte[length];
+  _buffer = _callback->env()->NewGlobalRef(buffer);
+  if (data) {
+    _data = (jbyteArray) _callback->env()->NewGlobalRef(data);
+    _bytes = new jbyte[length];
+  } else {
+    _data = NULL;
+    _bytes = (jbyte*) _callback->env()->GetDirectBufferAddress(buffer);
+  }
   return _bytes;
 }
 
-jbyteArray FileRequest::set_bytes(jsize length) {
-  _callback->env()->SetByteArrayRegion(_buffer, _offset, length, _bytes);
-  return _buffer;
+void FileRequest::set_bytes(jsize length) {
+  if (_data) {
+    _callback->env()->SetByteArrayRegion(_data, _offset, length, _bytes);
+  }
 }
 
 void FileCallbacks::static_initialize(JNIEnv* env, jclass cls) {
@@ -195,7 +207,7 @@ void FileCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _open_callback_mid = env->GetMethodID(_files_cid, "callOpen", "(Ljava/lang/Object;ILjava/lang/String;Ljava/lang/Exception;)V");
   assert(_open_callback_mid);
 
-  _read_callback_mid = env->GetMethodID(_files_cid, "callRead", "(Ljava/lang/Object;I[BLjava/lang/Exception;)V");
+  _read_callback_mid = env->GetMethodID(_files_cid, "callRead", "(Ljava/lang/Object;ILjava/nio/ByteBuffer;Ljava/lang/Exception;)V");
   assert(_read_callback_mid);
 
   _readdir_callback_mid = env->GetMethodID(_files_cid, "callReadDir", "(Ljava/lang/Object;[Ljava/lang/String;Ljava/lang/Exception;)V");
@@ -340,12 +352,13 @@ void FileCallbacks::fs_cb(FileRequest* request, uv_fs_type fs_type, ssize_t resu
     }
 
     case UV_FS_READ:
+      request->set_bytes(static_cast<jsize>(result));
       _env->CallVoidMethod(
           _instance,
           _read_callback_mid,
           request->context(),
           result,
-          request->set_bytes(static_cast<jsize>(result)),
+          request->buffer(),
           NULL);
       return;
 
@@ -617,10 +630,10 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1open
 /*
  * Class:     net_java_libuv_Files
  * Method:    _read
- * Signature: (JI[BJJJI)I
+ * Signature: (JILjava/nio/ByteBuffer;[BJJJLjava/lang/Object;)I
  */
 JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1read
-  (JNIEnv *env, jobject that, jlong ptr, jint fd, jbyteArray buffer, jlong length, jlong offset, jlong position, jobject context) {
+  (JNIEnv *env, jobject that, jlong ptr, jint fd, jobject buffer, jbyteArray data, jlong length, jlong offset, jlong position, jobject context) {
 
   assert(ptr);
   FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
@@ -629,16 +642,21 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1read
   if (context) {
     uv_fs_t* req = new uv_fs_t();
     FileRequest* request = new FileRequest(cb, context, fd, NULL);
-    jbyte* bytes = request->get_bytes(buffer, static_cast<jsize>(offset), static_cast<jsize>(length));
+    jbyte* bytes = request->get_bytes(buffer, data, static_cast<jsize>(offset), static_cast<jsize>(length));
     req->data = request;
     r = uv_fs_read(cb->loop(), req, fd, bytes, length, position, _fs_cb);
   } else {
     uv_fs_t req;
-    jbyte* base = new jbyte[length];
-    r = uv_fs_read(cb->loop(), &req, fd, base, length, position, NULL);
-    env->SetByteArrayRegion(buffer, (jsize) offset, (jsize) length, base);
+    if (data) {
+      jbyte* base = new jbyte[length];
+      r = uv_fs_read(cb->loop(), &req, fd, base, length, position, NULL);
+      env->SetByteArrayRegion(data, (jsize) offset, (jsize) length, base);
+      delete[] base;
+    } else {
+      jbyte* base = (jbyte*) env->GetDirectBufferAddress(buffer);
+      r = uv_fs_read(cb->loop(), &req, fd, base, length, position, NULL);
+    }
     uv_fs_req_cleanup(&req);
-    delete[] base;
     if (r < 0) {
       ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_read");
     }
@@ -678,10 +696,10 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1unlink
 /*
  * Class:     net_java_libuv_Files
  * Method:    _write
- * Signature: (JI[BJJJI)I
+ * Signature: (JILjava/nio/ByteBuffer;[BJJJLjava/lang/Object;)I
  */
 JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1write
-  (JNIEnv *env, jobject that, jlong ptr, jint fd, jbyteArray data, jlong length, jlong offset, jlong position, jobject context) {
+  (JNIEnv *env, jobject that, jlong ptr, jint fd, jobject buffer, jbyteArray data, jlong length, jlong offset, jlong position, jobject context) {
 
   assert(ptr);
   FileCallbacks* cb = reinterpret_cast<FileCallbacks*>(ptr);
@@ -690,16 +708,26 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1write
   if (context) {
     uv_fs_t* req = new uv_fs_t();
     req->data = new FileRequest(cb, context, fd, NULL);
-    jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
-    OOME(env, base);
-    r = uv_fs_write(cb->loop(), req, fd, base + offset, length, position, _fs_cb);
-    env->ReleasePrimitiveArrayCritical(data, base, 0);
+    if (data) {
+      jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
+      OOME(env, base);
+      r = uv_fs_write(cb->loop(), req, fd, base + offset, length, position, _fs_cb);
+      env->ReleasePrimitiveArrayCritical(data, base, 0);
+    } else {
+      jbyte* base = (jbyte*) env->GetDirectBufferAddress(buffer);
+      r = uv_fs_write(cb->loop(), req, fd, base + offset, length, position, _fs_cb);
+    }
   } else {
     uv_fs_t req;
-    jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
-    OOME(env, base);
-    r = uv_fs_write(cb->loop(), &req, fd, base + offset, length, position, NULL);
-    env->ReleasePrimitiveArrayCritical(data, base, 0);
+    if (data) {
+      jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
+      OOME(env, base);
+      r = uv_fs_write(cb->loop(), &req, fd, base + offset, length, position, NULL);
+      env->ReleasePrimitiveArrayCritical(data, base, 0);
+    } else {
+      jbyte* base = (jbyte*) env->GetDirectBufferAddress(buffer);
+      r = uv_fs_write(cb->loop(), &req, fd, base + offset, length, position, NULL);
+    }
     uv_fs_req_cleanup(&req);
     if (r < 0) {
       ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_write");

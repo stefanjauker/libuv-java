@@ -28,6 +28,7 @@ package net.java.libuv.security;
 import java.io.File;
 import java.io.FilePermission;
 import java.net.SocketPermission;
+import java.nio.ByteBuffer;
 import java.nio.file.FileSystems;
 import java.nio.file.LinkPermission;
 import java.security.AccessControlException;
@@ -631,7 +632,7 @@ public class PermissionTest extends TestBase {
         final Files handle = new Files(loop);
         final int fd = handle.open(fileName, Constants.O_RDONLY, Constants.S_IRWXU);
 
-        handle.read(fd, new byte[5], 0, 0, 0);
+        handle.read(fd, ByteBuffer.allocateDirect(5), 0, 0, 0);
         final Stats s = handle.fstat(fd);
         if (s == null) {
             throw new Exception("Stats is null");
@@ -656,7 +657,7 @@ public class PermissionTest extends TestBase {
         }
 
         try {
-            handle.write(fd, "Hello".getBytes(), 0, 2, 0);
+            handle.write(fd, ByteBuffer.wrap("Hello".getBytes()), 0, 2, 0);
             throw new Exception("Write should have failed");
         } catch (final AccessControlException ex) {
             // XXX OK.
@@ -714,8 +715,8 @@ public class PermissionTest extends TestBase {
         final int fd = handle.open(fileName, Constants.O_RDWR, Constants.S_IRWXU);
 
         // Allowed without security
-        handle.read(fd, new byte[5], 0, 0, 0);
-        handle.write(fd, "Hello".getBytes(), 0, 2, 0);
+        handle.read(fd, ByteBuffer.allocateDirect(5), 0, 0, 0);
+        handle.write(fd, ByteBuffer.wrap("Hello".getBytes()), 0, 2, 0);
         handle.ftruncate(fd, 1);
 
         init(permissions);
@@ -723,14 +724,14 @@ public class PermissionTest extends TestBase {
         // At this point, emulate the brute-force retrieval of fd.
 
         try {
-            handle.read(fd, new byte[5], 0, 0, 0);
+            handle.read(fd, ByteBuffer.allocateDirect(5), 0, 0, 0);
             throw new Exception("Read should have failed");
         } catch (final AccessControlException ex) {
             // XXX OK.
         }
 
         try {
-            handle.write(fd, "Hello".getBytes(), 0, 2, 0);
+            handle.write(fd, ByteBuffer.wrap("Hello".getBytes()), 0, 2, 0);
             throw new Exception("Write should have failed");
         } catch (final AccessControlException ex) {
             // XXX OK.

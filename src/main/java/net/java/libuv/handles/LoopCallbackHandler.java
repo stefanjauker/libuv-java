@@ -30,6 +30,7 @@ import java.nio.ByteBuffer;
 import net.java.libuv.Address;
 import net.java.libuv.Stats;
 import net.java.libuv.cb.AsyncCallback;
+import net.java.libuv.cb.CallbackExceptionHandler;
 import net.java.libuv.cb.CallbackHandler;
 import net.java.libuv.cb.CheckCallback;
 import net.java.libuv.cb.FileCallback;
@@ -60,12 +61,12 @@ import net.java.libuv.cb.UDPCloseCallback;
 import net.java.libuv.cb.UDPRecvCallback;
 import net.java.libuv.cb.UDPSendCallback;
 
-final class LoopCallbackHandler implements CallbackHandler {
+public final class LoopCallbackHandler implements CallbackHandler {
 
-    private final LoopHandle loopHandle;
+    private final CallbackExceptionHandler exceptionHandler;
 
-    public LoopCallbackHandler(final LoopHandle loopHandle) {
-        this.loopHandle = loopHandle;
+    public LoopCallbackHandler(final CallbackExceptionHandler exceptionHandler) {
+        this.exceptionHandler = exceptionHandler;
     }
 
     @Override
@@ -73,7 +74,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onSend(status);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -82,7 +83,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.call(status);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -91,7 +92,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.call(signum);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -100,7 +101,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onRead(data);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -109,7 +110,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onRead2(data, handle, type);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -118,7 +119,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onWrite(status, error);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -127,7 +128,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onConnect(status, error);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -136,7 +137,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onConnection(status, error);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -145,7 +146,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onClose();
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -154,7 +155,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onShutdown(status, error);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -163,7 +164,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.call(context, error);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -172,7 +173,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onClose(context, fd, error);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -181,16 +182,16 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onOpen(context, fd, error);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
     @Override
-    public void handleFileReadCallback(final FileReadCallback cb, final Object context, final int bytesRead, final byte[] data, final Exception error) {
+    public void handleFileReadCallback(final FileReadCallback cb, final Object context, final int bytesRead, final ByteBuffer data, final Exception error) {
         try {
             cb.onRead(context, bytesRead, data, error);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -199,7 +200,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onReadDir(context, names, error);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -208,7 +209,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onReadLink(context, name, error);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -217,7 +218,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onStats(context, stats, error);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -226,7 +227,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onUTime(context, time, error);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -235,7 +236,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onWrite(context, bytesWritten, error);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -244,7 +245,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.call(status, event, filename);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -253,7 +254,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onPoll(status, previous, current);
         } catch (Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -262,7 +263,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onStop();
         } catch (Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -271,7 +272,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onClose();
         } catch (Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -280,7 +281,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onExit(status, signal, error);
         } catch (Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -289,7 +290,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.call(status);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -298,7 +299,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onRecv(nread, data, address);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -307,7 +308,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onSend(status, error);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -316,7 +317,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.onClose();
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 
@@ -325,7 +326,7 @@ final class LoopCallbackHandler implements CallbackHandler {
         try {
             cb.call(status);
         } catch (final Exception ex) {
-            loopHandle.exceptionHandler.handle(ex);
+            exceptionHandler.handle(ex);
         }
     }
 }

@@ -91,7 +91,7 @@ public final class LoopHandle {
             }
         };
 
-        this.callbackHandler = new LoopCallbackHandler(this);
+        this.callbackHandler = new LoopCallbackHandler(this.exceptionHandler);
     }
 
     public CallbackExceptionHandler getExceptionHandler() {

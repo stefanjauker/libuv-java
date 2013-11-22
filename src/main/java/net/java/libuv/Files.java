@@ -25,6 +25,7 @@
 
 package net.java.libuv;
 
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -265,14 +266,18 @@ public final class Files {
         return _open(pointer, path, flags, mode, context);
     }
 
-    public int read(final int fd, final byte[] buffer, final long offset, final long length, final long position) {
+    public int read(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position) {
         LibUVPermission.checkReadFile(fd, getPath(fd));
-        return _read(pointer, fd, buffer, length, offset, position, SYNC_MODE);
+        return buffer.hasArray() ?
+                _read(pointer, fd, buffer, buffer.array(), length, offset, position, SYNC_MODE) :
+                _read(pointer, fd, buffer, null, length, offset, position, SYNC_MODE);
     }
 
-    public int read(final int fd, final byte[] buffer, final long offset, final long length, final long position, final Object context) {
+    public int read(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position, final Object context) {
         LibUVPermission.checkReadFile(fd, getPath(fd));
-        return _read(pointer, fd, buffer, length, offset, position, context);
+        return buffer.hasArray() ?
+                _read(pointer, fd, buffer, buffer.array(), length, offset, position, context) :
+                _read(pointer, fd, buffer, null, length, offset, position, context);
     }
 
     public int unlink(final String path) {
@@ -285,18 +290,22 @@ public final class Files {
         return _unlink(pointer, path, context);
     }
 
-    public int write(final int fd, final byte[] buffer, final long offset, final long length, final long position) {
+    public int write(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position) {
         LibUVPermission.checkWriteFile(fd, getPath(fd));
-        assert(offset < buffer.length);
-        assert(offset + length <= buffer.length);
-        return _write(pointer, fd, buffer, length, offset, position, SYNC_MODE);
+        assert(offset < buffer.limit());
+        assert(offset + length <= buffer.limit());
+        return buffer.hasArray() ?
+                _write(pointer, fd, buffer, buffer.array(), length, offset, position, SYNC_MODE) :
+                _write(pointer, fd, buffer, null, length, offset, position, SYNC_MODE);
     }
 
-    public int write(final int fd, final byte[] buffer, final long offset, final long length, final long position, final Object context) {
+    public int write(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position, final Object context) {
         LibUVPermission.checkWriteFile(fd, getPath(fd));
-        assert(offset < buffer.length);
-        assert(offset + length <= buffer.length);
-        return _write(pointer, fd, buffer, length, offset, position, context);
+        assert(offset < buffer.limit());
+        assert(offset + length <= buffer.limit());
+        return buffer.hasArray() ?
+                _write(pointer, fd, buffer, buffer.array(), length, offset, position, context) :
+                _write(pointer, fd, buffer, null, length, offset, position, context);
     }
 
     public int mkdir(final String path, final int mode) {
@@ -606,7 +615,7 @@ public final class Files {
         }
     }
 
-    private void callRead(final Object context, final int bytesRead, final byte[] data, final Exception error) {
+    private void callRead(final Object context, final int bytesRead, final ByteBuffer data, final Exception error) {
         if (onRead != null) {
             loop.getCallbackHandler().handleFileReadCallback(onRead, context, bytesRead, data, error);
         }
@@ -679,11 +688,11 @@ public final class Files {
 
     private native int _open(final long ptr, final String path, final int flags, final int mode, final Object context);
 
-    private native int _read(final long ptr, final int fd, final byte[] data, final long length, final long offset, final long position, final Object context);
+    private native int _read(final long ptr, final int fd, final ByteBuffer buffer, final byte[] data, final long length, final long offset, final long position, final Object context);
 
     private native int _unlink(final long ptr, final String path, final Object context);
 
-    private native int _write(final long ptr, final int fd, final byte[] data, final long length, final long offset, final long position, final Object context);
+    private native int _write(final long ptr, final int fd, final ByteBuffer buffer, final byte[] data, final long length, final long offset, final long position, final Object context);
 
     private native int _mkdir(final long ptr, final String path, final int mode, final Object context);
 

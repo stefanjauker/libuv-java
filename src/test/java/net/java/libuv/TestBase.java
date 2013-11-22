@@ -25,6 +25,9 @@
 
 package net.java.libuv;
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
 public class TestBase {
 
     static {
@@ -35,4 +38,16 @@ public class TestBase {
     protected static final String TMPDIR = System.getProperty("java.io.tmpdir");
     protected static final int TIMEOUT = 5000;
     protected static final boolean IS_WINDOWS = System.getProperty("os.name").startsWith("Windows");
+
+    protected static void fill(final ByteBuffer buffer, byte b) {
+        if (buffer.hasArray()) {
+            Arrays.fill(buffer.array(), b);
+        } else {
+            final byte[] data = new byte[buffer.capacity()];
+            Arrays.fill(data, b);
+            buffer.clear();
+            buffer.put(data);
+        }
+    }
+
 }

@@ -25,8 +25,10 @@
 
 package net.java.libuv.cb;
 
+import java.nio.ByteBuffer;
+
 public interface FileReadCallback {
 
-    public void onRead(Object context, int bytesRead, byte[] data, Exception error) throws Exception;
+    public void onRead(Object context, int bytesRead, ByteBuffer data, Exception error) throws Exception;
 
 }

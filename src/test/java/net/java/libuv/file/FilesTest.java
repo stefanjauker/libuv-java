@@ -27,6 +27,7 @@ package net.java.libuv.file;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -83,15 +84,15 @@ public class FilesTest extends TestBase {
     @Test
     public void testOpenWriteReadAndCloseSync() {
         final String filename = testName + ".txt";
-        final byte[] b = "some data".getBytes();
+        final ByteBuffer b = ByteBuffer.wrap("some data".getBytes());
         final LoopHandle loop = new LoopHandle();
         final Files handle = new Files(loop);
 
         final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
         Assert.assertTrue(fd >= 0);
-        handle.write(fd, b, 0, b.length, 0);
-        final byte[] bb = new byte[b.length];
-        handle.read(fd, bb, 0, bb.length, 0);
+        handle.write(fd, b, 0, b.limit(), 0);
+        final ByteBuffer bb = ByteBuffer.allocateDirect(b.capacity());
+        handle.read(fd, bb, 0, bb.limit(), 0);
         final int status = handle.close(fd);
         Assert.assertTrue(status == 0);
         Assert.assertEquals(b, bb);
@@ -104,8 +105,8 @@ public class FilesTest extends TestBase {
         final String data = "some data";
         final LoopHandle loop = new LoopHandle();
         final Files handle = new Files(loop);
-        final byte[] writeBuffer = data.getBytes();
-        final byte[] readBuffer = new byte[writeBuffer.length];
+        final ByteBuffer writeBuffer = ByteBuffer.wrap(data.getBytes());
+        final ByteBuffer readBuffer = ByteBuffer.allocateDirect(writeBuffer.capacity());
         final AtomicInteger fd = new AtomicInteger();
         final AtomicBoolean openCallbackCalled = new AtomicBoolean(false);
         final AtomicBoolean writeCallbackCalled = new AtomicBoolean(false);
@@ -120,7 +121,7 @@ public class FilesTest extends TestBase {
                 checkException(error);
                 fd.set(file);
                 Assert.assertTrue(fd.get() > 0);
-                handle.write(fd.get(), writeBuffer, 0, writeBuffer.length, 0, FilesTest.this);
+                handle.write(fd.get(), writeBuffer, 0, writeBuffer.limit(), 0, FilesTest.this);
             }
         });
 
@@ -131,17 +132,17 @@ public class FilesTest extends TestBase {
                 writeCallbackCalled.set(true);
                 Assert.assertNull(error);
                 Assert.assertEquals(bytesWritten, data.getBytes().length);
-                handle.read(fd.get(), readBuffer, 0, readBuffer.length, 0, FilesTest.this);
+                handle.read(fd.get(), readBuffer, 0, readBuffer.limit(), 0, FilesTest.this);
             }
         });
 
         handle.setReadCallback(new FileReadCallback() {
             @Override
-            public void onRead(Object context, int bytesRead, byte[] data, Exception error) throws Exception {
+            public void onRead(Object context, int bytesRead, ByteBuffer data, Exception error) throws Exception {
                 Assert.assertEquals(context, FilesTest.this);
                 readCallbackCalled.set(true);
                 Assert.assertNull(error);
-                Assert.assertEquals(bytesRead, writeBuffer.length);
+                Assert.assertEquals(bytesRead, writeBuffer.limit());
                 Assert.assertEquals(data, writeBuffer);
                 handle.close(fd.get(), FilesTest.this);
             }
@@ -366,12 +367,12 @@ public class FilesTest extends TestBase {
         final Files handle = new Files(loop);
 
         final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
-        final byte[] b = "some data".getBytes();
-        handle.write(fd, b, 0, b.length, 0);
+        final ByteBuffer b = ByteBuffer.wrap("some data".getBytes());
+        handle.write(fd, b, 0, b.limit(), 0);
         handle.close(fd);
         handle.link(filename, filename2);
         final Stats stats = handle.stat(filename2);
-        Assert.assertEquals(stats.getSize(), b.length);
+        Assert.assertEquals(stats.getSize(), b.limit());
         cleanupFiles(handle, filename, filename2);;
     }
 
@@ -382,7 +383,7 @@ public class FilesTest extends TestBase {
         final LoopHandle loop = new LoopHandle();
         final Files handle = new Files(loop);
         final AtomicBoolean linkCallbackCalled = new AtomicBoolean();
-        final byte[] b = "some data".getBytes();
+        final ByteBuffer b = ByteBuffer.wrap("some data".getBytes());
 
         handle.setLinkCallback(new FileCallback() {
             @Override
@@ -390,13 +391,13 @@ public class FilesTest extends TestBase {
                 Assert.assertEquals(context, FilesTest.this);
                 linkCallbackCalled.set(true);
                 final Stats stats = handle.stat(filename2);
-                Assert.assertEquals(stats.getSize(), b.length);
+                Assert.assertEquals(stats.getSize(), b.limit());
                 cleanupFiles(handle, filename, filename2);
             }
         });
 
         final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
-        handle.write(fd, b, 0, b.length, 0);
+        handle.write(fd, b, 0, b.limit(), 0);
         handle.close(fd);
         handle.link(filename, filename2, FilesTest.this);
         loop.run();
@@ -420,7 +421,7 @@ public class FilesTest extends TestBase {
 
     private void checkException(final Exception error) {
         if (error != null) {
-            Assert.fail(error.getMessage());
+            throw new RuntimeException(error);
         }
     }
 

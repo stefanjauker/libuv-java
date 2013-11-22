@@ -32,6 +32,7 @@ import net.java.libuv.cb.FileReadCallback;
 import net.java.libuv.handles.LoopHandle;
 
 import java.io.File;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.testng.Assert;
@@ -49,7 +50,7 @@ public class FileReadTest extends TestBase {
     private final static long DURATION = 300000;  // DURATION after 5 minutes
     private final static int BUFFER_SIZE = 16 * 1024 * 1024;
 
-    private byte[] readBuffer = new byte[BUFFER_SIZE];
+    private ByteBuffer readBuffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
     private int fd;
 
     @AfterMethod
@@ -66,11 +67,11 @@ public class FileReadTest extends TestBase {
 
         files.setReadCallback(new FileReadCallback() {
             @Override
-            public void onRead(Object context, int bytesRead, byte[] data, Exception error) throws Exception {
+            public void onRead(Object context, int bytesRead, ByteBuffer data, Exception error) throws Exception {
                 Assert.assertEquals(context, FileReadTest.this);
                 Assert.assertEquals(data, readBuffer);
                 for (int i = 0; i < bytesRead; i++) {
-                    Assert.assertEquals(data[i], (byte) i);
+                    Assert.assertEquals(data.get(i), (byte) i);
                 }
                 Assert.assertEquals(bytesRead, BUFFER_SIZE);
 
@@ -87,7 +88,7 @@ public class FileReadTest extends TestBase {
                 }
 
                 count++;
-                Arrays.fill(readBuffer, (byte) 0);
+                fill(readBuffer, (byte) 0);
                 files.read(fd, readBuffer, 0, BUFFER_SIZE, 0, FileReadTest.this);
             }
         });
@@ -95,11 +96,11 @@ public class FileReadTest extends TestBase {
 
     public void readFile() throws Exception {
         startTime = System.currentTimeMillis();
-        Arrays.fill(readBuffer, (byte) 0);
+        fill(readBuffer, (byte) 0);
         fd = files.open(filename, Constants.O_WRONLY | Constants.O_CREAT, Constants.S_IRWXU);
-        byte[] b = new byte[BUFFER_SIZE];
+        ByteBuffer b = ByteBuffer.allocateDirect(BUFFER_SIZE);
         for (int i = 0; i < BUFFER_SIZE; i++) {
-            b[i] = (byte) i;
+            b.put(i, (byte) i);
         }
         files.write(fd, b, 0, BUFFER_SIZE, 0);
         files.close(fd);
