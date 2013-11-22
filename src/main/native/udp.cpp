@@ -91,9 +91,10 @@ UDPCallbacks::~UDPCallbacks() {
 void UDPCallbacks::on_recv(ssize_t nread, uv_buf_t buf, struct sockaddr* addr, unsigned flags) {
   if (nread == 0) return;
   jobject buffer_arg = NULL;
+  jbyteArray bytes = NULL;
   if (nread > 0) {
     jsize size = static_cast<jsize>(nread);
-    jbyteArray bytes = _env->NewByteArray(size);
+    bytes = _env->NewByteArray(size);
     _env->SetByteArrayRegion(bytes, 0, size, reinterpret_cast<signed char const*>(buf.base));
     buffer_arg = _env->CallStaticObjectMethod(_buffer_cid, _buffer_wrap_mid, bytes);
     free(buf.base);
@@ -105,6 +106,8 @@ void UDPCallbacks::on_recv(ssize_t nread, uv_buf_t buf, struct sockaddr* addr, u
       nread,
       buffer_arg,
       rinfo_arg);
+  _env->DeleteLocalRef(bytes);
+  _env->DeleteLocalRef(buffer_arg);
 }
 
 void UDPCallbacks::on_send(int status, int error_code) {
