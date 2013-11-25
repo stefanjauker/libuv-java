@@ -59,7 +59,7 @@ public:
   FileRequest(FileCallbacks* ptr, jobject context, jint fd, jstring path);
   ~FileRequest();
 
-  jbyte* get_bytes(jobject buffer, jbyteArray data, jsize offset, jsize length);
+  void get_bytes(jobject buffer, jbyteArray data, jsize offset, jsize length);
   void set_bytes(jint length);
 
   FileCallbacks* callback() { return _callback; }
@@ -71,6 +71,8 @@ public:
   jstring path() { return _path; }
 
   jobject buffer() { return _buffer; }
+
+  jbyte* bytes() { return _bytes; }
 };
 
 class FileCallbacks {
@@ -158,7 +160,7 @@ FileRequest::~FileRequest() {
   }
 }
 
-jbyte* FileRequest::get_bytes(jobject buffer, jbyteArray data, jsize offset, jsize length) {
+void FileRequest::get_bytes(jobject buffer, jbyteArray data, jsize offset, jsize length) {
   assert(!_bytes);
   assert(!_buffer);
   assert(buffer);
@@ -172,7 +174,6 @@ jbyte* FileRequest::get_bytes(jobject buffer, jbyteArray data, jsize offset, jsi
     _data = NULL;
     _bytes = (jbyte*) _callback->env()->GetDirectBufferAddress(buffer);
   }
-  return _bytes;
 }
 
 void FileRequest::set_bytes(jsize length) {
@@ -642,9 +643,10 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1read
   if (context) {
     uv_fs_t* req = new uv_fs_t();
     FileRequest* request = new FileRequest(cb, context, fd, NULL);
-    jbyte* bytes = request->get_bytes(buffer, data, static_cast<jsize>(offset), static_cast<jsize>(length));
+    request->get_bytes(buffer, data, static_cast<jsize>(offset), static_cast<jsize>(length));
     req->data = request;
-    r = uv_fs_read(cb->loop(), req, fd, bytes + offset, length, position, _fs_cb);
+    jbyte* base = request->bytes();
+    r = uv_fs_read(cb->loop(), req, fd, base + offset, length, position, _fs_cb);
   } else {
     uv_fs_t req;
     if (data) {
