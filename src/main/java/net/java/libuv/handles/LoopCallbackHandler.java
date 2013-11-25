@@ -81,7 +81,7 @@ public final class LoopCallbackHandler implements CallbackHandler {
     @Override
     public void handleCheckCallback(final CheckCallback cb, final int status) {
         try {
-            cb.call(status);
+            cb.onCheck(status);
         } catch (final Exception ex) {
             exceptionHandler.handle(ex);
         }
@@ -90,7 +90,7 @@ public final class LoopCallbackHandler implements CallbackHandler {
     @Override
     public void handleSignalCallback(final SignalCallback cb, final int signum) {
         try {
-            cb.call(signum);
+            cb.onSignal(signum);
         } catch (final Exception ex) {
             exceptionHandler.handle(ex);
         }
@@ -162,7 +162,7 @@ public final class LoopCallbackHandler implements CallbackHandler {
     @Override
     public void handleFileCallback(final FileCallback cb, final Object context, final Exception error) {
         try {
-            cb.call(context, error);
+            cb.onDone(context, error);
         } catch (final Exception ex) {
             exceptionHandler.handle(ex);
         }
@@ -243,7 +243,7 @@ public final class LoopCallbackHandler implements CallbackHandler {
     @Override
     public void handleFileEventCallback(final FileEventCallback cb, final int status, final String event, final String filename) {
         try {
-            cb.call(status, event, filename);
+            cb.onEvent(status, event, filename);
         } catch (final Exception ex) {
             exceptionHandler.handle(ex);
         }
@@ -288,7 +288,7 @@ public final class LoopCallbackHandler implements CallbackHandler {
     @Override
     public void handleTimerCallback(final TimerCallback cb, final int status) {
         try {
-            cb.call(status);
+            cb.onTimer(status);
         } catch (final Exception ex) {
             exceptionHandler.handle(ex);
         }
@@ -324,7 +324,7 @@ public final class LoopCallbackHandler implements CallbackHandler {
     @Override
     public void handleIdleCallback(final IdleCallback cb, final int status) {
         try {
-            cb.call(status);
+            cb.onIdle(status);
         } catch (final Exception ex) {
             exceptionHandler.handle(ex);
         }

@@ -188,7 +188,7 @@ public class FilesTest extends TestBase {
 
         handle.setUnlinkCallback(new FileCallback() {
             @Override
-            public void call(final Object context, final Exception error) throws Exception {
+            public void onDone(final Object context, final Exception error) throws Exception {
                 Assert.assertEquals(context, FilesTest.this);
                 unlinkCallbackCalled.set(true);
                 checkException(error);
@@ -223,7 +223,7 @@ public class FilesTest extends TestBase {
 
         handle.setMkDirCallback( new FileCallback() {
             @Override
-            public void call(final Object context, final Exception error) throws Exception {
+            public void onDone(final Object context, final Exception error) throws Exception {
                 Assert.assertEquals(context, FilesTest.this);
                 mkdirCallbackCalled.set(true);
                 checkException(error);
@@ -233,7 +233,7 @@ public class FilesTest extends TestBase {
 
         handle.setRmDirCallback(new FileCallback() {
             @Override
-            public void call(final Object context, final Exception error) throws Exception {
+            public void onDone(final Object context, final Exception error) throws Exception {
                 Assert.assertEquals(context, FilesTest.this);
                 rmdirCallbackCalled.set(true);
                 checkException(error);
@@ -304,7 +304,7 @@ public class FilesTest extends TestBase {
 
         handle.setRenameCallback(new FileCallback() {
             @Override
-            public void call(final Object context, final Exception error) throws Exception {
+            public void onDone(final Object context, final Exception error) throws Exception {
                 Assert.assertEquals(context, FilesTest.this);
                 renameCallbackCalled.set(true);
                 checkException(error);
@@ -343,7 +343,7 @@ public class FilesTest extends TestBase {
 
         handle.setFTruncateCallback(new FileCallback() {
             @Override
-            public void call(final Object context, final Exception error) throws Exception {
+            public void onDone(final Object context, final Exception error) throws Exception {
                 Assert.assertEquals(context, FilesTest.this);
                 ftruncateCallbackCalled.set(true);
                 checkException(error);
@@ -387,7 +387,7 @@ public class FilesTest extends TestBase {
 
         handle.setLinkCallback(new FileCallback() {
             @Override
-            public void call(final Object context, final Exception error) throws Exception {
+            public void onDone(final Object context, final Exception error) throws Exception {
                 Assert.assertEquals(context, FilesTest.this);
                 linkCallbackCalled.set(true);
                 final Stats stats = handle.stat(filename2);

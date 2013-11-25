@@ -27,6 +27,6 @@ package net.java.libuv.cb;
 
 public interface IdleCallback {
 
-    public void call(int status) throws Exception;
+    public void onIdle(int status) throws Exception;
 
 }

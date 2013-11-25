@@ -47,7 +47,7 @@ public class IdleHandleTest extends TestBase {
 
         idleHandle.setCloseCallback(new IdleCallback() {
             @Override
-            public void call(final int i) throws Exception {
+            public void onIdle(final int i) throws Exception {
                 System.out.println("idle closed");
                 gotClose.set(true);
             }
@@ -55,7 +55,7 @@ public class IdleHandleTest extends TestBase {
 
         idleHandle.setIdleCallback(new IdleCallback() {
             @Override
-            public void call(final int status) throws Exception {
+            public void onIdle(final int status) throws Exception {
                 gotCallback.set(true);
                 System.out.println("idle!");
                 times.incrementAndGet();

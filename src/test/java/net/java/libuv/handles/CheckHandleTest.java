@@ -47,7 +47,7 @@ public class CheckHandleTest extends TestBase {
 
         checkHandle.setCloseCallback(new CheckCallback() {
             @Override
-            public void call(final int i) throws Exception {
+            public void onCheck(final int i) throws Exception {
                 System.out.println("check closed");
                 gotClose.set(true);
             }
@@ -55,7 +55,7 @@ public class CheckHandleTest extends TestBase {
 
         checkHandle.setCheckCallback(new CheckCallback() {
             @Override
-            public void call(final int status) throws Exception {
+            public void onCheck(final int status) throws Exception {
                 gotCallback.set(true);
                 System.out.println("check!");
                 times.incrementAndGet();

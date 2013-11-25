@@ -60,7 +60,7 @@ public class FileEventHandleTest extends TestBase {
 
         eventHandle.setCloseCallback(new FileEventCallback() {
             @Override
-            public void call(final int status, final String event, final String filename) throws Exception {
+            public void onEvent(final int status, final String event, final String filename) throws Exception {
                 System.out.println("file event closed");
                 handle.unlink(testName);
                 gotClose.set(true);
@@ -69,7 +69,7 @@ public class FileEventHandleTest extends TestBase {
 
         eventHandle.setFileEventCallback(new FileEventCallback() {
             @Override
-            public void call(final int status, final String event, final String filename) throws Exception {
+            public void onEvent(final int status, final String event, final String filename) throws Exception {
                 Assert.assertEquals(status, 0);
                 Assert.assertEquals(event, "change");
                 Assert.assertTrue(testName.endsWith(filename));
@@ -110,7 +110,7 @@ public class FileEventHandleTest extends TestBase {
 
         eventHandle.setCloseCallback(new FileEventCallback() {
             @Override
-            public void call(final int status, final String event, final String filename) throws Exception {
+            public void onEvent(final int status, final String event, final String filename) throws Exception {
                 System.out.println("file event closed");
                 handle.unlink(newName);
                 gotClose.set(true);
@@ -119,7 +119,7 @@ public class FileEventHandleTest extends TestBase {
 
         eventHandle.setFileEventCallback(new FileEventCallback() {
             @Override
-            public void call(final int status, final String event, final String filename) throws Exception {
+            public void onEvent(final int status, final String event, final String filename) throws Exception {
                 Assert.assertEquals(status, 0);
                 Assert.assertEquals(event, "rename");
                 Assert.assertTrue(testName.endsWith(filename));

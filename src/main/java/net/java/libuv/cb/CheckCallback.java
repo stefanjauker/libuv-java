@@ -27,6 +27,6 @@ package net.java.libuv.cb;
 
 public interface CheckCallback {
 
-    public void call(int status) throws Exception;
+    public void onCheck(int status) throws Exception;
 
 }

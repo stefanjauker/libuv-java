@@ -27,6 +27,6 @@ package net.java.libuv.cb;
 
 public interface FileCallback {
 
-    public void call(Object context, Exception error) throws Exception;
+    public void onDone(Object context, Exception error) throws Exception;
 
 }

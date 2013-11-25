@@ -27,6 +27,6 @@ package net.java.libuv.cb;
 
 public interface TimerCallback {
 
-    public void call(int status) throws Exception;
+    public void onTimer(int status) throws Exception;
 
 }

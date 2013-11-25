@@ -27,6 +27,6 @@ package net.java.libuv.cb;
 
 public interface FileEventCallback {
 
-    public void call(int status, String event, String filename) throws Exception;
+    public void onEvent(int status, String event, String filename) throws Exception;
 
 }

@@ -48,7 +48,7 @@ public class TimerHandleTest extends TestBase {
 
         timer.setCloseCallback(new TimerCallback() {
             @Override
-            public void call(final int i) throws Exception {
+            public void onTimer(final int i) throws Exception {
                 System.out.println("timer closed");
                 gotClose.set(true);
             }
@@ -56,7 +56,7 @@ public class TimerHandleTest extends TestBase {
 
         timer.setTimerFiredCallback(new TimerCallback() {
             @Override
-            public void call(final int status) throws Exception {
+            public void onTimer(final int status) throws Exception {
                 gotCallback.set(true);
                 System.out.println("timer fired once");
                 timer.close();
@@ -88,7 +88,7 @@ public class TimerHandleTest extends TestBase {
 
         timer.setCloseCallback(new TimerCallback() {
             @Override
-            public void call(final int i) throws Exception {
+            public void onTimer(final int i) throws Exception {
                 System.out.println("repeat timer closed");
                 gotClose.set(true);
             }
@@ -96,7 +96,7 @@ public class TimerHandleTest extends TestBase {
 
         timer.setTimerFiredCallback(new TimerCallback() {
             @Override
-            public void call(final int status) throws Exception {
+            public void onTimer(final int status) throws Exception {
                 gotCallback.set(true);
                 if (callbackCount.incrementAndGet() == TIMES) {
                     System.out.println("closing repeat timer");

@@ -40,7 +40,7 @@ public class SignalHandleTest extends TestBase {
         final SignalHandle handle = new SignalHandle(loop);
         handle.setSignalCallback(new SignalCallback() {
             @Override
-            public void call(final int signum) throws Exception {
+            public void onSignal(final int signum) throws Exception {
                 assert signum == 28;
                 System.out.println("received signal " + signum);
             }
