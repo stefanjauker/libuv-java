@@ -106,7 +106,7 @@ public final class UDPHandle extends Handle {
         } catch (final UnsupportedEncodingException e) {
             throw new RuntimeException(e); // "utf-8" is always supported
         }
-        return send(data, 0, data.length, port, host);
+        return send(ByteBuffer.wrap(data), 0, data.length, port, host);
     }
 
     public int send6(final String str,
@@ -118,7 +118,7 @@ public final class UDPHandle extends Handle {
         } catch (final UnsupportedEncodingException e) {
             throw new RuntimeException(e); // "utf-8" is always supported
         }
-        return send6(data, 0, data.length, port, host);
+        return send6(ByteBuffer.wrap(data), 0, data.length, port, host);
     }
 
     public int send(final String str,
@@ -126,7 +126,7 @@ public final class UDPHandle extends Handle {
                     final int port,
                     final String host) throws UnsupportedEncodingException {
         final byte[] data = str.getBytes(encoding);
-        return send(data, 0, data.length, port, host);
+        return send(ByteBuffer.wrap(data), 0, data.length, port, host);
     }
 
     public int send6(final String str,
@@ -134,39 +134,47 @@ public final class UDPHandle extends Handle {
                      final int port,
                      final String host) throws UnsupportedEncodingException {
         final byte[] data = str.getBytes(encoding);
-        return send6(data, 0, data.length, port, host);
+        return send6(ByteBuffer.wrap(data), 0, data.length, port, host);
     }
 
-    public int send(final byte[] data,
+    public int send(final ByteBuffer buffer,
                     final int port,
                     final String host) {
         LibUVPermission.checkUDPSend(host, port);
-        return _send(pointer, data, 0, data.length, port, host);
+        return buffer.hasArray() ?
+                _send(pointer, buffer, buffer.array(), 0, buffer.capacity(), port, host) :
+                _send(pointer, buffer, null, 0, buffer.capacity(), port, host);
     }
 
-    public int send6(final byte[] data,
+    public int send6(final ByteBuffer buffer,
                      final int port,
                      final String host) {
         LibUVPermission.checkUDPSend(host, port);
-        return _send6(pointer, data, 0, data.length, port, host);
+        return buffer.hasArray() ?
+                _send6(pointer, buffer, buffer.array(), 0, buffer.capacity(), port, host) :
+                _send6(pointer, buffer, null, 0, buffer.capacity(), port, host);
     }
 
-    public int send(final byte[] data,
+    public int send(final ByteBuffer buffer,
                     final int offset,
                     final int length,
                     final int port,
                     final String host) {
         LibUVPermission.checkUDPSend(host, port);
-        return _send(pointer, data, offset, length, port, host);
+        return buffer.hasArray() ?
+                _send(pointer, buffer, buffer.array(), offset, length, port, host) :
+                _send(pointer, buffer, null, offset, length, port, host);
     }
 
-    public int send6(final byte[] data,
+    public int send6(final ByteBuffer buffer,
                      final int offset,
                      final int length,
                      final int port,
                      final String host) {
         LibUVPermission.checkUDPSend(host, port);
-        return _send6(pointer, data, offset, length, port, host);
+        return buffer.hasArray() ?
+                _send6(pointer, buffer, buffer.array(), offset, length, port, host) :
+                _send6(pointer, buffer, null, offset, length, port, host);
     }
 
     public int recvStart() {
@@ -240,6 +248,7 @@ public final class UDPHandle extends Handle {
                               final String host);
 
     private native int _send(final long ptr,
+                             final ByteBuffer buffer,
                              final byte[] data,
                              final int offset,
                              final int length,
@@ -247,6 +256,7 @@ public final class UDPHandle extends Handle {
                              final String host);
 
     private native int _send6(final long ptr,
+                              final ByteBuffer buffer,
                               final byte[] data,
                               final int offset,
                               final int length,

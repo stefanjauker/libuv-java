@@ -53,7 +53,7 @@ public:
   void initialize(jobject instance);
 
   void on_recv(ssize_t nread, uv_buf_t buf, struct sockaddr* addr, unsigned flags);
-  void on_send(int status, int error_code);
+  void on_send(int status, int error_code, jobject buffer);
   void on_close();
 };
 
