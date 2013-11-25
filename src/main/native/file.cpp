@@ -644,7 +644,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1read
     FileRequest* request = new FileRequest(cb, context, fd, NULL);
     jbyte* bytes = request->get_bytes(buffer, data, static_cast<jsize>(offset), static_cast<jsize>(length));
     req->data = request;
-    r = uv_fs_read(cb->loop(), req, fd, bytes, length, position, _fs_cb);
+    r = uv_fs_read(cb->loop(), req, fd, bytes + offset, length, position, _fs_cb);
   } else {
     uv_fs_t req;
     if (data) {
@@ -654,7 +654,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1read
       delete[] base;
     } else {
       jbyte* base = (jbyte*) env->GetDirectBufferAddress(buffer);
-      r = uv_fs_read(cb->loop(), &req, fd, base, length, position, NULL);
+      r = uv_fs_read(cb->loop(), &req, fd, base + offset, length, position, NULL);
     }
     uv_fs_req_cleanup(&req);
     if (r < 0) {
