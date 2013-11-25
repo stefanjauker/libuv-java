@@ -5,7 +5,7 @@
     'variables': {
         'LIBUV_HOME%': '<(SOURCE_HOME%)/deps/uv',
         'LIBUV_JAVA_HOME%': '<(LIBUV_JAVA_HOME%)',
-        'SRC%': '<(LIBUV_JAVA_HOME%)/out/<(target)/obj.target',
+        'SRC%': './out/<(target)/obj.target',
     },
     'target_defaults': {
         'default_configuration': '<(target)',
