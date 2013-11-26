@@ -165,13 +165,16 @@ void StreamCallbacks::on_read2(uv_buf_t* buf, jsize nread, long ptr, uv_handle_t
   delete[] buf->base;
 }
 
-void StreamCallbacks::on_write(int status, int error_code) {
+void StreamCallbacks::on_write(int status, int error_code, jobject buffer) {
   assert(_env);
   _env->CallVoidMethod(
       _instance,
       _call_write_callback_mid,
       status,
       error_code ? NewException(_env, error_code) : NULL);
+  if (buffer) {
+    _env->DeleteGlobalRef(buffer);
+  }
 }
 
 void StreamCallbacks::on_connect(int status, int error_code) {
@@ -325,9 +328,8 @@ static void _read2_cb(uv_pipe_t* pipe, ssize_t nread, uv_buf_t buf, uv_handle_ty
 static void _write_cb(uv_write_t* req, int status) {
   assert(req->handle);
   assert(req->handle->data);
-  assert(req->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(req->handle->data);
-  cb->on_write(status, status < 0 ? uv_last_error(req->handle->loop).code : 0);
+  cb->on_write(status, status < 0 ? uv_last_error(req->handle->loop).code : 0, (jobject) req->data);
   delete req;
 }
 
@@ -455,26 +457,38 @@ JNIEXPORT jboolean JNICALL Java_net_java_libuv_handles_StreamHandle__1writable
 /*
  * Class:     net_java_libuv_handles_StreamHandle
  * Method:    _write
- * Signature: (J[BII)I
+ * Signature: (JLjava/nio/ByteBuffer;[BII)I
  */
 JNIEXPORT jint JNICALL Java_net_java_libuv_handles_StreamHandle__1write
-  (JNIEnv *env, jobject that, jlong stream, jbyteArray data, jint offset, jint length) {
+  (JNIEnv *env, jobject that, jlong stream, jobject buffer, jbyteArray data, jint offset, jint length) {
 
   assert(stream);
-  assert(data);
-  jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
-  OOME(env, base);
-  uv_buf_t buf;
-  buf.base = reinterpret_cast<char*>(base + offset);
-  buf.len = length;
+
+  int r;
   uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(stream);
-  uv_write_t* req = new uv_write_t();
-  req->handle = handle;
-  req->data = base;
-  int r = uv_write(req, handle, &buf, 1, _write_cb);
-  env->ReleasePrimitiveArrayCritical(data, base, 0);
+
+  if (data) {
+    jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
+    OOME(env, base);
+    uv_buf_t buf;
+    buf.base = reinterpret_cast<char*>(base + offset);
+    buf.len = length;
+    uv_write_t* req = new uv_write_t();
+    req->handle = handle;
+    req->data = NULL;
+    r = uv_write(req, handle, &buf, 1, _write_cb);
+    env->ReleasePrimitiveArrayCritical(data, base, 0);
+  } else {
+    jbyte* base = (jbyte*) env->GetDirectBufferAddress(buffer);
+    uv_buf_t buf;
+    buf.base = reinterpret_cast<char*>(base + offset);
+    buf.len = length;
+    uv_write_t* req = new uv_write_t();
+    req->handle = handle;
+    req->data = env->NewGlobalRef(buffer);
+    r = uv_write(req, handle, &buf, 1, _write_cb);
+  }
   if (r) {
-    delete req;
     ThrowException(env, handle->loop, "uv_write");
   }
   return r;
@@ -483,29 +497,43 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_StreamHandle__1write
 /*
  * Class:     net_java_libuv_handles_StreamHandle
  * Method:    _write2
- * Signature: (J[BIIJ)I
+ * Signature: (JLjava/nio/ByteBuffer;[BIIJ)I
  */
 JNIEXPORT jint JNICALL Java_net_java_libuv_handles_StreamHandle__1write2
-  (JNIEnv *env, jobject that, jlong stream, jbyteArray data, jint offset, jint length, jlong send_stream) {
+  (JNIEnv *env, jobject that, jlong stream, jobject buffer, jbyteArray data, jint offset, jint length, jlong send_stream) {
 
   assert(stream);
-  assert(data);
   assert(send_stream);
-  jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
-  OOME(env, base);
-  uv_buf_t buf;
-  buf.base = reinterpret_cast<char*>(base + offset);
-  buf.len = length - offset;
-  assert(stream);
+
+  int r;
   uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(stream);
-  uv_write_t* req = new uv_write_t();
-  req->handle = handle;
-  req->data = base;
-  uv_stream_t* send_handle = reinterpret_cast<uv_stream_t*>(send_stream);
-  int r = uv_write2(req, handle, &buf, 1, send_handle, _write_cb);
-  env->ReleasePrimitiveArrayCritical(data, base, 0);
+
+  if (data) {
+    jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
+    OOME(env, base);
+    uv_buf_t buf;
+    buf.base = reinterpret_cast<char*>(base + offset);
+    buf.len = length - offset;
+    uv_write_t* req = new uv_write_t();
+    req->handle = handle;
+    req->data = NULL;
+    uv_stream_t* send_handle = reinterpret_cast<uv_stream_t*>(send_stream);
+    r = uv_write2(req, handle, &buf, 1, send_handle, _write_cb);
+    env->ReleasePrimitiveArrayCritical(data, base, 0);
+  } else {
+    jbyte* base = (jbyte*) env->GetDirectBufferAddress(buffer);
+    OOME(env, base);
+    uv_buf_t buf;
+    buf.base = reinterpret_cast<char*>(base + offset);
+    buf.len = length - offset;
+    assert(stream);
+    uv_write_t* req = new uv_write_t();
+    req->handle = handle;
+    req->data = env->NewGlobalRef(buffer);
+    uv_stream_t* send_handle = reinterpret_cast<uv_stream_t*>(send_stream);
+    r = uv_write2(req, handle, &buf, 1, send_handle, _write_cb);
+  }
   if (r) {
-    delete req;
     ThrowException(env, handle->loop, "uv_write2");
   }
   return r;

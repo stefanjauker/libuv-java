@@ -63,7 +63,7 @@ public:
 
   void on_read(uv_buf_t* buf, jsize nread);
   void on_read2(uv_buf_t* buf, jsize nread, long ptr, uv_handle_type pending);
-  void on_write(int status, int error_code);
+  void on_write(int status, int error_code, jobject buffer);
   void on_shutdown(int status, int error_code);
   void on_connect(int status, int error_code);
   void on_connection(int status, int error_code);

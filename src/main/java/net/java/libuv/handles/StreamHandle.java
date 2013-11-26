@@ -108,7 +108,7 @@ public class StreamHandle extends Handle {
         } catch (final UnsupportedEncodingException e) {
             throw new RuntimeException(e); // "utf-8" is always supported
         }
-        return _write2(pointer, data, 0, data.length, handle.pointer);
+        return _write2(pointer, ByteBuffer.wrap(data), data, 0, data.length, handle.pointer);
     }
 
     public int write(final String str) {
@@ -118,24 +118,22 @@ public class StreamHandle extends Handle {
         } catch (final UnsupportedEncodingException e) {
             throw new RuntimeException(e); // "utf-8" is always supported
         }
-        return write(data, 0, data.length);
+        return write(ByteBuffer.wrap(data), 0, data.length);
     }
 
     public int write(final String str, final String encoding) throws UnsupportedEncodingException {
         final byte[] data = str.getBytes(encoding);
-        return write(data, 0, data.length);
+        return write(ByteBuffer.wrap(data), 0, data.length);
     }
 
-    public int write(final ByteBuffer data) {
-        return write(data.array(), data.position(), data.remaining());
+    public int write(final ByteBuffer buffer, final int offset, final int length) {
+        return buffer.hasArray() ?
+                _write(pointer, buffer, buffer.array(), offset, length) :
+                _write(pointer, buffer, null, offset, length);
     }
 
-    public int write(final byte[] data, final int offset, final int length) {
-        return _write(pointer, data, offset, length);
-    }
-
-    public int write(final byte[] data) {
-        return write(data, 0, data.length);
+    public int write(final ByteBuffer buffer) {
+        return write(buffer, 0, buffer.capacity());
     }
 
     public int closeWrite() {
@@ -239,11 +237,13 @@ public class StreamHandle extends Handle {
     private native boolean _writable(final long ptr);
 
     private native int _write(final long ptr,
+                              final ByteBuffer buffer,
                               final byte[] data,
                               final int offset,
                               final int length);
 
     private native int _write2(final long ptr,
+                               final ByteBuffer buffer,
                                final byte[] data,
                                final int offset,
                                final int length,
