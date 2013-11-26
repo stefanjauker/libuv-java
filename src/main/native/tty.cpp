@@ -30,6 +30,40 @@
 #include "stream.h"
 #include "net_java_libuv_handles_TTYHandle.h"
 
+static jstring _FILE = NULL;
+static jstring _PIPE = NULL;
+static jstring _TCP = NULL;
+static jstring _TTY = NULL;
+static jstring _UDP = NULL;
+static jstring _UNKNOWN = NULL;
+
+/*
+ * Class:     net_java_libuv_handles_TTYHandle
+ * Method:    _static_initialize
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_net_java_libuv_handles_TTYHandle__1static_1initialize
+  (JNIEnv *env, jclass cls) {
+
+  _FILE = env->NewStringUTF("FILE");
+  _FILE = (jstring) env->NewGlobalRef(_FILE);
+
+  _PIPE = env->NewStringUTF("PIPE");
+  _PIPE = (jstring) env->NewGlobalRef(_PIPE);
+
+  _TCP = env->NewStringUTF("TCP");
+  _TCP = (jstring) env->NewGlobalRef(_TCP);
+
+  _TTY = env->NewStringUTF("TTY");
+  _TTY = (jstring) env->NewGlobalRef(_TTY);
+
+  _UDP = env->NewStringUTF("UDP");
+  _UDP = (jstring) env->NewGlobalRef(_UDP);
+
+  _UNKNOWN = env->NewStringUTF("UNKNOWN");
+  _UNKNOWN = (jstring) env->NewGlobalRef(_UNKNOWN);
+}
+
 /*
  * Class:     net_java_libuv_handles_TTYHandle
  * Method:    _new
@@ -126,22 +160,22 @@ JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_TTYHandle__1guess_1handle_
   uv_handle_type type = uv_guess_handle(fd);
   switch (type) {
     case UV_TCP:
-      return env->NewStringUTF("TCP");
+      return _TCP;
 
     case UV_TTY:
-      return env->NewStringUTF("TTY");
+      return _TTY;
 
     case UV_UDP:
-      return env->NewStringUTF("UDP");
+      return _UDP;
 
     case UV_NAMED_PIPE:
-      return env->NewStringUTF("PIPE");
+      return _PIPE;
 
     case UV_FILE:
-      return env->NewStringUTF("FILE");
+      return _FILE;
 
     case UV_UNKNOWN_HANDLE:
-      return env->NewStringUTF("UNKNOWN");
+      return _UNKNOWN;
 
     default:
       assert(0);

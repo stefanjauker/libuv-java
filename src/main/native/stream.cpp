@@ -32,6 +32,9 @@
 #include "udp.h"
 #include "net_java_libuv_handles_StreamHandle.h"
 
+jstring StreamCallbacks::_IPV4 = NULL;
+jstring StreamCallbacks::_IPV6 = NULL;
+
 jclass StreamCallbacks::_buffer_cid = NULL;
 jclass StreamCallbacks::_address_cid = NULL;
 jclass StreamCallbacks::_stream_handle_cid = NULL;
@@ -51,6 +54,12 @@ JNIEnv* StreamCallbacks::_env = NULL;
 void StreamCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _env = env;
   assert(_env);
+
+  _IPV4 = env->NewStringUTF("IPv4");
+  _IPV4 = (jstring) env->NewGlobalRef(_IPV4);
+
+  _IPV6 = env->NewStringUTF("IPv6");
+  _IPV6 = (jstring) env->NewGlobalRef(_IPV6);
 
   _buffer_cid = env->FindClass("java/nio/ByteBuffer");
   assert(_buffer_cid);
@@ -228,7 +237,7 @@ jobject StreamCallbacks::_address_to_js(JNIEnv* env, const sockaddr* addr) {
       _address_init_mid,
       env->NewStringUTF(ip),
       port,
-      env->NewStringUTF("IPv6"));
+      _IPV6);
 
   case AF_INET:
     a4 = reinterpret_cast<const sockaddr_in*>(addr);
@@ -238,7 +247,7 @@ jobject StreamCallbacks::_address_to_js(JNIEnv* env, const sockaddr* addr) {
       _address_init_mid,
       env->NewStringUTF(ip),
       port,
-      env->NewStringUTF("IPv4"));
+      _IPV4);
   }
   return NULL;
 }

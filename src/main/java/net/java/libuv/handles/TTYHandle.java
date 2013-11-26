@@ -29,6 +29,10 @@ public final class TTYHandle extends StreamHandle {
 
     private final int fd;
 
+    static {
+        _static_initialize();
+    }
+
     public enum Mode {
 
         // must be equal to values in uv.h
@@ -72,6 +76,8 @@ public final class TTYHandle extends StreamHandle {
     public static String guessHandleType(final int fd) {
         return _guess_handle_type(fd);
     }
+
+    private static native void _static_initialize();
 
     private static native long _new(final long loop,
                                     final int fd,

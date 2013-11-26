@@ -32,6 +32,9 @@
 
 class StreamCallbacks {
 private:
+  static jstring _IPV4;
+  static jstring _IPV6;
+
   static jclass _buffer_cid;
   static jclass _address_cid;
   static jclass _stream_handle_cid;
