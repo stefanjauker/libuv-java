@@ -35,11 +35,9 @@
 jstring StreamCallbacks::_IPV4 = NULL;
 jstring StreamCallbacks::_IPV6 = NULL;
 
-jclass StreamCallbacks::_buffer_cid = NULL;
 jclass StreamCallbacks::_address_cid = NULL;
 jclass StreamCallbacks::_stream_handle_cid = NULL;
 
-jmethodID StreamCallbacks::_buffer_wrap_mid = NULL;
 jmethodID StreamCallbacks::_address_init_mid = NULL;
 jmethodID StreamCallbacks::_call_read_callback_mid = NULL;
 jmethodID StreamCallbacks::_call_read2_callback_mid = NULL;
@@ -60,14 +58,6 @@ void StreamCallbacks::static_initialize(JNIEnv* env, jclass cls) {
 
   _IPV6 = env->NewStringUTF("IPv6");
   _IPV6 = (jstring) env->NewGlobalRef(_IPV6);
-
-  _buffer_cid = env->FindClass("java/nio/ByteBuffer");
-  assert(_buffer_cid);
-  _buffer_cid = (jclass) env->NewGlobalRef(_buffer_cid);
-  assert(_buffer_cid);
-
-  _buffer_wrap_mid = env->GetStaticMethodID(_buffer_cid, "wrap", "([B)Ljava/nio/ByteBuffer;");
-  assert(_buffer_wrap_mid);
 
   _stream_handle_cid = (jclass) env->NewGlobalRef(cls);
   assert(_stream_handle_cid);
@@ -136,14 +126,13 @@ void StreamCallbacks::on_read(uv_buf_t* buf, jsize nread) {
         _call_read_callback_mid,
         NULL);
   } else if (nread > 0) {
-    jbyteArray bytes = _env->NewByteArray(nread);
-    _env->SetByteArrayRegion(bytes, 0, nread, reinterpret_cast<signed char const*>(buf->base));
-    jobject arg = _env->CallStaticObjectMethod(_buffer_cid, _buffer_wrap_mid, bytes);
+    jbyte* data = new jbyte[nread];
+    memcpy(data, buf->base, nread);
+    jobject arg = _env->NewDirectByteBuffer(data, nread);
     _env->CallVoidMethod(
         _instance,
         _call_read_callback_mid,
         arg);
-    _env->DeleteLocalRef(bytes);
     _env->DeleteLocalRef(arg);
   }
   delete[] buf->base;
@@ -159,17 +148,16 @@ void StreamCallbacks::on_read2(uv_buf_t* buf, jsize nread, long ptr, uv_handle_t
         ptr,
         pending);
   } else if (nread > 0) {
-    jbyteArray bytes = _env->NewByteArray(nread);
-    _env->SetByteArrayRegion(bytes, 0, nread, reinterpret_cast<signed char const*>(buf->base));
-    jobject array = _env->CallStaticObjectMethod(_buffer_cid, _buffer_wrap_mid, bytes);
+    jbyte* data = new jbyte[nread];
+    memcpy(data, buf->base, nread);
+    jobject array = _env->NewDirectByteBuffer(data, nread);
     _env->CallVoidMethod(
         _instance,
         _call_read2_callback_mid,
         array,
         ptr,
         pending);
-   _env->DeleteLocalRef(bytes);
-   _env->DeleteLocalRef(array);
+    _env->DeleteLocalRef(array);
   }
   delete[] buf->base;
 }

@@ -39,12 +39,24 @@ public final class Logger {
         this.prefix = prefix;
     }
 
+    public byte[] array(final ByteBuffer byteBuffer) {
+        if (byteBuffer.hasArray()) {
+            return byteBuffer.array();
+        } else {
+            final ByteBuffer dup = byteBuffer.duplicate();
+            final byte[] data = new byte[dup.capacity()];
+            dup.clear();
+            dup.get(data);
+            return data;
+        }
+    }
+
     public void log(final Object... args) throws Exception {
         System.out.print(prefix == null ? "" : prefix);
         if (args != null) {
             for (final Object arg : args) {
                 if (arg instanceof ByteBuffer) {
-                    final byte[] bytes = ((ByteBuffer) arg).array();
+                    final byte[] bytes = array(((ByteBuffer) arg));
                     System.out.print(new String(bytes, "utf-8"));
                 } else {
                     System.out.print(arg);

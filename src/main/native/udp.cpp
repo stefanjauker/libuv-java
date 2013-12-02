@@ -35,31 +35,21 @@
 
 uv_buf_t _alloc_cb(uv_handle_t* handle, size_t suggested_size) {
   // override - 64k buffers are too large for udp
-  if (suggested_size >= 64 * 1024) suggested_size = 4 * 1024;
+  if (suggested_size >= 64 * 1024) suggested_size = 2 * 1024;
   return uv_buf_init(new char[suggested_size], static_cast<unsigned int>(suggested_size));
 }
 
 jclass UDPCallbacks::_udp_handle_cid = NULL;
-jclass UDPCallbacks::_buffer_cid = NULL;
 
 jmethodID UDPCallbacks::_recv_callback_mid = NULL;
 jmethodID UDPCallbacks::_send_callback_mid = NULL;
 jmethodID UDPCallbacks::_close_callback_mid = NULL;
-jmethodID UDPCallbacks::_buffer_wrap_mid = NULL;
 
 JNIEnv* UDPCallbacks::_env = NULL;
 
 void UDPCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _env = env;
   assert(_env);
-
-  _buffer_cid = env->FindClass("java/nio/ByteBuffer");
-  assert(_buffer_cid);
-  _buffer_cid = (jclass) env->NewGlobalRef(_buffer_cid);
-  assert(_buffer_cid);
-
-  _buffer_wrap_mid = env->GetStaticMethodID(_buffer_cid, "wrap", "([B)Ljava/nio/ByteBuffer;");
-  assert(_buffer_wrap_mid);
 
   _udp_handle_cid = (jclass) env->NewGlobalRef(cls);
   assert(_udp_handle_cid);
@@ -91,13 +81,10 @@ UDPCallbacks::~UDPCallbacks() {
 void UDPCallbacks::on_recv(ssize_t nread, uv_buf_t buf, struct sockaddr* addr, unsigned flags) {
   if (nread == 0) return;
   jobject buffer_arg = NULL;
-  jbyteArray bytes = NULL;
   if (nread > 0) {
-    jsize size = static_cast<jsize>(nread);
-    bytes = _env->NewByteArray(size);
-    _env->SetByteArrayRegion(bytes, 0, size, reinterpret_cast<signed char const*>(buf.base));
-    buffer_arg = _env->CallStaticObjectMethod(_buffer_cid, _buffer_wrap_mid, bytes);
-    free(buf.base);
+    jbyte* data = new jbyte[nread];
+    memcpy(data, buf.base, nread);
+    buffer_arg = _env->NewDirectByteBuffer(data, nread);
   }
   jobject rinfo_arg = addr ? StreamCallbacks::_address_to_js(_env, addr) : NULL;
   _env->CallVoidMethod(
@@ -106,8 +93,10 @@ void UDPCallbacks::on_recv(ssize_t nread, uv_buf_t buf, struct sockaddr* addr, u
       nread,
       buffer_arg,
       rinfo_arg);
-  _env->DeleteLocalRef(bytes);
-  _env->DeleteLocalRef(buffer_arg);
+  if (buffer_arg) {
+    _env->DeleteLocalRef(buffer_arg);
+  }
+  delete[] buf.base;
 }
 
 void UDPCallbacks::on_send(int status, int error_code, jobject buffer) {

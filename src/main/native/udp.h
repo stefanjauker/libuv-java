@@ -33,12 +33,10 @@
 class UDPCallbacks {
 private:
   static jclass _udp_handle_cid;
-  static jclass _buffer_cid;
 
   static jmethodID _recv_callback_mid;
   static jmethodID _send_callback_mid;
   static jmethodID _close_callback_mid;
-  static jmethodID _buffer_wrap_mid;
 
   static JNIEnv* _env;
 
