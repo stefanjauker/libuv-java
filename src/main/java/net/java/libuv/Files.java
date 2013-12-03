@@ -28,6 +28,7 @@ package net.java.libuv;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import net.java.libuv.cb.FileCallback;
 import net.java.libuv.cb.FileCloseCallback;
@@ -237,6 +238,7 @@ public final class Files {
     }
 
     public int close(final int fd) {
+        Objects.requireNonNull(getPath(fd));
         final int r = _close(pointer, fd, SYNC_MODE);
         if (r != -1) {
             paths.remove(fd);
@@ -245,6 +247,7 @@ public final class Files {
     }
 
     public int close(final int fd, final Object context) {
+        Objects.requireNonNull(getPath(fd));
         final int r = _close(pointer, fd, context);
         if (r != -1) {
             paths.remove(fd);
@@ -253,6 +256,7 @@ public final class Files {
     }
 
     public int open(final String path, final int flags, final int mode) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkOpenFile(path, flags);
         final int fd = _open(pointer, path, flags, mode, SYNC_MODE);
         if (fd != -1) {
@@ -262,11 +266,14 @@ public final class Files {
     }
 
     public int open(final String path, final int flags, final int mode, final Object context) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkOpenFile(path, flags);
         return _open(pointer, path, flags, mode, context);
     }
 
     public int read(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position) {
+        Objects.requireNonNull(getPath(fd));
+        Objects.requireNonNull(buffer);
         LibUVPermission.checkReadFile(fd, getPath(fd));
         return buffer.hasArray() ?
                 _read(pointer, fd, buffer, buffer.array(), length, offset, position, SYNC_MODE) :
@@ -274,6 +281,8 @@ public final class Files {
     }
 
     public int read(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position, final Object context) {
+        Objects.requireNonNull(getPath(fd));
+        Objects.requireNonNull(buffer);
         LibUVPermission.checkReadFile(fd, getPath(fd));
         return buffer.hasArray() ?
                 _read(pointer, fd, buffer, buffer.array(), length, offset, position, context) :
@@ -281,16 +290,20 @@ public final class Files {
     }
 
     public int unlink(final String path) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkDeleteFile(path);
         return _unlink(pointer, path, SYNC_MODE);
     }
 
     public int unlink(final String path, final Object context) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkDeleteFile(path);
         return _unlink(pointer, path, context);
     }
 
     public int write(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position) {
+        Objects.requireNonNull(getPath(fd));
+        Objects.requireNonNull(buffer);
         LibUVPermission.checkWriteFile(fd, getPath(fd));
         assert(offset < buffer.limit());
         assert(offset + length <= buffer.limit());
@@ -300,6 +313,8 @@ public final class Files {
     }
 
     public int write(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position, final Object context) {
+        Objects.requireNonNull(getPath(fd));
+        Objects.requireNonNull(buffer);
         LibUVPermission.checkWriteFile(fd, getPath(fd));
         assert(offset < buffer.limit());
         assert(offset + length <= buffer.limit());
@@ -309,203 +324,251 @@ public final class Files {
     }
 
     public int mkdir(final String path, final int mode) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(path);
         return _mkdir(pointer, path, mode, SYNC_MODE);
     }
 
     public int mkdir(final String path, final int mode, final Object context) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(path);
         return _mkdir(pointer, path, mode, context);
     }
 
     public int rmdir(final String path) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkDeleteFile(path);
         return _rmdir(pointer, path, SYNC_MODE);
     }
 
     public int rmdir(final String path, final Object context) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkDeleteFile(path);
         return _rmdir(pointer, path, context);
     }
 
     public String[] readdir(final String path, final int flags) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
         return _readdir(pointer, path, flags, SYNC_MODE);
     }
 
     public String[] readdir(final String path, final int flags, final Object context) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
         return _readdir(pointer, path, flags, context);
     }
 
     public Stats stat(final String path) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
         return _stat(pointer, path, SYNC_MODE);
     }
 
     public Stats stat(final String path, final Object context) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
         return _stat(pointer, path, context);
     }
 
     public Stats fstat(final int fd) {
+        Objects.requireNonNull(getPath(fd));
         LibUVPermission.checkReadFile(fd, getPath(fd));
         return _fstat(pointer, fd, SYNC_MODE);
     }
 
     public Stats fstat(final int fd, final Object context) {
+        Objects.requireNonNull(getPath(fd));
         LibUVPermission.checkReadFile(fd, getPath(fd));
         return _fstat(pointer, fd, context);
     }
 
     public int rename(final String path, final String newPath) {
+        Objects.requireNonNull(path);
+        Objects.requireNonNull(newPath);
         LibUVPermission.checkWriteFile(path);
         LibUVPermission.checkWriteFile(newPath);
         return _rename(pointer, path, newPath, SYNC_MODE);
     }
 
     public int rename(final String path, final String newPath, final Object context) {
+        Objects.requireNonNull(path);
+        Objects.requireNonNull(newPath);
         LibUVPermission.checkWriteFile(path);
         LibUVPermission.checkWriteFile(newPath);
         return _rename(pointer, path, newPath, context);
     }
 
     public int fsync(final int fd) {
+        Objects.requireNonNull(getPath(fd));
         // If a file is open, it can be synced, no security check.
         return _fsync(pointer, fd, SYNC_MODE);
     }
 
     public int fsync(final int fd, final Object context) {
+        Objects.requireNonNull(getPath(fd));
         // If a file is open, it can be synced, no security check.
         return _fsync(pointer, fd, context);
     }
 
     public int fdatasync(final int fd) {
+        Objects.requireNonNull(getPath(fd));
         // If a file is open, it can be synced, no security check.
         return _fdatasync(pointer, fd, SYNC_MODE);
     }
 
     public int fdatasync(final int fd, final Object context) {
+        Objects.requireNonNull(getPath(fd));
         // If a file is open, it can be synced, no security check.
         return _fdatasync(pointer, fd, context);
     }
 
     public int ftruncate(final int fd, final long offset) {
+        Objects.requireNonNull(getPath(fd));
         LibUVPermission.checkWriteFile(fd, getPath(fd));
         return _ftruncate(pointer, fd, offset, SYNC_MODE);
     }
 
     public int ftruncate(final int fd, final long offset, final Object context) {
+        Objects.requireNonNull(getPath(fd));
         LibUVPermission.checkWriteFile(fd, getPath(fd));
         return _ftruncate(pointer, fd, offset, context);
     }
 
     public int sendfile(final int outFd, final int inFd, final long offset, final long length) {
+        Objects.requireNonNull(getPath(outFd));
+        Objects.requireNonNull(getPath(inFd));
         // No security check required.
         return _sendfile(pointer, outFd, inFd, offset, length, SYNC_MODE);
     }
 
     public int sendfile(final int outFd, final int inFd, final long offset, final long length, final Object context) {
+        Objects.requireNonNull(getPath(outFd));
+        Objects.requireNonNull(getPath(inFd));
         // No security check required.
         return _sendfile(pointer, outFd, inFd, offset, length, context);
     }
 
     public int chmod(final String path, final int mode) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(path);
         return _chmod(pointer, path, mode, SYNC_MODE);
     }
 
     public int chmod(final String path, final int mode, final Object context) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(path);
         return _chmod(pointer, path, mode, context);
     }
 
     public int utime(final String path, final double atime, final double mtime) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(path);
         return _utime(pointer, path, atime, mtime, SYNC_MODE);
     }
 
     public int utime(final String path, final double atime, final double mtime, final Object context) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(path);
         return _utime(pointer, path, atime, mtime, context);
     }
 
     public int futime(final int fd, final double atime, final double mtime) {
+        Objects.requireNonNull(getPath(fd));
         LibUVPermission.checkWriteFile(fd, getPath(fd));
         return _futime(pointer, fd, atime, mtime, SYNC_MODE);
     }
 
     public int futime(final int fd, final double atime, final double mtime, final Object context) {
+        Objects.requireNonNull(getPath(fd));
         LibUVPermission.checkWriteFile(fd, getPath(fd));
         return _futime(pointer, fd, atime, mtime, context);
     }
 
     public Stats lstat(final String path) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
         return _lstat(pointer, path, SYNC_MODE);
     }
 
     public Stats lstat(final String path, final Object context) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
         return _lstat(pointer, path, context);
     }
 
     public int link(final String path, final String newPath) {
+        Objects.requireNonNull(path);
+        Objects.requireNonNull(newPath);
         LibUVPermission.checkHardLink(path, newPath);
         return _link(pointer, path, newPath, SYNC_MODE);
     }
 
     public int link(final String path, final String newPath, final Object context) {
+        Objects.requireNonNull(path);
+        Objects.requireNonNull(newPath);
         LibUVPermission.checkHardLink(path, newPath);
         return _link(pointer, path, newPath, context);
     }
 
     public int symlink(final String path, final String newPath, final int flags) {
+        Objects.requireNonNull(path);
+        Objects.requireNonNull(newPath);
         LibUVPermission.checkSymbolicLink(path, newPath);
         return _symlink(pointer, path, newPath, flags, SYNC_MODE);
     }
 
     public int symlink(final String path, final String newPath, final int flags, final Object context) {
+        Objects.requireNonNull(path);
+        Objects.requireNonNull(newPath);
         LibUVPermission.checkSymbolicLink(path, newPath);
         return _symlink(pointer, path, newPath, flags, context);
     }
 
     public String readlink(final String path) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
         return _readlink(pointer, path, SYNC_MODE);
     }
 
     public String readlink(final String path, final Object context) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
         return _readlink(pointer, path, context);
     }
 
     public int fchmod(final int fd, final int mode) {
+        Objects.requireNonNull(getPath(fd));
         LibUVPermission.checkWriteFile(fd, getPath(fd));
         return _fchmod(pointer, fd, mode, SYNC_MODE);
     }
 
     public int fchmod(final int fd, final int mode, final Object context) {
+        Objects.requireNonNull(getPath(fd));
         LibUVPermission.checkWriteFile(fd, getPath(fd));
         return _fchmod(pointer, fd, mode, context);
     }
 
     public int chown(final String path, final int uid, final int gid) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(path);
         return _chown(pointer, path, uid, gid, SYNC_MODE);
     }
 
     public int chown(final String path, final int uid, final int gid, final Object context) {
+        Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(path);
         return _chown(pointer, path, uid, gid, context);
     }
 
     public int fchown(final int fd, final int uid, final int gid) {
+        Objects.requireNonNull(getPath(fd));
         LibUVPermission.checkWriteFile(fd, getPath(fd));
         return _fchown(pointer, fd, uid, gid, SYNC_MODE);
     }
 
     public int fchown(final int fd, final int uid, final int gid, final Object context) {
+        Objects.requireNonNull(getPath(fd));
         LibUVPermission.checkWriteFile(fd, getPath(fd));
         return _fchown(pointer, fd, uid, gid, context);
     }

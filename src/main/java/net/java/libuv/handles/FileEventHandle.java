@@ -25,6 +25,8 @@
 
 package net.java.libuv.handles;
 
+import java.util.Objects;
+
 import net.java.libuv.cb.FileEventCallback;
 
 public final class FileEventHandle extends Handle {
@@ -66,6 +68,7 @@ public final class FileEventHandle extends Handle {
     }
 
     public int start(final String path, final boolean persistent) {
+        Objects.requireNonNull(path);
         return _start(loop.pointer(), pointer, path, persistent);
     }
 

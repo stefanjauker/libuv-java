@@ -25,6 +25,8 @@
 
 package net.java.libuv.handles;
 
+import java.util.Objects;
+
 import net.java.libuv.Address;
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.LibUVPermission.AddressResolver;
@@ -42,23 +44,27 @@ public class TCPHandle extends StreamHandle {
     }
 
     public int bind(final String address, final int port) {
+        Objects.requireNonNull(address);
         bindPort = port;
         LibUVPermission.checkBind(address, port);
         return _bind(pointer, address, port);
     }
 
     public int bind6(final String address, final int port) {
+        Objects.requireNonNull(address);
         bindPort = port;
         LibUVPermission.checkBind(address, port);
         return _bind6(pointer, address, port);
     }
 
     public int connect(final String address, final int port) {
+        Objects.requireNonNull(address);
         LibUVPermission.checkConnect(address, port);
         return _connect(pointer, address, port);
     }
 
     public int connect6(final String address, final int port) {
+        Objects.requireNonNull(address);
         LibUVPermission.checkConnect(address, port);
         return _connect6(pointer, address, port);
     }
@@ -71,6 +77,7 @@ public class TCPHandle extends StreamHandle {
 
     @Override
     public int accept(final StreamHandle client) {
+        Objects.requireNonNull(client);
         assert client instanceof TCPHandle;
         final TCPHandle tcpClient = (TCPHandle) client;
         final int accepted = super.accept(client);

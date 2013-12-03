@@ -25,6 +25,8 @@
 
 package net.java.libuv.handles;
 
+import java.util.Objects;
+
 import net.java.libuv.Constants;
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.cb.SignalCallback;
@@ -47,6 +49,7 @@ public final class SignalHandle extends Handle {
     }
 
     public void start(final String signal) {
+        Objects.requireNonNull(signal);
         start(Constants.getConstants().get(signal));
     }
 

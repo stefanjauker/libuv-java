@@ -27,6 +27,7 @@ package net.java.libuv.handles;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 import net.java.libuv.cb.StreamCloseCallback;
 import net.java.libuv.cb.StreamConnectCallback;
@@ -101,6 +102,7 @@ public class StreamHandle extends Handle {
     }
 
     public int write2(final String str, final StreamHandle handle) {
+        Objects.requireNonNull(str);
         assert handle != null;
         final byte[] data;
         try {
@@ -112,6 +114,7 @@ public class StreamHandle extends Handle {
     }
 
     public int write(final String str) {
+        Objects.requireNonNull(str);
         final byte[] data;
         try {
             data = str.getBytes("utf-8");
@@ -122,17 +125,20 @@ public class StreamHandle extends Handle {
     }
 
     public int write(final String str, final String encoding) throws UnsupportedEncodingException {
+        Objects.requireNonNull(str);
         final byte[] data = str.getBytes(encoding);
         return write(ByteBuffer.wrap(data), 0, data.length);
     }
 
     public int write(final ByteBuffer buffer, final int offset, final int length) {
+        Objects.requireNonNull(buffer);
         return buffer.hasArray() ?
                 _write(pointer, buffer, buffer.array(), offset, length) :
                 _write(pointer, buffer, null, offset, length);
     }
 
     public int write(final ByteBuffer buffer) {
+        Objects.requireNonNull(buffer);
         return write(buffer, 0, buffer.capacity());
     }
 

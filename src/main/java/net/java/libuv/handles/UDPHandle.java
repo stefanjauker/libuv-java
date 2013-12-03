@@ -27,6 +27,7 @@ package net.java.libuv.handles;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 import net.java.libuv.Address;
 import net.java.libuv.LibUVPermission;
@@ -88,11 +89,13 @@ public final class UDPHandle extends Handle {
     }
 
     public int bind(final int port, final String address) {
+        Objects.requireNonNull(address);
         LibUVPermission.checkUDPBind(address, port);
         return _bind(pointer, port, address);
     }
 
     public int bind6(final int port, final String address) {
+        Objects.requireNonNull(address);
         LibUVPermission.checkUDPBind(address, port);
         return _bind6(pointer, port, address);
     }
@@ -100,6 +103,8 @@ public final class UDPHandle extends Handle {
     public int send(final String str,
                     final int port,
                     final String host) {
+        Objects.requireNonNull(str);
+        Objects.requireNonNull(host);
         final byte[] data;
         try {
             data = str.getBytes("utf-8");
@@ -112,6 +117,8 @@ public final class UDPHandle extends Handle {
     public int send6(final String str,
                      final int port,
                      final String host) {
+        Objects.requireNonNull(str);
+        Objects.requireNonNull(host);
         final byte[] data;
         try {
             data = str.getBytes("utf-8");
@@ -125,6 +132,9 @@ public final class UDPHandle extends Handle {
                     final String encoding,
                     final int port,
                     final String host) throws UnsupportedEncodingException {
+        Objects.requireNonNull(str);
+        Objects.requireNonNull(encoding);
+        Objects.requireNonNull(host);
         final byte[] data = str.getBytes(encoding);
         return send(ByteBuffer.wrap(data), 0, data.length, port, host);
     }
@@ -133,6 +143,9 @@ public final class UDPHandle extends Handle {
                      final String encoding,
                      final int port,
                      final String host) throws UnsupportedEncodingException {
+        Objects.requireNonNull(str);
+        Objects.requireNonNull(encoding);
+        Objects.requireNonNull(host);
         final byte[] data = str.getBytes(encoding);
         return send6(ByteBuffer.wrap(data), 0, data.length, port, host);
     }
@@ -140,6 +153,8 @@ public final class UDPHandle extends Handle {
     public int send(final ByteBuffer buffer,
                     final int port,
                     final String host) {
+        Objects.requireNonNull(buffer);
+        Objects.requireNonNull(host);
         LibUVPermission.checkUDPSend(host, port);
         return buffer.hasArray() ?
                 _send(pointer, buffer, buffer.array(), 0, buffer.capacity(), port, host) :
@@ -149,6 +164,8 @@ public final class UDPHandle extends Handle {
     public int send6(final ByteBuffer buffer,
                      final int port,
                      final String host) {
+        Objects.requireNonNull(buffer);
+        Objects.requireNonNull(host);
         LibUVPermission.checkUDPSend(host, port);
         return buffer.hasArray() ?
                 _send6(pointer, buffer, buffer.array(), 0, buffer.capacity(), port, host) :
@@ -160,6 +177,8 @@ public final class UDPHandle extends Handle {
                     final int length,
                     final int port,
                     final String host) {
+        Objects.requireNonNull(buffer);
+        Objects.requireNonNull(host);
         LibUVPermission.checkUDPSend(host, port);
         return buffer.hasArray() ?
                 _send(pointer, buffer, buffer.array(), offset, length, port, host) :
@@ -171,6 +190,8 @@ public final class UDPHandle extends Handle {
                      final int length,
                      final int port,
                      final String host) {
+        Objects.requireNonNull(buffer);
+        Objects.requireNonNull(host);
         LibUVPermission.checkUDPSend(host, port);
         return buffer.hasArray() ?
                 _send6(pointer, buffer, buffer.array(), offset, length, port, host) :

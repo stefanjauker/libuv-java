@@ -28,6 +28,7 @@ package net.java.libuv.handles;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.cb.ProcessCloseCallback;
@@ -83,8 +84,8 @@ public final class ProcessHandle extends Handle {
                      final StdioOptions[] stdio,
                      final int uid,
                      final int gid) {
-        assert program != null;
-        assert args != null;
+        Objects.requireNonNull(program);
+        Objects.requireNonNull(args);
         assert args.length > 0;
 
         char[] cmdChars = args[0].toCharArray();

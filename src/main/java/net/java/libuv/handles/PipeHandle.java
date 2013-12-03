@@ -25,6 +25,8 @@
 
 package net.java.libuv.handles;
 
+import java.util.Objects;
+
 import net.java.libuv.LibUVPermission;
 
 public class PipeHandle extends StreamHandle {
@@ -49,6 +51,7 @@ public class PipeHandle extends StreamHandle {
     }
 
     public int bind(final String name) {
+        Objects.requireNonNull(name);
         LibUVPermission.checkPermission(LibUVPermission.PIPE_BIND);
         return _bind(pointer, name);
     }
@@ -60,6 +63,7 @@ public class PipeHandle extends StreamHandle {
     }
 
     public void connect(final String name) {
+        Objects.requireNonNull(name);
         LibUVPermission.checkPermission(LibUVPermission.PIPE_CONNECT);
         _connect(pointer, name);
     }

@@ -25,6 +25,8 @@
 
 package net.java.libuv.handles;
 
+import java.util.Objects;
+
 import net.java.libuv.Stats;
 import net.java.libuv.cb.FilePollCallback;
 import net.java.libuv.cb.FilePollStopCallback;
@@ -60,6 +62,7 @@ public final class FilePollHandle extends Handle {
     }
 
     public int start(final String path, final boolean persistent, final int interval) {
+        Objects.requireNonNull(path);
         if (this.path != null) {
             throw new IllegalStateException("Already polling " + this.path);
         }
