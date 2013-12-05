@@ -240,7 +240,7 @@ public final class Files {
     public int close(final int fd) {
         final String path = getPathAssertNonNull(fd, "closeSync");
         Objects.requireNonNull(path);
-        final int r = _close(pointer, fd, SYNC_MODE);
+        final int r = _close(pointer, fd, SYNC_MODE, loop.getDomain());
         if (r != -1) {
             paths.remove(fd);
         }
@@ -250,11 +250,11 @@ public final class Files {
     public int close(final int fd, final Object context) {
         final String path = getPath(fd);
         if (path == null) {
-            callClose(context, -1, newEBADF("close", fd));
+            callClose(context, -1, newEBADF("close", fd), loop.getDomain());
             return -1;
         }
         Objects.requireNonNull(path);
-        final int r = _close(pointer, fd, context);
+        final int r = _close(pointer, fd, context, loop.getDomain());
         if (r != -1) {
             paths.remove(fd);
         }
@@ -264,7 +264,7 @@ public final class Files {
     public int open(final String path, final int flags, final int mode) {
         Objects.requireNonNull(path);
         LibUVPermission.checkOpenFile(path, flags);
-        final int fd = _open(pointer, path, flags, mode, SYNC_MODE);
+        final int fd = _open(pointer, path, flags, mode, SYNC_MODE, loop.getDomain());
         if (fd != -1) {
             paths.put(fd, path);
         }
@@ -274,7 +274,7 @@ public final class Files {
     public int open(final String path, final int flags, final int mode, final Object context) {
         Objects.requireNonNull(path);
         LibUVPermission.checkOpenFile(path, flags);
-        return _open(pointer, path, flags, mode, context);
+        return _open(pointer, path, flags, mode, context, loop.getDomain());
     }
 
     public int read(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position) {
@@ -283,34 +283,34 @@ public final class Files {
         Objects.requireNonNull(buffer);
         LibUVPermission.checkReadFile(fd, path);
         return buffer.hasArray() ?
-                _read(pointer, fd, buffer, buffer.array(), length, offset, position, SYNC_MODE) :
-                _read(pointer, fd, buffer, null, length, offset, position, SYNC_MODE);
+                _read(pointer, fd, buffer, buffer.array(), length, offset, position, SYNC_MODE, loop.getDomain()) :
+                _read(pointer, fd, buffer, null, length, offset, position, SYNC_MODE, loop.getDomain());
     }
 
     public int read(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position, final Object context) {
         final String path = getPath(fd);
         if (path == null) {
-            callRead(context, -1, buffer, newEBADF("read", fd));
+            callRead(context, -1, buffer, newEBADF("read", fd), loop.getDomain());
             return -1;
         }
         Objects.requireNonNull(path);
         Objects.requireNonNull(buffer);
         LibUVPermission.checkReadFile(fd, path);
         return buffer.hasArray() ?
-                _read(pointer, fd, buffer, buffer.array(), length, offset, position, context) :
-                _read(pointer, fd, buffer, null, length, offset, position, context);
+                _read(pointer, fd, buffer, buffer.array(), length, offset, position, context, loop.getDomain()) :
+                _read(pointer, fd, buffer, null, length, offset, position, context, loop.getDomain());
     }
 
     public int unlink(final String path) {
         Objects.requireNonNull(path);
         LibUVPermission.checkDeleteFile(path);
-        return _unlink(pointer, path, SYNC_MODE);
+        return _unlink(pointer, path, SYNC_MODE, loop.getDomain());
     }
 
     public int unlink(final String path, final Object context) {
         Objects.requireNonNull(path);
         LibUVPermission.checkDeleteFile(path);
-        return _unlink(pointer, path, context);
+        return _unlink(pointer, path, context, loop.getDomain());
     }
 
     public int write(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position) {
@@ -321,14 +321,14 @@ public final class Files {
         assert(offset < buffer.limit());
         assert(offset + length <= buffer.limit());
         return buffer.hasArray() ?
-                _write(pointer, fd, buffer, buffer.array(), length, offset, position, SYNC_MODE) :
-                _write(pointer, fd, buffer, null, length, offset, position, SYNC_MODE);
+                _write(pointer, fd, buffer, buffer.array(), length, offset, position, SYNC_MODE, loop.getDomain()) :
+                _write(pointer, fd, buffer, null, length, offset, position, SYNC_MODE, loop.getDomain());
     }
 
     public int write(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position, final Object context) {
         final String path = getPath(fd);
         if (path == null) {
-            callWrite(context, -1, newEBADF("write", fd));
+            callWrite(context, -1, newEBADF("write", fd), loop.getDomain());
             return -1;
         }
         Objects.requireNonNull(path);
@@ -337,74 +337,74 @@ public final class Files {
         assert(offset < buffer.limit());
         assert(offset + length <= buffer.limit());
         return buffer.hasArray() ?
-                _write(pointer, fd, buffer, buffer.array(), length, offset, position, context) :
-                _write(pointer, fd, buffer, null, length, offset, position, context);
+                _write(pointer, fd, buffer, buffer.array(), length, offset, position, context, loop.getDomain()) :
+                _write(pointer, fd, buffer, null, length, offset, position, context, loop.getDomain());
     }
 
     public int mkdir(final String path, final int mode) {
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(path);
-        return _mkdir(pointer, path, mode, SYNC_MODE);
+        return _mkdir(pointer, path, mode, SYNC_MODE, loop.getDomain());
     }
 
     public int mkdir(final String path, final int mode, final Object context) {
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(path);
-        return _mkdir(pointer, path, mode, context);
+        return _mkdir(pointer, path, mode, context, loop.getDomain());
     }
 
     public int rmdir(final String path) {
         Objects.requireNonNull(path);
         LibUVPermission.checkDeleteFile(path);
-        return _rmdir(pointer, path, SYNC_MODE);
+        return _rmdir(pointer, path, SYNC_MODE, loop.getDomain());
     }
 
     public int rmdir(final String path, final Object context) {
         Objects.requireNonNull(path);
         LibUVPermission.checkDeleteFile(path);
-        return _rmdir(pointer, path, context);
+        return _rmdir(pointer, path, context, loop.getDomain());
     }
 
     public String[] readdir(final String path, final int flags) {
         Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
-        return _readdir(pointer, path, flags, SYNC_MODE);
+        return _readdir(pointer, path, flags, SYNC_MODE, loop.getDomain());
     }
 
     public String[] readdir(final String path, final int flags, final Object context) {
         Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
-        return _readdir(pointer, path, flags, context);
+        return _readdir(pointer, path, flags, context, loop.getDomain());
     }
 
     public Stats stat(final String path) {
         Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
-        return _stat(pointer, path, SYNC_MODE);
+        return _stat(pointer, path, SYNC_MODE, loop.getDomain());
     }
 
     public Stats stat(final String path, final Object context) {
         Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
-        return _stat(pointer, path, context);
+        return _stat(pointer, path, context, loop.getDomain());
     }
 
     public Stats fstat(final int fd) {
         final String path = getPathAssertNonNull(fd, "fstatSync");
         Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(fd, path);
-        return _fstat(pointer, fd, SYNC_MODE);
+        return _fstat(pointer, fd, SYNC_MODE, loop.getDomain());
     }
 
     public Stats fstat(final int fd, final Object context) {
         final String path = getPath(fd);
         if (path == null) {
-            callStats(UV_FS_FSTAT, context, null, newEBADF("fstat", fd));
+            callStats(UV_FS_FSTAT, context, null, newEBADF("fstat", fd), loop.getDomain());
             return null;
         }
         Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(fd, path);
-        return _fstat(pointer, fd, context);
+        return _fstat(pointer, fd, context, loop.getDomain());
     }
 
     public int rename(final String path, final String newPath) {
@@ -412,7 +412,7 @@ public final class Files {
         Objects.requireNonNull(newPath);
         LibUVPermission.checkWriteFile(path);
         LibUVPermission.checkWriteFile(newPath);
-        return _rename(pointer, path, newPath, SYNC_MODE);
+        return _rename(pointer, path, newPath, SYNC_MODE, loop.getDomain());
     }
 
     public int rename(final String path, final String newPath, final Object context) {
@@ -420,217 +420,217 @@ public final class Files {
         Objects.requireNonNull(newPath);
         LibUVPermission.checkWriteFile(path);
         LibUVPermission.checkWriteFile(newPath);
-        return _rename(pointer, path, newPath, context);
+        return _rename(pointer, path, newPath, context, loop.getDomain());
     }
 
     public int fsync(final int fd) {
         final String path = getPathAssertNonNull(fd, "fsyncSync");
         Objects.requireNonNull(path);
         // If a file is open, it can be synced, no security check.
-        return _fsync(pointer, fd, SYNC_MODE);
+        return _fsync(pointer, fd, SYNC_MODE, loop.getDomain());
     }
 
     public int fsync(final int fd, final Object context) {
         final String path = getPath(fd);
         if (path == null) {
-            callback(UV_FS_FSYNC, context, newEBADF("fsync", fd));
+            callback(UV_FS_FSYNC, context, newEBADF("fsync", fd), loop.getDomain());
             return -1;
         }
         Objects.requireNonNull(path);
         // If a file is open, it can be synced, no security check.
-        return _fsync(pointer, fd, context);
+        return _fsync(pointer, fd, context, loop.getDomain());
     }
 
     public int fdatasync(final int fd) {
         final String path = getPathAssertNonNull(fd, "fdatasyncSync");
         Objects.requireNonNull(path);
         // If a file is open, it can be synced, no security check.
-        return _fdatasync(pointer, fd, SYNC_MODE);
+        return _fdatasync(pointer, fd, SYNC_MODE, loop.getDomain());
     }
 
     public int fdatasync(final int fd, final Object context) {
         final String path = getPath(fd);
         if (path == null) {
-            callback(UV_FS_FDATASYNC, context, newEBADF("fdatasync", fd));
+            callback(UV_FS_FDATASYNC, context, newEBADF("fdatasync", fd), loop.getDomain());
             return -1;
         }
         Objects.requireNonNull(path);
         // If a file is open, it can be synced, no security check.
-        return _fdatasync(pointer, fd, context);
+        return _fdatasync(pointer, fd, context, loop.getDomain());
     }
 
     public int ftruncate(final int fd, final long offset) {
         final String path = getPathAssertNonNull(fd, "ftruncateSync");
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(fd, path);
-        return _ftruncate(pointer, fd, offset, SYNC_MODE);
+        return _ftruncate(pointer, fd, offset, SYNC_MODE, loop.getDomain());
     }
 
     public int ftruncate(final int fd, final long offset, final Object context) {
         final String path = getPath(fd);
         if (path == null) {
-            callback(UV_FS_FTRUNCATE, context, newEBADF("ftruncate", fd));
+            callback(UV_FS_FTRUNCATE, context, newEBADF("ftruncate", fd), loop.getDomain());
             return -1;
         }
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(fd, path);
-        return _ftruncate(pointer, fd, offset, context);
+        return _ftruncate(pointer, fd, offset, context, loop.getDomain());
     }
 
     public int sendfile(final int outFd, final int inFd, final long offset, final long length) {
         Objects.requireNonNull(getPath(outFd));
         Objects.requireNonNull(getPath(inFd));
         // No security check required.
-        return _sendfile(pointer, outFd, inFd, offset, length, SYNC_MODE);
+        return _sendfile(pointer, outFd, inFd, offset, length, SYNC_MODE, loop.getDomain());
     }
 
     public int sendfile(final int outFd, final int inFd, final long offset, final long length, final Object context) {
         Objects.requireNonNull(getPath(outFd));
         Objects.requireNonNull(getPath(inFd));
         // No security check required.
-        return _sendfile(pointer, outFd, inFd, offset, length, context);
+        return _sendfile(pointer, outFd, inFd, offset, length, context, loop.getDomain());
     }
 
     public int chmod(final String path, final int mode) {
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(path);
-        return _chmod(pointer, path, mode, SYNC_MODE);
+        return _chmod(pointer, path, mode, SYNC_MODE, loop.getDomain());
     }
 
     public int chmod(final String path, final int mode, final Object context) {
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(path);
-        return _chmod(pointer, path, mode, context);
+        return _chmod(pointer, path, mode, context, loop.getDomain());
     }
 
     public int utime(final String path, final double atime, final double mtime) {
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(path);
-        return _utime(pointer, path, atime, mtime, SYNC_MODE);
+        return _utime(pointer, path, atime, mtime, SYNC_MODE, loop.getDomain());
     }
 
     public int utime(final String path, final double atime, final double mtime, final Object context) {
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(path);
-        return _utime(pointer, path, atime, mtime, context);
+        return _utime(pointer, path, atime, mtime, context, loop.getDomain());
     }
 
     public int futime(final int fd, final double atime, final double mtime) {
         final String path = getPathAssertNonNull(fd, "futimeSync");
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(fd, path);
-        return _futime(pointer, fd, atime, mtime, SYNC_MODE);
+        return _futime(pointer, fd, atime, mtime, SYNC_MODE, loop.getDomain());
     }
 
     public int futime(final int fd, final double atime, final double mtime, final Object context) {
         final String path = getPath(fd);
         if (path == null) {
-            callUTime(UV_FS_FUTIME, context, -1, newEBADF("futime", fd));
+            callUTime(UV_FS_FUTIME, context, -1, newEBADF("futime", fd), loop.getDomain());
             return -1;
         }
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(fd, path);
-        return _futime(pointer, fd, atime, mtime, context);
+        return _futime(pointer, fd, atime, mtime, context, loop.getDomain());
     }
 
     public Stats lstat(final String path) {
         Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
-        return _lstat(pointer, path, SYNC_MODE);
+        return _lstat(pointer, path, SYNC_MODE, loop.getDomain());
     }
 
     public Stats lstat(final String path, final Object context) {
         Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
-        return _lstat(pointer, path, context);
+        return _lstat(pointer, path, context, loop.getDomain());
     }
 
     public int link(final String path, final String newPath) {
         Objects.requireNonNull(path);
         Objects.requireNonNull(newPath);
         LibUVPermission.checkHardLink(path, newPath);
-        return _link(pointer, path, newPath, SYNC_MODE);
+        return _link(pointer, path, newPath, SYNC_MODE, loop.getDomain());
     }
 
     public int link(final String path, final String newPath, final Object context) {
         Objects.requireNonNull(path);
         Objects.requireNonNull(newPath);
         LibUVPermission.checkHardLink(path, newPath);
-        return _link(pointer, path, newPath, context);
+        return _link(pointer, path, newPath, context, loop.getDomain());
     }
 
     public int symlink(final String path, final String newPath, final int flags) {
         Objects.requireNonNull(path);
         Objects.requireNonNull(newPath);
         LibUVPermission.checkSymbolicLink(path, newPath);
-        return _symlink(pointer, path, newPath, flags, SYNC_MODE);
+        return _symlink(pointer, path, newPath, flags, SYNC_MODE, loop.getDomain());
     }
 
     public int symlink(final String path, final String newPath, final int flags, final Object context) {
         Objects.requireNonNull(path);
         Objects.requireNonNull(newPath);
         LibUVPermission.checkSymbolicLink(path, newPath);
-        return _symlink(pointer, path, newPath, flags, context);
+        return _symlink(pointer, path, newPath, flags, context, loop.getDomain());
     }
 
     public String readlink(final String path) {
         Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
-        return _readlink(pointer, path, SYNC_MODE);
+        return _readlink(pointer, path, SYNC_MODE, loop.getDomain());
     }
 
     public String readlink(final String path, final Object context) {
         Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
-        return _readlink(pointer, path, context);
+        return _readlink(pointer, path, context, loop.getDomain());
     }
 
     public int fchmod(final int fd, final int mode) {
         final String path = getPathAssertNonNull(fd, "fchmodSync");
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(fd, path);
-        return _fchmod(pointer, fd, mode, SYNC_MODE);
+        return _fchmod(pointer, fd, mode, SYNC_MODE, loop.getDomain());
     }
 
     public int fchmod(final int fd, final int mode, final Object context) {
         final String path = getPath(fd);
         if (path == null) {
-            callback(UV_FS_FCHMOD, context, newEBADF("fchmod", fd));
+            callback(UV_FS_FCHMOD, context, newEBADF("fchmod", fd), loop.getDomain());
             return -1;
         }
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(fd, path);
-        return _fchmod(pointer, fd, mode, context);
+        return _fchmod(pointer, fd, mode, context, loop.getDomain());
     }
 
     public int chown(final String path, final int uid, final int gid) {
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(path);
-        return _chown(pointer, path, uid, gid, SYNC_MODE);
+        return _chown(pointer, path, uid, gid, SYNC_MODE, loop.getDomain());
     }
 
     public int chown(final String path, final int uid, final int gid, final Object context) {
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(path);
-        return _chown(pointer, path, uid, gid, context);
+        return _chown(pointer, path, uid, gid, context, loop.getDomain());
     }
 
     public int fchown(final int fd, final int uid, final int gid) {
         final String path = getPathAssertNonNull(fd, "fchown");
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(fd, path);
-        return _fchown(pointer, fd, uid, gid, SYNC_MODE);
+        return _fchown(pointer, fd, uid, gid, SYNC_MODE, loop.getDomain());
     }
 
     public int fchown(final int fd, final int uid, final int gid, final Object context) {
         final String path = getPath(fd);
         if (path == null) {
-            callback(UV_FS_FCHOWN, context, newEBADF("fchown", fd));
+            callback(UV_FS_FCHOWN, context, newEBADF("fchown", fd), loop.getDomain());
             return -1;
         }
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(fd, path);
-        return _fchown(pointer, fd, uid, gid, context);
+        return _fchown(pointer, fd, uid, gid, context, loop.getDomain());
     }
 
     public String getPath(final int fd) {
@@ -650,164 +650,164 @@ public final class Files {
         return new NativeException(9, "EBADF", "Bad file number: " + fd, method, null, null);
     }
 
-    private void callback(final int type, final Object context, final Exception error) {
+    private void callback(final int type, final Object context, final Exception error,final Object domain) {
         Integer fd;
         switch (type) {
             case UV_FS_CUSTOM:
                 if (onCustom != null) {
-                    loop.getCallbackHandler().handleFileCallback(onCustom, context, error);
+                    loop.getCallbackHandler(domain).handleFileCallback(onCustom, context, error);
                 }
                 break;
             case UV_FS_SENDFILE:
                 if (onSendfile != null) {
-                    loop.getCallbackHandler().handleFileCallback(onSendfile, context, error);
+                    loop.getCallbackHandler(domain).handleFileCallback(onSendfile, context, error);
                 }
                 break;
             case UV_FS_FTRUNCATE:
                 if (onFTruncate != null) {
-                    loop.getCallbackHandler().handleFileCallback(onFTruncate, context, error);
+                    loop.getCallbackHandler(domain).handleFileCallback(onFTruncate, context, error);
                 }
                 break;
             case UV_FS_CHMOD:
                 if (onChmod != null) {
-                    loop.getCallbackHandler().handleFileCallback(onChmod, context, error);
+                    loop.getCallbackHandler(domain).handleFileCallback(onChmod, context, error);
                 }
                 break;
             case UV_FS_FCHMOD:
                 if (onFChmod != null) {
-                    loop.getCallbackHandler().handleFileCallback(onFChmod, context, error);
+                    loop.getCallbackHandler(domain).handleFileCallback(onFChmod, context, error);
                 }
                 break;
             case UV_FS_FSYNC:
                 if (onFSync != null) {
-                    loop.getCallbackHandler().handleFileCallback(onFSync, context, error);
+                    loop.getCallbackHandler(domain).handleFileCallback(onFSync, context, error);
                 }
                 break;
             case UV_FS_FDATASYNC:
                 if (onFDatasync != null) {
-                    loop.getCallbackHandler().handleFileCallback(onFDatasync, context, error);
+                    loop.getCallbackHandler(domain).handleFileCallback(onFDatasync, context, error);
                 }
                 break;
             case UV_FS_UNLINK:
                 if (onUnlink != null) {
-                    loop.getCallbackHandler().handleFileCallback(onUnlink, context, error);
+                    loop.getCallbackHandler(domain).handleFileCallback(onUnlink, context, error);
                 }
                 break;
             case UV_FS_RMDIR:
                 if (onRmDir != null) {
-                    loop.getCallbackHandler().handleFileCallback(onRmDir, context, error);
+                    loop.getCallbackHandler(domain).handleFileCallback(onRmDir, context, error);
                 }
                 break;
             case UV_FS_MKDIR:
                 if (onMkDir != null) {
-                    loop.getCallbackHandler().handleFileCallback(onMkDir, context, error);
+                    loop.getCallbackHandler(domain).handleFileCallback(onMkDir, context, error);
                 }
                 break;
             case UV_FS_RENAME:
                 if (onRename != null) {
-                    loop.getCallbackHandler().handleFileCallback(onRename, context, error);
+                    loop.getCallbackHandler(domain).handleFileCallback(onRename, context, error);
                 }
                 break;
             case UV_FS_LINK:
                 if (onLink != null) {
-                    loop.getCallbackHandler().handleFileCallback(onLink, context, error);
+                    loop.getCallbackHandler(domain).handleFileCallback(onLink, context, error);
                 }
                 break;
             case UV_FS_SYMLINK:
                 if (onSymLink != null) {
-                    loop.getCallbackHandler().handleFileCallback(onSymLink, context, error);
+                    loop.getCallbackHandler(domain).handleFileCallback(onSymLink, context, error);
                 }
                 break;
             case UV_FS_CHOWN:
                 if (onChown != null) {
-                    loop.getCallbackHandler().handleFileCallback(onChown, context, error);
+                    loop.getCallbackHandler(domain).handleFileCallback(onChown, context, error);
                 }
                 break;
             case UV_FS_FCHOWN:
                 if (onFChown != null) {
-                    loop.getCallbackHandler().handleFileCallback(onFChown, context, error);
+                    loop.getCallbackHandler(domain).handleFileCallback(onFChown, context, error);
                 }
                 break;
             default: assert false : "unsupported callback type " + type;
         }
     }
 
-    private void callClose(final Object context, final int fd, final Exception error) {
+    private void callClose(final Object context, final int fd, final Exception error, final Object domain) {
         if (fd != -1) {
             paths.remove(fd);
         }
         if (onClose != null) {
-            loop.getCallbackHandler().handleFileCloseCallback(onClose, context, fd, error);
+            loop.getCallbackHandler(domain).handleFileCloseCallback(onClose, context, fd, error);
         }
     }
 
-    private void callOpen(final Object context, final int fd, final String path, final Exception error) {
+    private void callOpen(final Object context, final int fd, final String path, final Exception error, final Object domain) {
         if (fd != -1) {
             paths.put(fd, path);
         }
         if (onOpen != null) {
-            loop.getCallbackHandler().handleFileOpenCallback(onOpen, context, fd, error);
+            loop.getCallbackHandler(domain).handleFileOpenCallback(onOpen, context, fd, error);
         }
     }
 
-    private void callRead(final Object context, final int bytesRead, final ByteBuffer data, final Exception error) {
+    private void callRead(final Object context, final int bytesRead, final ByteBuffer data, final Exception error, final Object domain) {
         if (onRead != null) {
-            loop.getCallbackHandler().handleFileReadCallback(onRead, context, bytesRead, data, error);
+            loop.getCallbackHandler(domain).handleFileReadCallback(onRead, context, bytesRead, data, error);
         }
     }
 
-    private void callReadDir(final Object context, final String[] names, final Exception error) {
+    private void callReadDir(final Object context, final String[] names, final Exception error, final Object domain) {
         if (onReadDir != null) {
-            loop.getCallbackHandler().handleFileReadDirCallback(onReadDir, context, names, error);
+            loop.getCallbackHandler(domain).handleFileReadDirCallback(onReadDir, context, names, error);
         }
     }
 
-    private void callReadLink(final Object context, final String name, final Exception error) {
+    private void callReadLink(final Object context, final String name, final Exception error, final Object domain) {
         if (onReadLink != null) {
-            loop.getCallbackHandler().handleFileReadLinkCallback(onReadLink, context, name, error);
+            loop.getCallbackHandler(domain).handleFileReadLinkCallback(onReadLink, context, name, error);
         }
     }
 
-    private void callStats(final int type, final Object context, final Stats stats, final Exception error) {
+    private void callStats(final int type, final Object context, final Stats stats, final Exception error, final Object domain) {
         switch(type) {
             case UV_FS_FSTAT:
                 if (onFStat != null) {
-                    loop.getCallbackHandler().handleFileStatsCallback(onFStat, context, stats, error);
+                    loop.getCallbackHandler(domain).handleFileStatsCallback(onFStat, context, stats, error);
                 }
                 break;
             case UV_FS_LSTAT:
                 if (onLStat != null) {
-                    loop.getCallbackHandler().handleFileStatsCallback(onLStat, context, stats, error);
+                    loop.getCallbackHandler(domain).handleFileStatsCallback(onLStat, context, stats, error);
                 }
                 break;
             case UV_FS_STAT:
                 if (onStat != null) {
-                    loop.getCallbackHandler().handleFileStatsCallback(onStat, context, stats, error);
+                    loop.getCallbackHandler(domain).handleFileStatsCallback(onStat, context, stats, error);
                 }
                 break;
             default: assert false : "unsupported callback type " + type;
         }
     }
 
-    private void callUTime(final int type, final Object context, final long time, final Exception error) {
+    private void callUTime(final int type, final Object context, final long time, final Exception error, final Object domain) {
         switch(type) {
             case UV_FS_UTIME:
                 if (onUTime != null) {
-                    loop.getCallbackHandler().handleFileUTimeCallback(onUTime, context, time, error);
+                    loop.getCallbackHandler(domain).handleFileUTimeCallback(onUTime, context, time, error);
                 }
                 break;
             case UV_FS_FUTIME:
                 if (onFUTime != null) {
-                    loop.getCallbackHandler().handleFileUTimeCallback(onFUTime, context, time, error);
+                    loop.getCallbackHandler(domain).handleFileUTimeCallback(onFUTime, context, time, error);
                 }
                 break;
             default: assert false : "unsupported callback type " + type;
         }
     }
 
-    private void callWrite(final Object context, final int bytesWritten, final Exception error) {
+    private void callWrite(final Object context, final int bytesWritten, final Exception error, final Object domain) {
         if (onWrite != null) {
-            loop.getCallbackHandler().handleFileWriteCallback(onWrite, context, bytesWritten, error);
+            loop.getCallbackHandler(domain).handleFileWriteCallback(onWrite, context, bytesWritten, error);
         }
     }
 
@@ -819,54 +819,54 @@ public final class Files {
 
     private native int _close(final long ptr);
 
-    private native int _close(final long ptr, final int fd, final Object context);
+    private native int _close(final long ptr, final int fd, final Object context, final Object domain);
 
-    private native int _open(final long ptr, final String path, final int flags, final int mode, final Object context);
+    private native int _open(final long ptr, final String path, final int flags, final int mode, final Object context, final Object domain);
 
-    private native int _read(final long ptr, final int fd, final ByteBuffer buffer, final byte[] data, final long length, final long offset, final long position, final Object context);
+    private native int _read(final long ptr, final int fd, final ByteBuffer buffer, final byte[] data, final long length, final long offset, final long position, final Object context, final Object domain);
 
-    private native int _unlink(final long ptr, final String path, final Object context);
+    private native int _unlink(final long ptr, final String path, final Object context, final Object domain);
 
-    private native int _write(final long ptr, final int fd, final ByteBuffer buffer, final byte[] data, final long length, final long offset, final long position, final Object context);
+    private native int _write(final long ptr, final int fd, final ByteBuffer buffer, final byte[] data, final long length, final long offset, final long position, final Object context, final Object domain);
 
-    private native int _mkdir(final long ptr, final String path, final int mode, final Object context);
+    private native int _mkdir(final long ptr, final String path, final int mode, final Object context, final Object domain);
 
-    private native int _rmdir(final long ptr, final String path, final Object context);
+    private native int _rmdir(final long ptr, final String path, final Object context, final Object domain);
 
-    private native String[] _readdir(final long ptr, final String path, final int flags, final Object context);
+    private native String[] _readdir(final long ptr, final String path, final int flags, final Object context, final Object domain);
 
-    private native Stats _stat(final long ptr, final String path, final Object context);
+    private native Stats _stat(final long ptr, final String path, final Object context, final Object domain);
 
-    private native Stats _fstat(final long ptr, final int fd, final Object context);
+    private native Stats _fstat(final long ptr, final int fd, final Object context, final Object domain);
 
-    private native int _rename(final long ptr, final String path, final String newPath, final Object context);
+    private native int _rename(final long ptr, final String path, final String newPath, final Object context, final Object domain);
 
-    private native int _fsync(final long ptr, final int fd, final Object context);
+    private native int _fsync(final long ptr, final int fd, final Object context, final Object domain);
 
-    private native int _fdatasync(final long ptr, final int fd, final Object context);
+    private native int _fdatasync(final long ptr, final int fd, final Object context, final Object domain);
 
-    private native int _ftruncate(final long ptr, final int fd, final long offset, final Object context);
+    private native int _ftruncate(final long ptr, final int fd, final long offset, final Object context, final Object domain);
 
-    private native int _sendfile(final long ptr, final int outFd, final int inFd, final long offset, final long length, final Object context);
+    private native int _sendfile(final long ptr, final int outFd, final int inFd, final long offset, final long length, final Object context, final Object domain);
 
-    private native int _chmod(final long ptr, final String path, final int mode, final Object context);
+    private native int _chmod(final long ptr, final String path, final int mode, final Object context, final Object domain);
 
-    private native int _utime(final long ptr, final String path, final double atime, final double mtime, final Object context);
+    private native int _utime(final long ptr, final String path, final double atime, final double mtime, final Object context, final Object domain);
 
-    private native int _futime(final long ptr, final int fd, final double atime, final double mtime, final Object context);
+    private native int _futime(final long ptr, final int fd, final double atime, final double mtime, final Object context, final Object domain);
 
-    private native Stats _lstat(final long ptr, final String path, final Object context);
+    private native Stats _lstat(final long ptr, final String path, final Object context, final Object domain);
 
-    private native int _link(final long ptr, final String path, final String newPath, final Object context);
+    private native int _link(final long ptr, final String path, final String newPath, final Object context, final Object domain);
 
-    private native int _symlink(final long ptr, final String path, final String newPath, final int flags, final Object context);
+    private native int _symlink(final long ptr, final String path, final String newPath, final int flags, final Object context, final Object domain);
 
-    private native String _readlink(final long ptr, final String path, final Object context);
+    private native String _readlink(final long ptr, final String path, final Object context, final Object domain);
 
-    private native int _fchmod(final long ptr, final int fd, final int mode, final Object context);
+    private native int _fchmod(final long ptr, final int fd, final int mode, final Object context, final Object domain);
 
-    private native int _chown(final long ptr, final String path, final int uid, final int gid, final Object context);
+    private native int _chown(final long ptr, final String path, final int uid, final int gid, final Object context, final Object domain);
 
-    private native int _fchown(final long ptr, final int fd, final int uid, final int gid, final Object context);
+    private native int _fchown(final long ptr, final int fd, final int uid, final int gid, final Object context, final Object domain);
 
 }

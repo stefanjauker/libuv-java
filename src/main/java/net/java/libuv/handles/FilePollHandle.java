@@ -90,13 +90,13 @@ public final class FilePollHandle extends Handle {
 
     private void callPoll(final int status) {
         if (onPoll != null) {
-            loop.callbackHandler.handleFilePollCallback(onPoll, status, previous, current);
+            loop.getCallbackHandler().handleFilePollCallback(onPoll, status, previous, current);
         }
     }
 
     private void callStop() {
         if (onStop != null) {
-            loop.callbackHandler.handleFilePollStopCallback(onStop);
+            loop.getCallbackHandler().handleFilePollStopCallback(onStop);
         }
     }
 

@@ -101,8 +101,8 @@ public final class FileEventHandle extends Handle {
         }
 
         switch (type) {
-            case 1: if (onEvent != null) {loop.callbackHandler.handleFileEventCallback(onEvent, status, eventStr, filename);} break;
-            case 2: if (onClose != null) {loop.callbackHandler.handleFileEventCallback(onClose, status, eventStr, filename);} break;
+            case 1: if (onEvent != null) {loop.getCallbackHandler().handleFileEventCallback(onEvent, status, eventStr, filename);} break;
+            case 2: if (onClose != null) {loop.getCallbackHandler().handleFileEventCallback(onClose, status, eventStr, filename);} break;
             default: assert false : "unsupported callback type " + type;
         }
     }

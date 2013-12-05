@@ -157,8 +157,8 @@ public final class UDPHandle extends Handle {
         Objects.requireNonNull(host);
         LibUVPermission.checkUDPSend(host, port);
         return buffer.hasArray() ?
-                _send(pointer, buffer, buffer.array(), 0, buffer.capacity(), port, host) :
-                _send(pointer, buffer, null, 0, buffer.capacity(), port, host);
+                _send(pointer, buffer, buffer.array(), 0, buffer.capacity(), port, host, loop.getDomain()) :
+                _send(pointer, buffer, null, 0, buffer.capacity(), port, host, loop.getDomain());
     }
 
     public int send6(final ByteBuffer buffer,
@@ -168,8 +168,8 @@ public final class UDPHandle extends Handle {
         Objects.requireNonNull(host);
         LibUVPermission.checkUDPSend(host, port);
         return buffer.hasArray() ?
-                _send6(pointer, buffer, buffer.array(), 0, buffer.capacity(), port, host) :
-                _send6(pointer, buffer, null, 0, buffer.capacity(), port, host);
+                _send6(pointer, buffer, buffer.array(), 0, buffer.capacity(), port, host, loop.getDomain()) :
+                _send6(pointer, buffer, null, 0, buffer.capacity(), port, host, loop.getDomain());
     }
 
     public int send(final ByteBuffer buffer,
@@ -181,8 +181,8 @@ public final class UDPHandle extends Handle {
         Objects.requireNonNull(host);
         LibUVPermission.checkUDPSend(host, port);
         return buffer.hasArray() ?
-                _send(pointer, buffer, buffer.array(), offset, length, port, host) :
-                _send(pointer, buffer, null, offset, length, port, host);
+                _send(pointer, buffer, buffer.array(), offset, length, port, host, loop.getDomain()) :
+                _send(pointer, buffer, null, offset, length, port, host, loop.getDomain());
     }
 
     public int send6(final ByteBuffer buffer,
@@ -194,8 +194,8 @@ public final class UDPHandle extends Handle {
         Objects.requireNonNull(host);
         LibUVPermission.checkUDPSend(host, port);
         return buffer.hasArray() ?
-                _send6(pointer, buffer, buffer.array(), offset, length, port, host) :
-                _send6(pointer, buffer, null, offset, length, port, host);
+                _send6(pointer, buffer, buffer.array(), offset, length, port, host, loop.getDomain()) :
+                _send6(pointer, buffer, null, offset, length, port, host, loop.getDomain());
     }
 
     public int recvStart() {
@@ -236,19 +236,19 @@ public final class UDPHandle extends Handle {
 
     private void callRecv(final int nread, final ByteBuffer data, final Address address) {
         if (onRecv != null) {
-            loop.callbackHandler.handleUDPRecvCallback(onRecv, nread, data, address);
+            loop.getCallbackHandler().handleUDPRecvCallback(onRecv, nread, data, address);
         }
     }
 
-    private void callSend(final int status, final Exception error) {
+    private void callSend(final int status, final Exception error, final Object domain) {
         if (onSend != null) {
-            loop.callbackHandler.handleUDPSendCallback(onSend, status, error);
+            loop.getCallbackHandler(domain).handleUDPSendCallback(onSend, status, error);
         }
     }
 
     private void callClose() {
         if (onClose != null) {
-            loop.callbackHandler.handleUDPCloseCallback(onClose);
+            loop.getCallbackHandler().handleUDPCloseCallback(onClose);
         }
     }
 
@@ -274,7 +274,7 @@ public final class UDPHandle extends Handle {
                              final int offset,
                              final int length,
                              final int port,
-                             final String host);
+                             final String host, final Object domain);
 
     private native int _send6(final long ptr,
                               final ByteBuffer buffer,
@@ -282,7 +282,7 @@ public final class UDPHandle extends Handle {
                               final int offset,
                               final int length,
                               final int port,
-                              final String host);
+                              final String host, final Object domain);
 
     private native int _recv_start(final long ptr);
 

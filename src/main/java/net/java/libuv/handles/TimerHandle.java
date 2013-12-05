@@ -86,8 +86,8 @@ public final class TimerHandle extends Handle {
 
     private void callback(final int type, final int status) {
         switch (type) {
-            case 1: if (onTimerFired != null) {loop.callbackHandler.handleTimerCallback(onTimerFired, status);} break;
-            case 2: if (onClose != null) {loop.callbackHandler.handleTimerCallback(onClose, status);} break;
+            case 1: if (onTimerFired != null) {loop.getCallbackHandler().handleTimerCallback(onTimerFired, status);} break;
+            case 2: if (onClose != null) {loop.getCallbackHandler().handleTimerCallback(onClose, status);} break;
             default: assert false : "unsupported callback type " + type;
         }
     }

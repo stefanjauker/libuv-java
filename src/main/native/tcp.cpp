@@ -28,15 +28,19 @@
 #include "uv.h"
 #include "exception.h"
 #include "stream.h"
+#include "domain_holder.h"
 #include "net_java_libuv_handles_TCPHandle.h"
 
 static void _tcp_connect_cb(uv_connect_t* req, int status) {
   assert(req);
+  assert(req->data);
   assert(req->handle);
   assert(req->handle->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(req->handle->data);
-  cb->on_connect(status, status < 0 ? uv_last_error(req->handle->loop).code : 0);
+  DomainHolder* req_data = reinterpret_cast<DomainHolder*>(req->data);
+  cb->on_connect(status, status < 0 ? uv_last_error(req->handle->loop).code : 0, req_data->domain());
   delete req;
+  delete req_data;
 }
 
 /*
@@ -106,7 +110,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_TCPHandle__1bind6
  * Signature: (JLjava/lang/String;I)I
  */
 JNIEXPORT jint JNICALL Java_net_java_libuv_handles_TCPHandle__1connect
-  (JNIEnv *env, jobject that, jlong tcp, jstring host, jint port) {
+  (JNIEnv *env, jobject that, jlong tcp, jstring host, jint port, jobject domain) {
 
   assert(tcp);
   uv_tcp_t* handle = reinterpret_cast<uv_tcp_t*>(tcp);
@@ -114,8 +118,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_TCPHandle__1connect
   sockaddr_in addr = uv_ip4_addr(h, port);
   uv_connect_t* req = new uv_connect_t();
   req->handle = reinterpret_cast<uv_stream_t*>(handle);
+  DomainHolder* req_data = new DomainHolder(env, domain);
+  req->data = req_data;
   int r = uv_tcp_connect(req, handle, addr, _tcp_connect_cb);
   if (r) {
+    delete req_data;
     delete req;
     ThrowException(env, handle->loop, "uv_tcp_connect", h);
   }
@@ -129,7 +136,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_TCPHandle__1connect
  * Signature: (JLjava/lang/String;I)I
  */
 JNIEXPORT jint JNICALL Java_net_java_libuv_handles_TCPHandle__1connect6
-  (JNIEnv *env, jobject that, jlong tcp, jstring host, jint port) {
+  (JNIEnv *env, jobject that, jlong tcp, jstring host, jint port, jobject domain) {
 
   assert(tcp);
   uv_tcp_t* handle = reinterpret_cast<uv_tcp_t*>(tcp);
@@ -137,8 +144,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_TCPHandle__1connect6
   sockaddr_in6 addr = uv_ip6_addr(h, port);
   uv_connect_t* req = new uv_connect_t();
   req->handle = reinterpret_cast<uv_stream_t*>(handle);
+  DomainHolder* req_data = new DomainHolder(env, domain);
+  req->data = req_data;
   int r = uv_tcp_connect6(req, handle, addr, _tcp_connect_cb);
   if (r) {
+    delete req_data;
     delete req;
     ThrowException(env, handle->loop, "uv_tcp_connect6", h);
   }

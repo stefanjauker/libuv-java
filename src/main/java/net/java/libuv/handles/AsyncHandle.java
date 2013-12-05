@@ -64,7 +64,7 @@ public final class AsyncHandle extends Handle {
     }
 
     private void callSend(final int status) {
-        if (onSend != null) {loop.callbackHandler.handleAsyncCallback(onSend, status);}
+        if (onSend != null) {loop.getCallbackHandler().handleAsyncCallback(onSend, status);}
     }
 
     private static native long _new(final long loop);

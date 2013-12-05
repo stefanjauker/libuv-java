@@ -74,8 +74,8 @@ public final class CheckHandle extends Handle {
 
     private void callback(final int type, final int status) {
         switch (type) {
-            case 1: if (onCheck != null) {loop.callbackHandler.handleCheckCallback(onCheck, status);} break;
-            case 2: if (onClose != null) {loop.callbackHandler.handleCheckCallback(onClose, status);} break;
+            case 1: if (onCheck != null) {loop.getCallbackHandler().handleCheckCallback(onCheck, status);} break;
+            case 2: if (onClose != null) {loop.getCallbackHandler().handleCheckCallback(onClose, status);} break;
             default: assert false : "unsupported callback type " + type;
         }
     }

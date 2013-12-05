@@ -65,7 +65,7 @@ public class PipeHandle extends StreamHandle {
     public void connect(final String name) {
         Objects.requireNonNull(name);
         LibUVPermission.checkPermission(LibUVPermission.PIPE_CONNECT);
-        _connect(pointer, name);
+        _connect(pointer, name, loop.getDomain());
     }
 
     private static native long _new(final long loop, final boolean ipc);
@@ -74,6 +74,6 @@ public class PipeHandle extends StreamHandle {
 
     private native int _bind(final long ptr, final String name);
 
-    private native void _connect(final long ptr, final String name);
+    private native void _connect(final long ptr, final String name, final Object domain);
 
 }

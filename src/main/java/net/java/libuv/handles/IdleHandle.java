@@ -74,8 +74,8 @@ public final class IdleHandle extends Handle {
 
     private void callback(final int type, final int status) {
         switch (type) {
-            case 1: if (onIdle != null) {loop.callbackHandler.handleIdleCallback(onIdle, status);} break;
-            case 2: if (onClose != null) {loop.callbackHandler.handleIdleCallback(onClose, status);} break;
+            case 1: if (onIdle != null) {loop.getCallbackHandler().handleIdleCallback(onIdle, status);} break;
+            case 2: if (onClose != null) {loop.getCallbackHandler().handleIdleCallback(onClose, status);} break;
             default: assert false : "unsupported callback type " + type;
         }
     }

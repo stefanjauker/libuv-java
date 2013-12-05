@@ -23,36 +23,28 @@
  * questions.
  */
 
-#ifndef _libuv_java_udp_h_
-#define _libuv_java_udp_h_
-
+#include <assert.h>
+#include <stdlib.h>
 #include <jni.h>
+#include "domain_holder.h"
 
-#include "uv.h"
+ DomainHolder::DomainHolder(JNIEnv* env, jobject data, jobject domain) {
+  _data = data ? (jobject) env->NewGlobalRef(data) : NULL;
+  _env = env;
+  _domain = domain ? (jobject) env->NewGlobalRef(domain) : NULL;
+ }
 
-class UDPCallbacks {
-private:
-  static jclass _udp_handle_cid;
+ DomainHolder::DomainHolder(JNIEnv* env, jobject domain) {
+  _data = NULL;
+  _env = env;
+  _domain = domain ? (jobject) env->NewGlobalRef(domain) : NULL;
+ }
 
-  static jmethodID _recv_callback_mid;
-  static jmethodID _send_callback_mid;
-  static jmethodID _close_callback_mid;
-
-  static JNIEnv* _env;
-
-  jobject _instance;
-
-public:
-  static void static_initialize(JNIEnv* env, jclass cls);
-
-  UDPCallbacks();
-  ~UDPCallbacks();
-
-  void initialize(jobject instance);
-
-  void on_recv(ssize_t nread, uv_buf_t buf, struct sockaddr* addr, unsigned flags);
-  void on_send(int status, int error_code, jobject buffer, jobject domain);
-  void on_close();
-};
-
-#endif // _libuv_java_udp_h_
+ DomainHolder::~DomainHolder() {
+  if (_domain) {
+   _env->DeleteGlobalRef(_domain);
+  }
+  if (_data) {
+   _env->DeleteGlobalRef(_data);
+  }
+ }

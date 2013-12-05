@@ -29,7 +29,9 @@ import net.java.libuv.LibUVPermission;
 import net.java.libuv.NativeException;
 
 import net.java.libuv.cb.CallbackExceptionHandler;
+import net.java.libuv.cb.CallbackDomainProvider;
 import net.java.libuv.cb.CallbackHandler;
+import net.java.libuv.cb.CallbackHandlerFactory;
 
 public final class LoopHandle {
 
@@ -41,7 +43,8 @@ public final class LoopHandle {
     private static int createdLoopCount = 0;
 
     protected final CallbackExceptionHandler exceptionHandler;
-    protected final CallbackHandler callbackHandler;
+    protected final CallbackHandlerFactory callbackHandlerFactory;
+    protected final CallbackDomainProvider domainProvider;
     private final long pointer;
     private Exception pendingException;
 
@@ -66,13 +69,15 @@ public final class LoopHandle {
     }
 
     public LoopHandle(final CallbackExceptionHandler exceptionHandler,
-            final CallbackHandler callbackHandler) {
+            final CallbackHandlerFactory callbackHandler,
+            final CallbackDomainProvider domainProvider) {
         newLoop();
         this.pointer = _new();
         assert pointer != 0;
         assert exceptionHandler != null;
         this.exceptionHandler = exceptionHandler;
-        this.callbackHandler = callbackHandler;
+        this.callbackHandlerFactory = callbackHandler;
+        this.domainProvider = domainProvider;
     }
 
     public LoopHandle() {
@@ -91,15 +96,32 @@ public final class LoopHandle {
             }
         };
 
-        this.callbackHandler = new LoopCallbackHandler(this.exceptionHandler);
-    }
+        this.callbackHandlerFactory = new LoopCallbackHandlerFactory(this.exceptionHandler);
+        
+        this.domainProvider = new CallbackDomainProvider() {
 
+            @Override
+            public Object getDomain() {
+                return null;
+            }
+            
+        };
+    }
+    
+    public CallbackHandler getCallbackHandler(Object domain) {
+        return callbackHandlerFactory.newCallbackHandlerWithDomain(domain);
+    }
+    
+    public CallbackHandler getCallbackHandler() {
+        return callbackHandlerFactory.newCallbackHandler();
+    }
+    
+    public Object getDomain() {
+        return domainProvider.getDomain();
+    }
+    
     public CallbackExceptionHandler getExceptionHandler() {
         return exceptionHandler;
-    }
-
-    public CallbackHandler getCallbackHandler() {
-        return callbackHandler;
     }
 
     public boolean runNoWait() throws Exception {

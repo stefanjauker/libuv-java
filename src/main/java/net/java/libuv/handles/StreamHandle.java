@@ -110,7 +110,7 @@ public class StreamHandle extends Handle {
         } catch (final UnsupportedEncodingException e) {
             throw new RuntimeException(e); // "utf-8" is always supported
         }
-        return _write2(pointer, ByteBuffer.wrap(data), data, 0, data.length, handle.pointer);
+        return _write2(pointer, ByteBuffer.wrap(data), data, 0, data.length, handle.pointer, loop.getDomain());
     }
 
     public int write(final String str) {
@@ -133,8 +133,8 @@ public class StreamHandle extends Handle {
     public int write(final ByteBuffer buffer, final int offset, final int length) {
         Objects.requireNonNull(buffer);
         return buffer.hasArray() ?
-                _write(pointer, buffer, buffer.array(), offset, length) :
-                _write(pointer, buffer, null, offset, length);
+                _write(pointer, buffer, buffer.array(), offset, length, loop.getDomain()) :
+                _write(pointer, buffer, null, offset, length, loop.getDomain());
     }
 
     public int write(final ByteBuffer buffer) {
@@ -143,7 +143,7 @@ public class StreamHandle extends Handle {
     }
 
     public int closeWrite() {
-        return _close_write(pointer);
+        return _close_write(pointer, loop.getDomain());
     }
 
     public void close() {
@@ -188,43 +188,43 @@ public class StreamHandle extends Handle {
 
     private void callRead(final ByteBuffer data) {
         if (onRead != null) {
-            loop.callbackHandler.handleStreamReadCallback(onRead, data);
+            loop.getCallbackHandler().handleStreamReadCallback(onRead, data);
         }
     }
 
     private void callRead2(final ByteBuffer data, long handle, int type) {
         if (onRead2 != null) {
-            loop.callbackHandler.handleStreamRead2Callback(onRead2, data, handle, type);
+            loop.getCallbackHandler().handleStreamRead2Callback(onRead2, data, handle, type);
         }
     }
 
-    private void callWrite(final int status, final Exception error) {
+    private void callWrite(final int status, final Exception error, final Object domain) {
         if (onWrite != null) {
-            loop.callbackHandler.handleStreamWriteCallback(onWrite, status, error);
+            loop.getCallbackHandler(domain).handleStreamWriteCallback(onWrite, status, error);
         }
     }
 
-    private void callConnect(final int status, final Exception error) {
+    private void callConnect(final int status, final Exception error, final Object domain) {
         if (onConnect != null) {
-            loop.callbackHandler.handleStreamConnectCallback(onConnect, status, error);
+            loop.getCallbackHandler(domain).handleStreamConnectCallback(onConnect, status, error);
         }
     }
 
     private void callConnection(final int status, final Exception error) {
         if (onConnection != null) {
-            loop.callbackHandler.handleStreamConnectionCallback(onConnection, status, error);
+            loop.getCallbackHandler().handleStreamConnectionCallback(onConnection, status, error);
         }
     }
 
     private void callClose() {
         if (onClose != null) {
-            loop.callbackHandler.handleStreamCloseCallback(onClose);
+            loop.getCallbackHandler().handleStreamCloseCallback(onClose);
         }
     }
 
-    private void callShutdown(final int status, final Exception error) {
+    private void callShutdown(final int status, final Exception error, final Object domain) {
         if (onShutdown != null) {
-            loop.callbackHandler.handleStreamShutdownCallback(onShutdown, status, error);
+            loop.getCallbackHandler(domain).handleStreamShutdownCallback(onShutdown, status, error);
         }
     }
 
@@ -246,20 +246,20 @@ public class StreamHandle extends Handle {
                               final ByteBuffer buffer,
                               final byte[] data,
                               final int offset,
-                              final int length);
+                              final int length, final Object domain);
 
     private native int _write2(final long ptr,
                                final ByteBuffer buffer,
                                final byte[] data,
                                final int offset,
                                final int length,
-                               final long handlePointer);
+                               final long handlePointer, final Object domain);
 
     private native long _write_queue_size(final long ptr);
 
     private native void _close(final long ptr);
 
-    private native int _close_write(final long ptr);
+    private native int _close_write(final long ptr, final Object domain);
 
     private native int _listen(final long ptr, final int backlog);
 

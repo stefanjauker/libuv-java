@@ -29,6 +29,7 @@
 
 #include "uv.h"
 #include "exception.h"
+#include "domain_holder.h"
 #include "stream.h"
 #include "udp.h"
 #include "net_java_libuv_handles_StreamHandle.h"
@@ -69,10 +70,10 @@ void StreamCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _call_read2_callback_mid = env->GetMethodID(_stream_handle_cid, "callRead2", "(Ljava/nio/ByteBuffer;JI)V");
   assert(_call_read2_callback_mid);
 
-  _call_write_callback_mid = env->GetMethodID(_stream_handle_cid, "callWrite", "(ILjava/lang/Exception;)V");
+  _call_write_callback_mid = env->GetMethodID(_stream_handle_cid, "callWrite", "(ILjava/lang/Exception;Ljava/lang/Object;)V");
   assert(_call_write_callback_mid);
 
-  _call_connect_callback_mid = env->GetMethodID(_stream_handle_cid, "callConnect", "(ILjava/lang/Exception;)V");
+  _call_connect_callback_mid = env->GetMethodID(_stream_handle_cid, "callConnect", "(ILjava/lang/Exception;Ljava/lang/Object;)V");
   assert(_call_connect_callback_mid);
 
   _call_connection_callback_mid = env->GetMethodID(_stream_handle_cid, "callConnection", "(ILjava/lang/Exception;)V");
@@ -81,7 +82,7 @@ void StreamCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _call_close_callback_mid = env->GetMethodID(_stream_handle_cid, "callClose", "()V");
   assert(_call_close_callback_mid);
 
-  _call_shutdown_callback_mid = env->GetMethodID(_stream_handle_cid, "callShutdown", "(ILjava/lang/Exception;)V");
+  _call_shutdown_callback_mid = env->GetMethodID(_stream_handle_cid, "callShutdown", "(ILjava/lang/Exception;Ljava/lang/Object;)V");
   assert(_call_shutdown_callback_mid);
 
   static_initialize_address(env);
@@ -163,25 +164,24 @@ void StreamCallbacks::on_read2(uv_buf_t* buf, jsize nread, long ptr, uv_handle_t
   delete[] buf->base;
 }
 
-void StreamCallbacks::on_write(int status, int error_code, jobject buffer) {
+void StreamCallbacks::on_write(int status, int error_code, jobject buffer, jobject domain) {
   assert(_env);
   _env->CallVoidMethod(
       _instance,
       _call_write_callback_mid,
       status,
-      error_code ? NewException(_env, error_code) : NULL);
-  if (buffer) {
-    _env->DeleteGlobalRef(buffer);
-  }
+      error_code ? NewException(_env, error_code) : NULL,
+      domain);
 }
 
-void StreamCallbacks::on_connect(int status, int error_code) {
+void StreamCallbacks::on_connect(int status, int error_code, jobject domain) {
   assert(_env);
   _env->CallVoidMethod(
       _instance,
       _call_connect_callback_mid,
       status,
-      error_code ? NewException(_env, error_code) : NULL);
+      error_code ? NewException(_env, error_code) : NULL,
+      domain);
 }
 
 void StreamCallbacks::on_connection(int status, int error_code) {
@@ -193,13 +193,14 @@ void StreamCallbacks::on_connection(int status, int error_code) {
       error_code ? NewException(_env, error_code) : NULL);
 }
 
-void StreamCallbacks::on_shutdown(int status, int error_code) {
+void StreamCallbacks::on_shutdown(int status, int error_code, jobject domain) {
   assert(_env);
   _env->CallVoidMethod(
       _instance,
       _call_shutdown_callback_mid,
       status,
-      error_code ? NewException(_env, error_code) : NULL);
+      error_code ? NewException(_env, error_code) : NULL, 
+      domain);
 }
 
 void StreamCallbacks::on_close() {
@@ -254,11 +255,14 @@ static void _read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_t buf) {
 
 static void _shutdown_cb(uv_shutdown_t* req, int status) {
   assert(req);
+  assert(req->data);
   assert(req->handle);
   assert(req->handle->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(req->handle->data);
-  cb->on_shutdown(status, status < 0 ? uv_last_error(req->handle->loop).code : 0);
-  delete req;
+  DomainHolder* req_data = reinterpret_cast<DomainHolder*>(req->data);
+  cb->on_shutdown(status, status < 0 ? uv_last_error(req->handle->loop).code : 0, req_data->domain());
+  delete req_data;
+  delete req;  
 }
 
 static void _close_cb(uv_handle_t* handle) {
@@ -327,8 +331,10 @@ static void _write_cb(uv_write_t* req, int status) {
   assert(req->handle);
   assert(req->handle->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(req->handle->data);
-  cb->on_write(status, status < 0 ? uv_last_error(req->handle->loop).code : 0, (jobject) req->data);
+  DomainHolder* req_data = reinterpret_cast<DomainHolder*>(req->data);
+  cb->on_write(status, status < 0 ? uv_last_error(req->handle->loop).code : 0, req_data->data(), req_data->domain());
   delete req;
+  delete req_data;
 }
 
 static void _connection_cb(uv_stream_t* stream, int status) {
@@ -458,22 +464,23 @@ JNIEXPORT jboolean JNICALL Java_net_java_libuv_handles_StreamHandle__1writable
  * Signature: (JLjava/nio/ByteBuffer;[BII)I
  */
 JNIEXPORT jint JNICALL Java_net_java_libuv_handles_StreamHandle__1write
-  (JNIEnv *env, jobject that, jlong stream, jobject buffer, jbyteArray data, jint offset, jint length) {
+  (JNIEnv *env, jobject that, jlong stream, jobject buffer, jbyteArray data, jint offset, jint length, jobject domain) {
 
   assert(stream);
 
   int r;
   uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(stream);
-
+  uv_write_t* req = new uv_write_t();
+  req->handle = handle;
+  DomainHolder* req_data = NULL;
   if (data) {
     jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
     OOME(env, base);
     uv_buf_t buf;
     buf.base = reinterpret_cast<char*>(base + offset);
     buf.len = length;
-    uv_write_t* req = new uv_write_t();
-    req->handle = handle;
-    req->data = NULL;
+    req_data = new DomainHolder(env, domain);
+    req->data = req_data;
     r = uv_write(req, handle, &buf, 1, _write_cb);
     env->ReleasePrimitiveArrayCritical(data, base, 0);
   } else {
@@ -481,12 +488,12 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_StreamHandle__1write
     uv_buf_t buf;
     buf.base = reinterpret_cast<char*>(base + offset);
     buf.len = length;
-    uv_write_t* req = new uv_write_t();
-    req->handle = handle;
-    req->data = env->NewGlobalRef(buffer);
+    req->data = new DomainHolder(env, buffer, domain);
     r = uv_write(req, handle, &buf, 1, _write_cb);
   }
   if (r) {
+    delete req_data;
+    delete req;
     ThrowException(env, handle->loop, "uv_write");
   }
   return r;
@@ -498,23 +505,24 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_StreamHandle__1write
  * Signature: (JLjava/nio/ByteBuffer;[BIIJ)I
  */
 JNIEXPORT jint JNICALL Java_net_java_libuv_handles_StreamHandle__1write2
-  (JNIEnv *env, jobject that, jlong stream, jobject buffer, jbyteArray data, jint offset, jint length, jlong send_stream) {
+  (JNIEnv *env, jobject that, jlong stream, jobject buffer, jbyteArray data, jint offset, jint length, jlong send_stream, jobject domain) {
 
   assert(stream);
   assert(send_stream);
 
   int r;
   uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(stream);
-
+  uv_write_t* req = new uv_write_t();
+  DomainHolder* req_data = NULL;
+  req->handle = handle;
   if (data) {
     jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
     OOME(env, base);
     uv_buf_t buf;
     buf.base = reinterpret_cast<char*>(base + offset);
     buf.len = length - offset;
-    uv_write_t* req = new uv_write_t();
-    req->handle = handle;
-    req->data = NULL;
+    req_data = new DomainHolder(env, domain);
+    req->data = req_data;
     uv_stream_t* send_handle = reinterpret_cast<uv_stream_t*>(send_stream);
     r = uv_write2(req, handle, &buf, 1, send_handle, _write_cb);
     env->ReleasePrimitiveArrayCritical(data, base, 0);
@@ -525,13 +533,14 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_StreamHandle__1write2
     buf.base = reinterpret_cast<char*>(base + offset);
     buf.len = length - offset;
     assert(stream);
-    uv_write_t* req = new uv_write_t();
-    req->handle = handle;
-    req->data = env->NewGlobalRef(buffer);
+    req_data = new DomainHolder(env, buffer, domain);
+    req->data = req_data;
     uv_stream_t* send_handle = reinterpret_cast<uv_stream_t*>(send_stream);
     r = uv_write2(req, handle, &buf, 1, send_handle, _write_cb);
   }
   if (r) {
+    delete req_data;
+    delete req;
     ThrowException(env, handle->loop, "uv_write2");
   }
   return r;
@@ -556,14 +565,18 @@ JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_StreamHandle__1write_1queue_
  * Signature: (J)I
  */
 JNIEXPORT jint JNICALL Java_net_java_libuv_handles_StreamHandle__1close_1write
-  (JNIEnv *env, jobject that, jlong stream) {
+  (JNIEnv *env, jobject that, jlong stream, jobject domain) {
 
   assert(stream);
   uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(stream);
   uv_shutdown_t* req = new uv_shutdown_t();
+  DomainHolder* req_data = new DomainHolder(env, domain);
+  req->data = req_data;
   req->handle = handle;
   int r = uv_shutdown(req, handle, _shutdown_cb);
   if (r) {
+    delete req_data;
+    delete req;
     ThrowException(env, handle->loop, "uv_close_write");
   }
   return r;

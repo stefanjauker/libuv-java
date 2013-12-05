@@ -23,36 +23,25 @@
  * questions.
  */
 
-#ifndef _libuv_java_udp_h_
-#define _libuv_java_udp_h_
+package net.java.libuv.handles;
 
-#include <jni.h>
+import net.java.libuv.cb.CallbackExceptionHandler;
+import net.java.libuv.cb.CallbackHandler;
+import net.java.libuv.cb.CallbackHandlerFactory;
 
-#include "uv.h"
+public final class LoopCallbackHandlerFactory implements CallbackHandlerFactory {
+    private final LoopCallbackHandler defaultHandler;
+    public LoopCallbackHandlerFactory(final CallbackExceptionHandler exceptionHandler) {
+        defaultHandler = new LoopCallbackHandler(exceptionHandler);
+    }
+    
+    @Override
+    public CallbackHandler newCallbackHandlerWithDomain(Object domain) {
+        return defaultHandler;
+    }
 
-class UDPCallbacks {
-private:
-  static jclass _udp_handle_cid;
-
-  static jmethodID _recv_callback_mid;
-  static jmethodID _send_callback_mid;
-  static jmethodID _close_callback_mid;
-
-  static JNIEnv* _env;
-
-  jobject _instance;
-
-public:
-  static void static_initialize(JNIEnv* env, jclass cls);
-
-  UDPCallbacks();
-  ~UDPCallbacks();
-
-  void initialize(jobject instance);
-
-  void on_recv(ssize_t nread, uv_buf_t buf, struct sockaddr* addr, unsigned flags);
-  void on_send(int status, int error_code, jobject buffer, jobject domain);
-  void on_close();
-};
-
-#endif // _libuv_java_udp_h_
+    @Override
+    public CallbackHandler newCallbackHandler() {
+        return defaultHandler;
+    }
+}

@@ -23,36 +23,25 @@
  * questions.
  */
 
-#ifndef _libuv_java_udp_h_
-#define _libuv_java_udp_h_
+#ifndef _libuv_java_domain_holder_h_
+#define _libuv_java_domain_holder_h_
 
 #include <jni.h>
 
 #include "uv.h"
 
-class UDPCallbacks {
-private:
-  static jclass _udp_handle_cid;
+ class DomainHolder {
+  private:
+    jobject _domain;
+    jobject _data;
+    JNIEnv* _env;
+  public:
+    jobject domain() { return _domain; }
+    jobject data() { return _data; }
+    DomainHolder(JNIEnv* env, jobject data, jobject domain);
+    DomainHolder(JNIEnv* env, jobject domain);
+    ~DomainHolder();
+    
+ };
 
-  static jmethodID _recv_callback_mid;
-  static jmethodID _send_callback_mid;
-  static jmethodID _close_callback_mid;
-
-  static JNIEnv* _env;
-
-  jobject _instance;
-
-public:
-  static void static_initialize(JNIEnv* env, jclass cls);
-
-  UDPCallbacks();
-  ~UDPCallbacks();
-
-  void initialize(jobject instance);
-
-  void on_recv(ssize_t nread, uv_buf_t buf, struct sockaddr* addr, unsigned flags);
-  void on_send(int status, int error_code, jobject buffer, jobject domain);
-  void on_close();
-};
-
-#endif // _libuv_java_udp_h_
+#endif // _libuv_java_domain_holder_h_
