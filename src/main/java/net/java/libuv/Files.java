@@ -238,7 +238,7 @@ public final class Files {
     }
 
     public int close(final int fd) {
-        final String path = getPath(fd);
+        final String path = getPathAssertNonNull(fd, "closeSync");
         Objects.requireNonNull(path);
         final int r = _close(pointer, fd, SYNC_MODE);
         if (r != -1) {
@@ -249,6 +249,10 @@ public final class Files {
 
     public int close(final int fd, final Object context) {
         final String path = getPath(fd);
+        if (path == null) {
+            callClose(context, -1, newEBADF("close", fd));
+            return -1;
+        }
         Objects.requireNonNull(path);
         final int r = _close(pointer, fd, context);
         if (r != -1) {
@@ -274,7 +278,7 @@ public final class Files {
     }
 
     public int read(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position) {
-        final String path = getPath(fd);
+        final String path = getPathAssertNonNull(fd, "readSync");
         Objects.requireNonNull(path);
         Objects.requireNonNull(buffer);
         LibUVPermission.checkReadFile(fd, path);
@@ -285,6 +289,10 @@ public final class Files {
 
     public int read(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position, final Object context) {
         final String path = getPath(fd);
+        if (path == null) {
+            callRead(context, -1, buffer, newEBADF("read", fd));
+            return -1;
+        }
         Objects.requireNonNull(path);
         Objects.requireNonNull(buffer);
         LibUVPermission.checkReadFile(fd, path);
@@ -306,7 +314,7 @@ public final class Files {
     }
 
     public int write(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position) {
-        final String path = getPath(fd);
+        final String path = getPathAssertNonNull(fd, "writeSync");
         Objects.requireNonNull(path);
         Objects.requireNonNull(buffer);
         LibUVPermission.checkWriteFile(fd, path);
@@ -319,6 +327,10 @@ public final class Files {
 
     public int write(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position, final Object context) {
         final String path = getPath(fd);
+        if (path == null) {
+            callWrite(context, -1, newEBADF("write", fd));
+            return -1;
+        }
         Objects.requireNonNull(path);
         Objects.requireNonNull(buffer);
         LibUVPermission.checkWriteFile(fd, getPath(fd));
@@ -378,7 +390,7 @@ public final class Files {
     }
 
     public Stats fstat(final int fd) {
-        final String path = getPath(fd);
+        final String path = getPathAssertNonNull(fd, "fstatSync");
         Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(fd, path);
         return _fstat(pointer, fd, SYNC_MODE);
@@ -386,6 +398,10 @@ public final class Files {
 
     public Stats fstat(final int fd, final Object context) {
         final String path = getPath(fd);
+        if (path == null) {
+            callStats(UV_FS_FSTAT, context, null, newEBADF("fstat", fd));
+            return null;
+        }
         Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(fd, path);
         return _fstat(pointer, fd, context);
@@ -408,7 +424,7 @@ public final class Files {
     }
 
     public int fsync(final int fd) {
-        final String path = getPath(fd);
+        final String path = getPathAssertNonNull(fd, "fsyncSync");
         Objects.requireNonNull(path);
         // If a file is open, it can be synced, no security check.
         return _fsync(pointer, fd, SYNC_MODE);
@@ -416,13 +432,17 @@ public final class Files {
 
     public int fsync(final int fd, final Object context) {
         final String path = getPath(fd);
+        if (path == null) {
+            callback(UV_FS_FSYNC, context, newEBADF("fsync", fd));
+            return -1;
+        }
         Objects.requireNonNull(path);
         // If a file is open, it can be synced, no security check.
         return _fsync(pointer, fd, context);
     }
 
     public int fdatasync(final int fd) {
-        final String path = getPath(fd);
+        final String path = getPathAssertNonNull(fd, "fdatasyncSync");
         Objects.requireNonNull(path);
         // If a file is open, it can be synced, no security check.
         return _fdatasync(pointer, fd, SYNC_MODE);
@@ -430,13 +450,17 @@ public final class Files {
 
     public int fdatasync(final int fd, final Object context) {
         final String path = getPath(fd);
+        if (path == null) {
+            callback(UV_FS_FDATASYNC, context, newEBADF("fdatasync", fd));
+            return -1;
+        }
         Objects.requireNonNull(path);
         // If a file is open, it can be synced, no security check.
         return _fdatasync(pointer, fd, context);
     }
 
     public int ftruncate(final int fd, final long offset) {
-        final String path = getPath(fd);
+        final String path = getPathAssertNonNull(fd, "ftruncateSync");
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(fd, path);
         return _ftruncate(pointer, fd, offset, SYNC_MODE);
@@ -444,6 +468,10 @@ public final class Files {
 
     public int ftruncate(final int fd, final long offset, final Object context) {
         final String path = getPath(fd);
+        if (path == null) {
+            callback(UV_FS_FTRUNCATE, context, newEBADF("ftruncate", fd));
+            return -1;
+        }
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(fd, path);
         return _ftruncate(pointer, fd, offset, context);
@@ -488,7 +516,7 @@ public final class Files {
     }
 
     public int futime(final int fd, final double atime, final double mtime) {
-        final String path = getPath(fd);
+        final String path = getPathAssertNonNull(fd, "futimeSync");
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(fd, path);
         return _futime(pointer, fd, atime, mtime, SYNC_MODE);
@@ -496,6 +524,10 @@ public final class Files {
 
     public int futime(final int fd, final double atime, final double mtime, final Object context) {
         final String path = getPath(fd);
+        if (path == null) {
+            callUTime(UV_FS_FUTIME, context, -1, newEBADF("futime", fd));
+            return -1;
+        }
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(fd, path);
         return _futime(pointer, fd, atime, mtime, context);
@@ -554,7 +586,7 @@ public final class Files {
     }
 
     public int fchmod(final int fd, final int mode) {
-        final String path = getPath(fd);
+        final String path = getPathAssertNonNull(fd, "fchmodSync");
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(fd, path);
         return _fchmod(pointer, fd, mode, SYNC_MODE);
@@ -562,6 +594,10 @@ public final class Files {
 
     public int fchmod(final int fd, final int mode, final Object context) {
         final String path = getPath(fd);
+        if (path == null) {
+            callback(UV_FS_FCHMOD, context, newEBADF("fchmod", fd));
+            return -1;
+        }
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(fd, path);
         return _fchmod(pointer, fd, mode, context);
@@ -580,7 +616,7 @@ public final class Files {
     }
 
     public int fchown(final int fd, final int uid, final int gid) {
-        final String path = getPath(fd);
+        final String path = getPathAssertNonNull(fd, "fchown");
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(fd, path);
         return _fchown(pointer, fd, uid, gid, SYNC_MODE);
@@ -588,6 +624,10 @@ public final class Files {
 
     public int fchown(final int fd, final int uid, final int gid, final Object context) {
         final String path = getPath(fd);
+        if (path == null) {
+            callback(UV_FS_FCHOWN, context, newEBADF("fchown", fd));
+            return -1;
+        }
         Objects.requireNonNull(path);
         LibUVPermission.checkWriteFile(fd, path);
         return _fchown(pointer, fd, uid, gid, context);
@@ -596,6 +636,18 @@ public final class Files {
     public String getPath(final int fd) {
         // No security check, can retrieve path of an opened fd.
         return paths.get(fd);
+    }
+
+    private String getPathAssertNonNull(final int fd, final String method) {
+        final String path = paths.get(fd);
+        if (path == null) {
+            throw newEBADF(method, fd);
+        }
+        return path;
+    }
+
+    private NativeException newEBADF(final String method, final int fd) {
+        return new NativeException(9, "EBADF", "Bad file number: " + fd, method, null, null);
     }
 
     private void callback(final int type, final Object context, final Exception error) {
