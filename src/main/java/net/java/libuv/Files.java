@@ -652,9 +652,6 @@ public final class Files {
     }
 
     private void callClose(final Object context, final int fd, final Exception error, final Object domain) {
-        if (fd != -1) {
-            paths.remove(fd);
-        }
         if (onClose != null) {
             loop.getCallbackHandler(domain).handleFileCloseCallback(onClose, context, fd, error);
         }
