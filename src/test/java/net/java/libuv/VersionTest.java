@@ -34,7 +34,7 @@ public class VersionTest extends TestBase {
     public void testVersion() {
         final String version = LibUV.version();
         System.out.println("libuv version is " + version);
-        Assert.assertEquals(version, "0.10.15");
+        Assert.assertEquals(version, "0.10.18");
     }
 
     @Test
