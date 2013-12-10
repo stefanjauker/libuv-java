@@ -55,11 +55,13 @@ private:
   jint _fd;
   jstring _path;
   jobject _context;
-
+  jint _flags;
 public:
   FileRequest(FileCallback* ptr, jobject callback, jint fd, jstring path, jobject context);
+  FileRequest(FileCallback* ptr, jobject callback, jint fd, jstring path, jint flags, jobject context);
   ~FileRequest();
 
+  void init(FileCallback* ptr, jobject callback, jint fd, jstring path, jint flags, jobject context);
   void get_bytes(jobject buffer, jbyteArray data, jsize offset, jsize length);
   void set_bytes(jint length);
 
@@ -68,6 +70,8 @@ public:
   jobject callback() { return _callback; }
 
   jint fd() { return _fd; }
+
+  jint flags() { return _flags; }
 
   jstring path() { return _path; }
 
@@ -132,7 +136,15 @@ jmethodID FileCallback::_stats_init_mid = NULL;
 
 JNIEnv* FileCallback::_env = NULL;
 
+FileRequest::FileRequest(FileCallback* ptr, jobject callback, jint fd, jstring path, jint flags, jobject context) {
+  init(ptr, callback, fd, path, flags, context);
+}
+
 FileRequest::FileRequest(FileCallback* ptr, jobject callback, jint fd, jstring path, jobject context) {
+  init(ptr, callback, fd, path, 0, context);
+}
+
+void FileRequest::init(FileCallback* ptr, jobject callback, jint fd, jstring path, jint flags, jobject context) {
   _file_callback = ptr;
   _callback = callback ? _file_callback->env()->NewGlobalRef(callback) : NULL;
   _fd = fd;
@@ -141,6 +153,7 @@ FileRequest::FileRequest(FileCallback* ptr, jobject callback, jint fd, jstring p
   _buffer = NULL;
   _data = NULL;
   _context = context ? (jobject) _file_callback->env()->NewGlobalRef(context) : NULL;
+  _flags = flags;
 }
 
 
@@ -214,7 +227,7 @@ void FileCallback::static_initialize(JNIEnv* env, jclass cls) {
   _close_callback_mid = env->GetMethodID(_files_cid, "callClose", "(Ljava/lang/Object;ILjava/lang/Exception;Ljava/lang/Object;)V");
   assert(_close_callback_mid);
 
-  _open_callback_mid = env->GetMethodID(_files_cid, "callOpen", "(Ljava/lang/Object;ILjava/lang/String;Ljava/lang/Exception;Ljava/lang/Object;)V");
+  _open_callback_mid = env->GetMethodID(_files_cid, "callOpen", "(Ljava/lang/Object;ILjava/lang/String;ILjava/lang/Exception;Ljava/lang/Object;)V");
   assert(_open_callback_mid);
 
   _read_callback_mid = env->GetMethodID(_files_cid, "callRead", "(Ljava/lang/Object;ILjava/nio/ByteBuffer;Ljava/lang/Exception;Ljava/lang/Object;)V");
@@ -300,6 +313,7 @@ void FileCallback::fs_cb(FileRequest* request, uv_fs_type fs_type, ssize_t resul
           request->callback(),
           result,
           request->path(),
+          request->flags(),
           NULL,
           request->context());
       return;
@@ -447,6 +461,7 @@ void FileCallback::fs_cb(FileRequest* request, uv_fs_type fs_type, int errorno) 
           request->callback(),
           -1,
           NULL,
+          request->flags(),
           exception,
           request->context());
       break;
@@ -641,7 +656,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1open
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new FileRequest(cb, callback, 0, path, context);
+    req->data = new FileRequest(cb, callback, 0, path, flags, context);
     fd = uv_fs_open(cb->loop(), req, cpath, flags, mode, _fs_cb);
   } else {
     uv_fs_t req;

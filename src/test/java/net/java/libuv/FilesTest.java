@@ -23,7 +23,7 @@
  * questions.
  */
 
-package net.java.libuv.file;
+package net.java.libuv;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -43,6 +43,7 @@ import net.java.libuv.cb.FileOpenCallback;
 import net.java.libuv.cb.FileReadCallback;
 import net.java.libuv.cb.FileReadDirCallback;
 import net.java.libuv.Files;
+import net.java.libuv.Files.OpenedFile;
 import net.java.libuv.Stats;
 import net.java.libuv.TestBase;
 import net.java.libuv.cb.FileWriteCallback;
@@ -76,8 +77,8 @@ public class FilesTest extends TestBase {
         final Files handle = new Files(loop);
 
         final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
-        final String path = handle.getPath(fd);
-        Assert.assertEquals(path, filename);
+        final OpenedFile openedFile = handle.getOpenedFile(fd);
+        Assert.assertEquals(openedFile.getPath(), filename);
         cleanupFiles(handle, filename);
     }
 

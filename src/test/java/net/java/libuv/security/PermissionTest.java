@@ -50,7 +50,7 @@ import org.testng.annotations.Test;
 import net.java.libuv.Constants;
 import net.java.libuv.Files;
 import net.java.libuv.cb.StreamConnectionCallback;
-import net.java.libuv.file.FilesTest;
+import net.java.libuv.FilesTest;
 import net.java.libuv.LibUV;
 import net.java.libuv.LibUVPermission;
 import net.java.libuv.NativeException;

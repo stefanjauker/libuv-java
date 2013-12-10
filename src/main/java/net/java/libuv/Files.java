@@ -107,10 +107,22 @@ public final class Files {
 
     private final long pointer;
     private final LoopHandle loop;
-    private final Map<Integer, String> paths = new HashMap<>();
+    private final Map<Integer, OpenedFile> openedFiles = new HashMap<>();
 
     private boolean closed;
 
+    // should be private but used by unit tests.
+    static final class OpenedFile {
+        private int flags;
+        private String path;
+        private OpenedFile(final String path, final int flags) {
+            this.path = path;
+            this.flags = flags;
+        }
+        int getFlags() { return flags; }
+        String getPath() { return path; }
+    }
+    
     public Files(final LoopHandle loop) {
         LibUVPermission.checkHandle();
         this.pointer = _new();
@@ -225,7 +237,7 @@ public final class Files {
 
     public void close() {
         if (!closed) {
-            paths.clear();
+            openedFiles.clear();
             _close(pointer);
         }
         closed = true;
@@ -238,25 +250,27 @@ public final class Files {
     }
 
     public int close(final int fd) {
-        final String path = getPathAssertNonNull(fd, "closeSync");
-        Objects.requireNonNull(path);
+        final OpenedFile file = getOpenedFileAssertNonNull(fd, "closeSync");
+        Objects.requireNonNull(file);
+        LibUVPermission.checkOpenFile(file.getPath(), file.getFlags());
         final int r = _close(pointer, fd, SYNC_MODE, loop.getContext());
         if (r != -1) {
-            paths.remove(fd);
+            openedFiles.remove(fd);
         }
         return r;
     }
 
     public int close(final int fd, final Object context) {
-        final String path = getPath(fd);
-        if (path == null) {
+        final OpenedFile file = getOpenedFile(fd);
+        if (file == null) {
             callClose(context, -1, newEBADF("close", fd), loop.getContext());
             return -1;
         }
-        Objects.requireNonNull(path);
+        Objects.requireNonNull(file);
+        LibUVPermission.checkOpenFile(file.getPath(), file.getFlags());
         final int r = _close(pointer, fd, context, loop.getContext());
         if (r != -1) {
-            paths.remove(fd);
+            openedFiles.remove(fd);
         }
         return r;
     }
@@ -266,7 +280,7 @@ public final class Files {
         LibUVPermission.checkOpenFile(path, flags);
         final int fd = _open(pointer, path, flags, mode, SYNC_MODE, loop.getContext());
         if (fd != -1) {
-            paths.put(fd, path);
+            openedFiles.put(fd, new OpenedFile(path, flags));
         }
         return fd;
     }
@@ -278,24 +292,24 @@ public final class Files {
     }
 
     public int read(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position) {
-        final String path = getPathAssertNonNull(fd, "readSync");
-        Objects.requireNonNull(path);
+        final OpenedFile file = getOpenedFileAssertNonNull(fd, "readSync");
+        Objects.requireNonNull(file);
         Objects.requireNonNull(buffer);
-        LibUVPermission.checkReadFile(fd, path);
+        LibUVPermission.checkReadFile(fd, file.getPath());
         return buffer.hasArray() ?
                 _read(pointer, fd, buffer, buffer.array(), length, offset, position, SYNC_MODE, loop.getContext()) :
                 _read(pointer, fd, buffer, null, length, offset, position, SYNC_MODE, loop.getContext());
     }
 
     public int read(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position, final Object context) {
-        final String path = getPath(fd);
-        if (path == null) {
+        final OpenedFile file = getOpenedFile(fd);
+        if (file == null) {
             callRead(context, -1, buffer, newEBADF("read", fd), loop.getContext());
             return -1;
         }
-        Objects.requireNonNull(path);
+        Objects.requireNonNull(file);
         Objects.requireNonNull(buffer);
-        LibUVPermission.checkReadFile(fd, path);
+        LibUVPermission.checkReadFile(fd, file.getPath());
         return buffer.hasArray() ?
                 _read(pointer, fd, buffer, buffer.array(), length, offset, position, context, loop.getContext()) :
                 _read(pointer, fd, buffer, null, length, offset, position, context, loop.getContext());
@@ -314,10 +328,10 @@ public final class Files {
     }
 
     public int write(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position) {
-        final String path = getPathAssertNonNull(fd, "writeSync");
-        Objects.requireNonNull(path);
+        final OpenedFile file = getOpenedFileAssertNonNull(fd, "writeSync");
+        Objects.requireNonNull(file);
         Objects.requireNonNull(buffer);
-        LibUVPermission.checkWriteFile(fd, path);
+        LibUVPermission.checkWriteFile(fd, file.getPath());
         assert(offset < buffer.limit());
         assert(offset + length <= buffer.limit());
         return buffer.hasArray() ?
@@ -326,14 +340,14 @@ public final class Files {
     }
 
     public int write(final int fd, final ByteBuffer buffer, final long offset, final long length, final long position, final Object context) {
-        final String path = getPath(fd);
-        if (path == null) {
+        final OpenedFile file = getOpenedFile(fd);
+        if (file == null) {
             callWrite(context, -1, newEBADF("write", fd), loop.getContext());
             return -1;
         }
-        Objects.requireNonNull(path);
+        Objects.requireNonNull(file);
         Objects.requireNonNull(buffer);
-        LibUVPermission.checkWriteFile(fd, getPath(fd));
+        LibUVPermission.checkWriteFile(fd, file.getPath());
         assert(offset < buffer.limit());
         assert(offset + length <= buffer.limit());
         return buffer.hasArray() ?
@@ -390,20 +404,20 @@ public final class Files {
     }
 
     public Stats fstat(final int fd) {
-        final String path = getPathAssertNonNull(fd, "fstatSync");
-        Objects.requireNonNull(path);
-        LibUVPermission.checkReadFile(fd, path);
+        final OpenedFile file = getOpenedFileAssertNonNull(fd, "fstatSync");
+        Objects.requireNonNull(file);
+        LibUVPermission.checkReadFile(fd, file.getPath());
         return _fstat(pointer, fd, SYNC_MODE, loop.getContext());
     }
 
     public Stats fstat(final int fd, final Object context) {
-        final String path = getPath(fd);
-        if (path == null) {
+        final OpenedFile file = getOpenedFile(fd);
+        if (file == null) {
             callStats(UV_FS_FSTAT, context, null, newEBADF("fstat", fd), loop.getContext());
             return null;
         }
-        Objects.requireNonNull(path);
-        LibUVPermission.checkReadFile(fd, path);
+        Objects.requireNonNull(file);
+        LibUVPermission.checkReadFile(fd, file.getPath());
         return _fstat(pointer, fd, context, loop.getContext());
     }
 
@@ -424,69 +438,69 @@ public final class Files {
     }
 
     public int fsync(final int fd) {
-        final String path = getPathAssertNonNull(fd, "fsyncSync");
-        Objects.requireNonNull(path);
+        final OpenedFile file = getOpenedFileAssertNonNull(fd, "fsyncSync");
+        Objects.requireNonNull(file);
         // If a file is open, it can be synced, no security check.
         return _fsync(pointer, fd, SYNC_MODE, loop.getContext());
     }
 
     public int fsync(final int fd, final Object context) {
-        final String path = getPath(fd);
-        if (path == null) {
+        final OpenedFile file = getOpenedFile(fd);
+        if (file == null) {
             callback(UV_FS_FSYNC, context, newEBADF("fsync", fd), loop.getContext());
             return -1;
         }
-        Objects.requireNonNull(path);
+        Objects.requireNonNull(file);
         // If a file is open, it can be synced, no security check.
         return _fsync(pointer, fd, context, loop.getContext());
     }
 
     public int fdatasync(final int fd) {
-        final String path = getPathAssertNonNull(fd, "fdatasyncSync");
-        Objects.requireNonNull(path);
+        final OpenedFile file = getOpenedFileAssertNonNull(fd, "fdatasyncSync");
+        Objects.requireNonNull(file);
         // If a file is open, it can be synced, no security check.
         return _fdatasync(pointer, fd, SYNC_MODE, loop.getContext());
     }
 
     public int fdatasync(final int fd, final Object context) {
-        final String path = getPath(fd);
-        if (path == null) {
+        final OpenedFile file = getOpenedFile(fd);
+        if (file == null) {
             callback(UV_FS_FDATASYNC, context, newEBADF("fdatasync", fd), loop.getContext());
             return -1;
         }
-        Objects.requireNonNull(path);
+        Objects.requireNonNull(file);
         // If a file is open, it can be synced, no security check.
         return _fdatasync(pointer, fd, context, loop.getContext());
     }
 
     public int ftruncate(final int fd, final long offset) {
-        final String path = getPathAssertNonNull(fd, "ftruncateSync");
-        Objects.requireNonNull(path);
-        LibUVPermission.checkWriteFile(fd, path);
+        final OpenedFile file = getOpenedFileAssertNonNull(fd, "ftruncateSync");
+        Objects.requireNonNull(file);
+        LibUVPermission.checkWriteFile(fd, file.getPath());
         return _ftruncate(pointer, fd, offset, SYNC_MODE, loop.getContext());
     }
 
     public int ftruncate(final int fd, final long offset, final Object context) {
-        final String path = getPath(fd);
-        if (path == null) {
+        final OpenedFile file = getOpenedFile(fd);
+        if (file == null) {
             callback(UV_FS_FTRUNCATE, context, newEBADF("ftruncate", fd), loop.getContext());
             return -1;
         }
-        Objects.requireNonNull(path);
-        LibUVPermission.checkWriteFile(fd, path);
+        Objects.requireNonNull(file);
+        LibUVPermission.checkWriteFile(fd, file.getPath());
         return _ftruncate(pointer, fd, offset, context, loop.getContext());
     }
 
     public int sendfile(final int outFd, final int inFd, final long offset, final long length) {
-        Objects.requireNonNull(getPath(outFd));
-        Objects.requireNonNull(getPath(inFd));
+        Objects.requireNonNull(getOpenedFile(outFd));
+        Objects.requireNonNull(getOpenedFile(inFd));
         // No security check required.
         return _sendfile(pointer, outFd, inFd, offset, length, SYNC_MODE, loop.getContext());
     }
 
     public int sendfile(final int outFd, final int inFd, final long offset, final long length, final Object context) {
-        Objects.requireNonNull(getPath(outFd));
-        Objects.requireNonNull(getPath(inFd));
+        Objects.requireNonNull(getOpenedFile(outFd));
+        Objects.requireNonNull(getOpenedFile(inFd));
         // No security check required.
         return _sendfile(pointer, outFd, inFd, offset, length, context, loop.getContext());
     }
@@ -516,20 +530,20 @@ public final class Files {
     }
 
     public int futime(final int fd, final double atime, final double mtime) {
-        final String path = getPathAssertNonNull(fd, "futimeSync");
-        Objects.requireNonNull(path);
-        LibUVPermission.checkWriteFile(fd, path);
+        final OpenedFile file = getOpenedFileAssertNonNull(fd, "futimeSync");
+        Objects.requireNonNull(file);
+        LibUVPermission.checkWriteFile(fd, file.getPath());
         return _futime(pointer, fd, atime, mtime, SYNC_MODE, loop.getContext());
     }
 
     public int futime(final int fd, final double atime, final double mtime, final Object context) {
-        final String path = getPath(fd);
-        if (path == null) {
+        final OpenedFile file = getOpenedFile(fd);
+        if (file == null) {
             callUTime(UV_FS_FUTIME, context, -1, newEBADF("futime", fd), loop.getContext());
             return -1;
         }
-        Objects.requireNonNull(path);
-        LibUVPermission.checkWriteFile(fd, path);
+        Objects.requireNonNull(file);
+        LibUVPermission.checkWriteFile(fd, file.getPath());
         return _futime(pointer, fd, atime, mtime, context, loop.getContext());
     }
 
@@ -586,20 +600,20 @@ public final class Files {
     }
 
     public int fchmod(final int fd, final int mode) {
-        final String path = getPathAssertNonNull(fd, "fchmodSync");
-        Objects.requireNonNull(path);
-        LibUVPermission.checkWriteFile(fd, path);
+        final OpenedFile file = getOpenedFileAssertNonNull(fd, "fchmodSync");
+        Objects.requireNonNull(file);
+        LibUVPermission.checkWriteFile(fd, file.getPath());
         return _fchmod(pointer, fd, mode, SYNC_MODE, loop.getContext());
     }
 
     public int fchmod(final int fd, final int mode, final Object context) {
-        final String path = getPath(fd);
-        if (path == null) {
+        final OpenedFile file = getOpenedFile(fd);
+        if (file == null) {
             callback(UV_FS_FCHMOD, context, newEBADF("fchmod", fd), loop.getContext());
             return -1;
         }
-        Objects.requireNonNull(path);
-        LibUVPermission.checkWriteFile(fd, path);
+        Objects.requireNonNull(file);
+        LibUVPermission.checkWriteFile(fd, file.getPath());
         return _fchmod(pointer, fd, mode, context, loop.getContext());
     }
 
@@ -616,34 +630,35 @@ public final class Files {
     }
 
     public int fchown(final int fd, final int uid, final int gid) {
-        final String path = getPathAssertNonNull(fd, "fchown");
-        Objects.requireNonNull(path);
-        LibUVPermission.checkWriteFile(fd, path);
+        final OpenedFile file = getOpenedFileAssertNonNull(fd, "fchown");
+        Objects.requireNonNull(file);
+        LibUVPermission.checkWriteFile(fd, file.getPath());
         return _fchown(pointer, fd, uid, gid, SYNC_MODE, loop.getContext());
     }
 
     public int fchown(final int fd, final int uid, final int gid, final Object context) {
-        final String path = getPath(fd);
-        if (path == null) {
+        final OpenedFile file = getOpenedFile(fd);
+        if (file == null) {
             callback(UV_FS_FCHOWN, context, newEBADF("fchown", fd), loop.getContext());
             return -1;
         }
-        Objects.requireNonNull(path);
-        LibUVPermission.checkWriteFile(fd, path);
+        Objects.requireNonNull(file);
+        LibUVPermission.checkWriteFile(fd, file.getPath());
         return _fchown(pointer, fd, uid, gid, context, loop.getContext());
     }
 
-    public String getPath(final int fd) {
+    // should be private but used by unit tests.
+    OpenedFile getOpenedFile(final int fd) {
         // No security check, can retrieve path of an opened fd.
-        return paths.get(fd);
+        return openedFiles.get(fd);
     }
 
-    private String getPathAssertNonNull(final int fd, final String method) {
-        final String path = paths.get(fd);
-        if (path == null) {
+    private OpenedFile getOpenedFileAssertNonNull(final int fd, final String method) {
+        final OpenedFile file = openedFiles.get(fd);
+        if (file == null) {
             throw newEBADF(method, fd);
         }
-        return path;
+        return file;
     }
 
     private NativeException newEBADF(final String method, final int fd) {
@@ -738,9 +753,9 @@ public final class Files {
         }
     }
 
-    private void callOpen(final Object callback, final int fd, final String path, final Exception error, final Object context) {
+    private void callOpen(final Object callback, final int fd, final String path, final int flags, final Exception error, final Object context) {
         if (fd != -1) {
-            paths.put(fd, path);
+            openedFiles.put(fd, new OpenedFile(path, flags));
         }
         if (onOpen != null) {
             loop.getCallbackHandler(context).handleFileOpenCallback(onOpen, callback, fd, error);
