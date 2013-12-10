@@ -29,7 +29,7 @@ import net.java.libuv.LibUVPermission;
 import net.java.libuv.NativeException;
 
 import net.java.libuv.cb.CallbackExceptionHandler;
-import net.java.libuv.cb.CallbackDomainProvider;
+import net.java.libuv.cb.ContextProvider;
 import net.java.libuv.cb.CallbackHandler;
 import net.java.libuv.cb.CallbackHandlerFactory;
 
@@ -44,7 +44,7 @@ public final class LoopHandle {
 
     protected final CallbackExceptionHandler exceptionHandler;
     protected final CallbackHandlerFactory callbackHandlerFactory;
-    protected final CallbackDomainProvider domainProvider;
+    protected final ContextProvider contextProvider;
     private final long pointer;
     private Exception pendingException;
 
@@ -70,14 +70,14 @@ public final class LoopHandle {
 
     public LoopHandle(final CallbackExceptionHandler exceptionHandler,
             final CallbackHandlerFactory callbackHandler,
-            final CallbackDomainProvider domainProvider) {
+            final ContextProvider contextProvider) {
         newLoop();
         this.pointer = _new();
         assert pointer != 0;
         assert exceptionHandler != null;
         this.exceptionHandler = exceptionHandler;
         this.callbackHandlerFactory = callbackHandler;
-        this.domainProvider = domainProvider;
+        this.contextProvider = contextProvider;
     }
 
     public LoopHandle() {
@@ -97,29 +97,27 @@ public final class LoopHandle {
         };
 
         this.callbackHandlerFactory = new LoopCallbackHandlerFactory(this.exceptionHandler);
-        
-        this.domainProvider = new CallbackDomainProvider() {
 
+        this.contextProvider = new ContextProvider() {
             @Override
-            public Object getDomain() {
+            public Object getContext() {
                 return null;
             }
-            
         };
     }
-    
-    public CallbackHandler getCallbackHandler(Object domain) {
-        return callbackHandlerFactory.newCallbackHandlerWithDomain(domain);
+
+    public CallbackHandler getCallbackHandler(final Object context) {
+        return callbackHandlerFactory.newCallbackHandler(context);
     }
-    
+
     public CallbackHandler getCallbackHandler() {
         return callbackHandlerFactory.newCallbackHandler();
     }
-    
-    public Object getDomain() {
-        return domainProvider.getDomain();
+
+    public Object getContext() {
+        return contextProvider.getContext();
     }
-    
+
     public CallbackExceptionHandler getExceptionHandler() {
         return exceptionHandler;
     }

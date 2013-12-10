@@ -60,13 +60,13 @@ public class TCPHandle extends StreamHandle {
     public int connect(final String address, final int port) {
         Objects.requireNonNull(address);
         LibUVPermission.checkConnect(address, port);
-        return _connect(pointer, address, port, loop.getDomain());
+        return _connect(pointer, address, port, loop.getContext());
     }
 
     public int connect6(final String address, final int port) {
         Objects.requireNonNull(address);
         LibUVPermission.checkConnect(address, port);
-        return _connect6(pointer, address, port, loop.getDomain());
+        return _connect6(pointer, address, port, loop.getContext());
     }
 
     @Override
@@ -124,9 +124,9 @@ public class TCPHandle extends StreamHandle {
 
     private native int _bind6(final long ptr, final String address, final int port);
 
-    private native int _connect(final long ptr, final String address, final int port, final Object domain);
+    private native int _connect(final long ptr, final String address, final int port, final Object context);
 
-    private native int _connect6(final long ptr, final String address, final int port, final Object domain);
+    private native int _connect6(final long ptr, final String address, final int port, final Object context);
 
     private native int _open(final long ptr, final int fd);
 

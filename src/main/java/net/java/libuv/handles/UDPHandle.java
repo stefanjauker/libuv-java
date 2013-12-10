@@ -157,8 +157,8 @@ public final class UDPHandle extends Handle {
         Objects.requireNonNull(host);
         LibUVPermission.checkUDPSend(host, port);
         return buffer.hasArray() ?
-                _send(pointer, buffer, buffer.array(), 0, buffer.capacity(), port, host, loop.getDomain()) :
-                _send(pointer, buffer, null, 0, buffer.capacity(), port, host, loop.getDomain());
+                _send(pointer, buffer, buffer.array(), 0, buffer.capacity(), port, host, loop.getContext()) :
+                _send(pointer, buffer, null, 0, buffer.capacity(), port, host, loop.getContext());
     }
 
     public int send6(final ByteBuffer buffer,
@@ -168,8 +168,8 @@ public final class UDPHandle extends Handle {
         Objects.requireNonNull(host);
         LibUVPermission.checkUDPSend(host, port);
         return buffer.hasArray() ?
-                _send6(pointer, buffer, buffer.array(), 0, buffer.capacity(), port, host, loop.getDomain()) :
-                _send6(pointer, buffer, null, 0, buffer.capacity(), port, host, loop.getDomain());
+                _send6(pointer, buffer, buffer.array(), 0, buffer.capacity(), port, host, loop.getContext()) :
+                _send6(pointer, buffer, null, 0, buffer.capacity(), port, host, loop.getContext());
     }
 
     public int send(final ByteBuffer buffer,
@@ -181,8 +181,8 @@ public final class UDPHandle extends Handle {
         Objects.requireNonNull(host);
         LibUVPermission.checkUDPSend(host, port);
         return buffer.hasArray() ?
-                _send(pointer, buffer, buffer.array(), offset, length, port, host, loop.getDomain()) :
-                _send(pointer, buffer, null, offset, length, port, host, loop.getDomain());
+                _send(pointer, buffer, buffer.array(), offset, length, port, host, loop.getContext()) :
+                _send(pointer, buffer, null, offset, length, port, host, loop.getContext());
     }
 
     public int send6(final ByteBuffer buffer,
@@ -194,8 +194,8 @@ public final class UDPHandle extends Handle {
         Objects.requireNonNull(host);
         LibUVPermission.checkUDPSend(host, port);
         return buffer.hasArray() ?
-                _send6(pointer, buffer, buffer.array(), offset, length, port, host, loop.getDomain()) :
-                _send6(pointer, buffer, null, offset, length, port, host, loop.getDomain());
+                _send6(pointer, buffer, buffer.array(), offset, length, port, host, loop.getContext()) :
+                _send6(pointer, buffer, null, offset, length, port, host, loop.getContext());
     }
 
     public int recvStart() {
@@ -240,9 +240,9 @@ public final class UDPHandle extends Handle {
         }
     }
 
-    private void callSend(final int status, final Exception error, final Object domain) {
+    private void callSend(final int status, final Exception error, final Object context) {
         if (onSend != null) {
-            loop.getCallbackHandler(domain).handleUDPSendCallback(onSend, status, error);
+            loop.getCallbackHandler(context).handleUDPSendCallback(onSend, status, error);
         }
     }
 
@@ -274,7 +274,8 @@ public final class UDPHandle extends Handle {
                              final int offset,
                              final int length,
                              final int port,
-                             final String host, final Object domain);
+                             final String host,
+                             final Object context);
 
     private native int _send6(final long ptr,
                               final ByteBuffer buffer,
@@ -282,7 +283,8 @@ public final class UDPHandle extends Handle {
                               final int offset,
                               final int length,
                               final int port,
-                              final String host, final Object domain);
+                              final String host,
+                              final Object context);
 
     private native int _recv_start(final long ptr);
 

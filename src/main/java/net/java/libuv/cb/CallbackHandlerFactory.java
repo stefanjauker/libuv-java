@@ -26,6 +26,6 @@
 package net.java.libuv.cb;
 
 public interface CallbackHandlerFactory {
-    public CallbackHandler newCallbackHandlerWithDomain(Object domain);
+    public CallbackHandler newCallbackHandler(Object context);
     public CallbackHandler newCallbackHandler();
 }

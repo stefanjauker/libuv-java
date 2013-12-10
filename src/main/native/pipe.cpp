@@ -27,18 +27,18 @@
 
 #include "uv.h"
 #include "exception.h"
-#include "domain_holder.h"
+#include "context.h"
 #include "stream.h"
 #include "net_java_libuv_handles_PipeHandle.h"
 
 static void _pipe_connect_cb(uv_connect_t* req, int status) {
   assert(req);
-  assert(req->data);  
+  assert(req->data);
   assert(req->handle);
   assert(req->handle->data);
-  DomainHolder* req_data = reinterpret_cast<DomainHolder*>(req->data);
+  ContextHolder* req_data = reinterpret_cast<ContextHolder*>(req->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(req->handle->data);
-  cb->on_connect(status, status < 0 ? uv_last_error(req->handle->loop).code : 0, req_data->domain());
+  cb->on_connect(status, status < 0 ? uv_last_error(req->handle->loop).code : 0, req_data->context());
   delete req_data;
   delete req;
 }
@@ -106,12 +106,12 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_PipeHandle__1bind
  * Signature: (JLjava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_net_java_libuv_handles_PipeHandle__1connect
-  (JNIEnv *env, jobject that, jlong pipe, jstring name, jobject domain) {
+  (JNIEnv *env, jobject that, jlong pipe, jstring name, jobject context) {
 
   assert(pipe);
   uv_pipe_t* handle = reinterpret_cast<uv_pipe_t*>(pipe);
   uv_connect_t* connect = new uv_connect_t();
-  connect->data = new DomainHolder(env, domain);
+  connect->data = new ContextHolder(env, context);
   connect->handle = reinterpret_cast<uv_stream_t*>(handle);
   const char *pipeName = env->GetStringUTFChars(name, 0);
   uv_pipe_connect(connect, handle, pipeName, _pipe_connect_cb);

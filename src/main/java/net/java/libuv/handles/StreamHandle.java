@@ -110,7 +110,7 @@ public class StreamHandle extends Handle {
         } catch (final UnsupportedEncodingException e) {
             throw new RuntimeException(e); // "utf-8" is always supported
         }
-        return _write2(pointer, ByteBuffer.wrap(data), data, 0, data.length, handle.pointer, loop.getDomain());
+        return _write2(pointer, ByteBuffer.wrap(data), data, 0, data.length, handle.pointer, loop.getContext());
     }
 
     public int write(final String str) {
@@ -133,8 +133,8 @@ public class StreamHandle extends Handle {
     public int write(final ByteBuffer buffer, final int offset, final int length) {
         Objects.requireNonNull(buffer);
         return buffer.hasArray() ?
-                _write(pointer, buffer, buffer.array(), offset, length, loop.getDomain()) :
-                _write(pointer, buffer, null, offset, length, loop.getDomain());
+                _write(pointer, buffer, buffer.array(), offset, length, loop.getContext()) :
+                _write(pointer, buffer, null, offset, length, loop.getContext());
     }
 
     public int write(final ByteBuffer buffer) {
@@ -143,7 +143,7 @@ public class StreamHandle extends Handle {
     }
 
     public int closeWrite() {
-        return _close_write(pointer, loop.getDomain());
+        return _close_write(pointer, loop.getContext());
     }
 
     public void close() {
@@ -198,15 +198,15 @@ public class StreamHandle extends Handle {
         }
     }
 
-    private void callWrite(final int status, final Exception error, final Object domain) {
+    private void callWrite(final int status, final Exception error, final Object context) {
         if (onWrite != null) {
-            loop.getCallbackHandler(domain).handleStreamWriteCallback(onWrite, status, error);
+            loop.getCallbackHandler(context).handleStreamWriteCallback(onWrite, status, error);
         }
     }
 
-    private void callConnect(final int status, final Exception error, final Object domain) {
+    private void callConnect(final int status, final Exception error, final Object context) {
         if (onConnect != null) {
-            loop.getCallbackHandler(domain).handleStreamConnectCallback(onConnect, status, error);
+            loop.getCallbackHandler(context).handleStreamConnectCallback(onConnect, status, error);
         }
     }
 
@@ -222,9 +222,9 @@ public class StreamHandle extends Handle {
         }
     }
 
-    private void callShutdown(final int status, final Exception error, final Object domain) {
+    private void callShutdown(final int status, final Exception error, final Object context) {
         if (onShutdown != null) {
-            loop.getCallbackHandler(domain).handleStreamShutdownCallback(onShutdown, status, error);
+            loop.getCallbackHandler(context).handleStreamShutdownCallback(onShutdown, status, error);
         }
     }
 
@@ -246,20 +246,22 @@ public class StreamHandle extends Handle {
                               final ByteBuffer buffer,
                               final byte[] data,
                               final int offset,
-                              final int length, final Object domain);
+                              final int length,
+                              final Object context);
 
     private native int _write2(final long ptr,
                                final ByteBuffer buffer,
                                final byte[] data,
                                final int offset,
                                final int length,
-                               final long handlePointer, final Object domain);
+                               final long handlePointer,
+                               final Object context);
 
     private native long _write_queue_size(final long ptr);
 
     private native void _close(final long ptr);
 
-    private native int _close_write(final long ptr, final Object domain);
+    private native int _close_write(final long ptr, final Object context);
 
     private native int _listen(final long ptr, final int backlog);
 

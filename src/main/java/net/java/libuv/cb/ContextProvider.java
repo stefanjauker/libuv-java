@@ -25,8 +25,8 @@
 
 package net.java.libuv.cb;
 
-public interface CallbackDomainProvider {
+public interface ContextProvider {
 
-    public Object getDomain();
+    public Object getContext();
 
 }

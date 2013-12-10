@@ -29,7 +29,7 @@
 
 #include "uv.h"
 #include "exception.h"
-#include "domain_holder.h"
+#include "context.h"
 #include "stream.h"
 #include "udp.h"
 #include "net_java_libuv_handles_UDPHandle.h"
@@ -100,7 +100,7 @@ void UDPCallbacks::on_recv(ssize_t nread, uv_buf_t buf, struct sockaddr* addr, u
   delete[] buf.base;
 }
 
-void UDPCallbacks::on_send(int status, int error_code, jobject buffer, jobject domain) {
+void UDPCallbacks::on_send(int status, int error_code, jobject buffer, jobject context) {
   assert(_env);
 
   jthrowable exception = error_code ? NewException(_env, error_code) : NULL;
@@ -109,7 +109,7 @@ void UDPCallbacks::on_send(int status, int error_code, jobject buffer, jobject d
       _send_callback_mid,
       status,
       exception,
-      domain);
+      context);
 }
 
 void UDPCallbacks::on_close() {
@@ -140,8 +140,8 @@ static void _send_cb(uv_udp_send_t* req, int status) {
   assert(req->data);
   assert(req->handle->data);
   UDPCallbacks* cb = reinterpret_cast<UDPCallbacks*>(req->handle->data);
-  DomainHolder* req_data = reinterpret_cast<DomainHolder*>(req->data);
-  cb->on_send(status, status < 0 ? uv_last_error(req->handle->loop).code : 0, req_data->data(), req_data->domain());
+  ContextHolder* req_data = reinterpret_cast<ContextHolder*>(req->data);
+  cb->on_send(status, status < 0 ? uv_last_error(req->handle->loop).code : 0, req_data->data(), req_data->context());
   delete req_data;
   delete req;
 }
@@ -262,7 +262,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1bind6
  * Signature: (JLjava/nio/ByteBuffer;[BIIILjava/lang/String;)I
  */
 JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1send
-  (JNIEnv *env, jobject that, jlong udp, jobject buffer, jbyteArray data, jint offset, jint length, jint port, jstring host, jobject domain) {
+  (JNIEnv *env, jobject that, jlong udp, jobject buffer, jbyteArray data, jint offset, jint length, jint port, jstring host, jobject context) {
 
   assert(udp);
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
@@ -270,15 +270,15 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1send
   sockaddr_in addr = uv_ip4_addr(h, port);
   uv_udp_send_t* req = new uv_udp_send_t();
   req->handle = handle;
-  DomainHolder* req_data = NULL;
+  ContextHolder* req_data = NULL;
   int r;
   if (data) {
     jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
     OOME(env, base);
     uv_buf_t buf;
     buf.base = reinterpret_cast<char*>(base + offset);
-    buf.len = length;   
-    req_data = new DomainHolder(env, domain);
+    buf.len = length;
+    req_data = new ContextHolder(env, context);
     req->data = req_data;
     r = uv_udp_send(req, handle, &buf, 1, addr, _send_cb);
     env->ReleasePrimitiveArrayCritical(data, base, 0);
@@ -287,7 +287,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1send
     uv_buf_t buf;
     buf.base = reinterpret_cast<char*>(base + offset);
     buf.len = length;
-    req_data = new DomainHolder(env, buffer, domain);
+    req_data = new ContextHolder(env, buffer, context);
     req->data = req_data;
     r = uv_udp_send(req, handle, &buf, 1, addr, _send_cb);
   }
@@ -306,7 +306,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1send
  * Signature: (JLjava/nio/ByteBuffer;[BIIILjava/lang/String;)I
  */
 JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1send6
-  (JNIEnv *env, jobject that, jlong udp, jobject buffer, jbyteArray data, jint offset, jint length, jint port, jstring host, jobject domain) {
+  (JNIEnv *env, jobject that, jlong udp, jobject buffer, jbyteArray data, jint offset, jint length, jint port, jstring host, jobject context) {
 
   assert(udp);
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
@@ -321,7 +321,7 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1send6
 
   uv_udp_send_t* req = new uv_udp_send_t();
   req->handle = handle;
-  DomainHolder* req_data = new DomainHolder(env, domain); 
+  ContextHolder* req_data = new ContextHolder(env, context);
   req->data = req_data;
   int r = uv_udp_send6(req, handle, &buf, 1, addr, _send_cb);
   env->ReleasePrimitiveArrayCritical(data, base, 0);

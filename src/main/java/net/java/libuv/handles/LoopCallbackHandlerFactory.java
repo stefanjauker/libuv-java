@@ -30,13 +30,15 @@ import net.java.libuv.cb.CallbackHandler;
 import net.java.libuv.cb.CallbackHandlerFactory;
 
 public final class LoopCallbackHandlerFactory implements CallbackHandlerFactory {
+
     private final LoopCallbackHandler defaultHandler;
+
     public LoopCallbackHandlerFactory(final CallbackExceptionHandler exceptionHandler) {
         defaultHandler = new LoopCallbackHandler(exceptionHandler);
     }
-    
+
     @Override
-    public CallbackHandler newCallbackHandlerWithDomain(Object domain) {
+    public CallbackHandler newCallbackHandler(Object context) {
         return defaultHandler;
     }
 

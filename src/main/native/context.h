@@ -23,28 +23,25 @@
  * questions.
  */
 
-#include <assert.h>
-#include <stdlib.h>
+#ifndef _libuv_java_context_h_
+#define _libuv_java_context_h_
+
 #include <jni.h>
-#include "domain_holder.h"
 
- DomainHolder::DomainHolder(JNIEnv* env, jobject data, jobject domain) {
-  _data = data ? (jobject) env->NewGlobalRef(data) : NULL;
-  _env = env;
-  _domain = domain ? (jobject) env->NewGlobalRef(domain) : NULL;
- }
+#include "uv.h"
 
- DomainHolder::DomainHolder(JNIEnv* env, jobject domain) {
-  _data = NULL;
-  _env = env;
-  _domain = domain ? (jobject) env->NewGlobalRef(domain) : NULL;
- }
+class ContextHolder {
+  private:
+    jobject _context;
+    jobject _data;
+    JNIEnv* _env;
 
- DomainHolder::~DomainHolder() {
-  if (_domain) {
-   _env->DeleteGlobalRef(_domain);
-  }
-  if (_data) {
-   _env->DeleteGlobalRef(_data);
-  }
- }
+  public:
+    inline jobject context() { return _context; }
+    inline jobject data() { return _data; }
+    ContextHolder(JNIEnv* env, jobject data, jobject context);
+    ContextHolder(JNIEnv* env, jobject context);
+    ~ContextHolder();
+};
+
+#endif // _libuv_java_contexts_h_
