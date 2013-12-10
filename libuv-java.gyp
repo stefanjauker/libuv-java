@@ -34,6 +34,11 @@
                 'defines': [ 'NDEBUG' ],
                 'conditions': [
                     ['OS == "win"', {
+                        'msvs_settings': {
+                            'VCCLCompilerTool': {
+                                'ObjectFile': 'out\<(target)\obj.target\libuv-java\\',
+                            },
+                        },
                     }],
                     [ 'OS=="linux"', {
                     }],
