@@ -140,7 +140,7 @@ void StreamCallbacks::on_read(uv_buf_t* buf, jsize nread) {
   delete[] buf->base;
 }
 
-void StreamCallbacks::on_read2(uv_buf_t* buf, jsize nread, long ptr, uv_handle_type pending) {
+void StreamCallbacks::on_read2(uv_buf_t* buf, jsize nread, jlong ptr, uv_handle_type pending) {
   assert(_env);
   if (nread < 0) {
     _env->CallVoidMethod(
@@ -293,7 +293,7 @@ static void _read2_cb(uv_pipe_t* pipe, ssize_t nread, uv_buf_t buf, uv_handle_ty
       cb->throw_exception(r, "read2_cb.uv_accept(tcp)");
       return;
     }
-    cb->on_read2(&buf, size, reinterpret_cast<long>(tcp), pending);
+    cb->on_read2(&buf, size, reinterpret_cast<jlong>(tcp), pending);
   } else if (pending == UV_NAMED_PIPE) {
     uv_pipe_t* p = new uv_pipe_t();
     r = uv_pipe_init(handle->loop, p, 1);
@@ -306,7 +306,7 @@ static void _read2_cb(uv_pipe_t* pipe, ssize_t nread, uv_buf_t buf, uv_handle_ty
       cb->throw_exception(r, "read2_cb.uv_accept(pipe)");
       return;
     }
-    cb->on_read2(&buf, size, reinterpret_cast<long>(p), pending);
+    cb->on_read2(&buf, size, reinterpret_cast<jlong>(p), pending);
   } else if (pending == UV_UDP) {
     uv_udp_t* udp = new uv_udp_t();
     r = uv_udp_init(handle->loop, udp);
@@ -320,7 +320,7 @@ static void _read2_cb(uv_pipe_t* pipe, ssize_t nread, uv_buf_t buf, uv_handle_ty
       cb->throw_exception(r, "read2_cb.uv_accept(udp)");
       return;
     }
-    cb->on_read2(&buf, size, reinterpret_cast<long>(udp), pending);
+    cb->on_read2(&buf, size, reinterpret_cast<jlong>(udp), pending);
   } else {
     assert(pending == UV_UNKNOWN_HANDLE);
     cb->on_read(&buf, size);
