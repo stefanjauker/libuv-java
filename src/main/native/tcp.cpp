@@ -270,7 +270,8 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_TCPHandle__1simultaneous_1acc
 
   int r = uv_tcp_simultaneous_accepts(handle, enable);
   if (r) {
-    ThrowException(env, handle->loop, "uv_tcp_simultaneous_accepts");
+    // TODO: Node.js as of v0.10.23 ignores the error.
+    // ThrowException(env, handle->loop, "uv_tcp_simultaneous_accepts");
   }
   return r;
 }
