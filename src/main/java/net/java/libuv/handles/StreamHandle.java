@@ -102,6 +102,14 @@ public class StreamHandle extends Handle {
     }
 
     public int write2(final String str, final StreamHandle handle) {
+        return _write2(str, handle);
+    }
+
+    public int write2(final String str, final UDPHandle handle) {
+        return _write2(str, handle);
+    }
+
+    private int _write2(final String str, final Handle handle) {
         Objects.requireNonNull(str);
         assert handle != null;
         final byte[] data;

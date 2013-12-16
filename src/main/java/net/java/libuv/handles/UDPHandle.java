@@ -77,6 +77,12 @@ public final class UDPHandle extends Handle {
         _initialize(pointer);
     }
 
+    public UDPHandle(final LoopHandle loop, final long pointer) {
+        super(pointer, loop);
+        this.closed = false;
+        _initialize(pointer);
+    }
+
     public void close() {
         if (!closed) {
             _close(pointer);
