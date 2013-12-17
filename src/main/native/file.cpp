@@ -116,7 +116,7 @@ public:
 
   void initialize(jobject instance, uv_loop_t* loop);
   void fs_cb(FileRequest* request, uv_fs_type fs_type, ssize_t result, void* ptr);
-  void fs_cb(FileRequest* request, uv_fs_type fs_type, int errorno);
+  void fs_cb(FileRequest* request, uv_fs_type fs_type, const char* target_path, int errorno);
 };
 
 jclass FileCallback::_files_cid = NULL;
@@ -409,17 +409,20 @@ void FileCallback::fs_cb(FileRequest* request, uv_fs_type fs_type, ssize_t resul
   }
 }
 
-void FileCallback::fs_cb(FileRequest* request, uv_fs_type fs_type, int errorno) {
+void FileCallback::fs_cb(FileRequest* request, uv_fs_type fs_type, const char* target_path, int errorno) {
   assert(_env);
   assert(request);
 
   jstring path = request->path();
   const char* cpath = NULL;
-  if (path) {
-    cpath = _env->GetStringUTFChars(path, 0);
-  }
+  jthrowable exception;
 
-  jthrowable exception = NewException(_env, errorno, NULL, NULL, cpath);
+  if ((errorno == UV_EEXIST || errorno == UV_ENOTEMPTY || errorno == UV_EPERM) && path) {
+    cpath = _env->GetStringUTFChars(path, 0);
+    exception = NewException(_env, errorno, NULL, NULL, cpath);
+  } else {
+    exception = NewException(_env, errorno, NULL, NULL, target_path);
+  }
 
   switch (fs_type) {
     case UV_FS_CLOSE:
@@ -551,7 +554,7 @@ static void _fs_cb(uv_fs_t* req) {
   assert(cb);
 
   if (req->result == -1) {
-    cb->fs_cb(request, req->fs_type, req->errorno);
+    cb->fs_cb(request, req->fs_type, req->path, req->errorno);
   } else {
     cb->fs_cb(request, req->fs_type, req->result, req->ptr);
   }
@@ -956,14 +959,20 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1rename
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new FileRequest(cb, callback, 0, path, context);
+    req->data = new FileRequest(cb, callback, 0, new_path, context);
     r = uv_fs_rename(cb->loop(), req, src_path, dst_path, _fs_cb);
   } else {
     uv_fs_t req;
     r = uv_fs_rename(cb->loop(), &req, src_path, dst_path, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_rename", NULL, src_path);
+      int code = uv_last_error(cb->loop()).code;
+      if (dst_path != NULL &&
+         (code == UV_EEXIST || code == UV_ENOTEMPTY || code == UV_EPERM)) {
+        ThrowException(env, code, "uv_fs_rename", NULL, dst_path);
+      } else {
+        ThrowException(env, code, "uv_fs_rename", NULL, src_path);
+      }
     }
   }
   env->ReleaseStringUTFChars(path, src_path);
@@ -1210,14 +1219,20 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_Files__1link
 
   if (callback) {
     uv_fs_t* req = new uv_fs_t();
-    req->data = new FileRequest(cb, callback, 0, path, context);
+    req->data = new FileRequest(cb, callback, 0, new_path, context);
     r = uv_fs_link(cb->loop(), req, src_path, dst_path, _fs_cb);
   } else {
     uv_fs_t req;
     r = uv_fs_link(cb->loop(), &req, src_path, dst_path, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_link", NULL, src_path);
+      int code = uv_last_error(cb->loop()).code;
+      if (dst_path != NULL &&
+         (code == UV_EEXIST || code == UV_ENOTEMPTY || code == UV_EPERM)) {
+        ThrowException(env, code, "uv_fs_link", NULL, dst_path);
+      } else {
+        ThrowException(env, code, "uv_fs_link", NULL, src_path);
+      }
     }
   }
   env->ReleaseStringUTFChars(path, src_path);
