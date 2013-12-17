@@ -301,6 +301,7 @@ static void _read2_cb(uv_pipe_t* pipe, ssize_t nread, uv_buf_t buf, uv_handle_ty
       cb->throw_exception(r, "read2_cb.uv_pipe_init");
       return;
     }
+    p->data = new StreamCallbacks();
     r = uv_accept(handle, reinterpret_cast<uv_stream_t*>(p));
     if (r) {
       cb->throw_exception(r, "read2_cb.uv_accept(pipe)");
