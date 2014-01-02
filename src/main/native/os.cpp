@@ -32,14 +32,14 @@
 
 #include "uv.h"
 #include "exception.h"
-#include "net_java_libuv_LibUV.h"
+#include "com_oracle_libuv_LibUV.h"
 
 /*
- * Class:     net_java_libuv_LibUV
+ * Class:     com_oracle_libuv_LibUV
  * Method:    _getUptime
  * Signature: ()D
  */
-JNIEXPORT jdouble JNICALL Java_net_java_libuv_LibUV__1getUptime
+JNIEXPORT jdouble JNICALL Java_com_oracle_libuv_LibUV__1getUptime
   (JNIEnv *env, jclass cls) {
 
   double uptime;
@@ -54,11 +54,11 @@ JNIEXPORT jdouble JNICALL Java_net_java_libuv_LibUV__1getUptime
 }
 
 /*
- * Class:     net_java_libuv_LibUV
+ * Class:     com_oracle_libuv_LibUV
  * Method:    _getLoadAvg
  * Signature: ()[D
  */
-JNIEXPORT jdoubleArray JNICALL Java_net_java_libuv_LibUV__1getLoadAvg
+JNIEXPORT jdoubleArray JNICALL Java_com_oracle_libuv_LibUV__1getLoadAvg
   (JNIEnv *env, jclass cls) {
 
   double loadavg[3];
@@ -73,33 +73,33 @@ JNIEXPORT jdoubleArray JNICALL Java_net_java_libuv_LibUV__1getLoadAvg
 }
 
 /*
- * Class:     net_java_libuv_LibUV
+ * Class:     com_oracle_libuv_LibUV
  * Method:    _getTotalMem
  * Signature: ()D
  */
-JNIEXPORT jdouble JNICALL Java_net_java_libuv_LibUV__1getTotalMem
+JNIEXPORT jdouble JNICALL Java_com_oracle_libuv_LibUV__1getTotalMem
   (JNIEnv *env, jclass cls) {
 
   return (jdouble) uv_get_total_memory();
 }
 
 /*
- * Class:     net_java_libuv_LibUV
+ * Class:     com_oracle_libuv_LibUV
  * Method:    _getFreeMem
  * Signature: ()D
  */
-JNIEXPORT jdouble JNICALL Java_net_java_libuv_LibUV__1getFreeMem
+JNIEXPORT jdouble JNICALL Java_com_oracle_libuv_LibUV__1getFreeMem
   (JNIEnv *env, jclass cls) {
 
   return (jdouble) uv_get_free_memory();
 }
 
 /*
- * Class:     net_java_libuv_LibUV
+ * Class:     com_oracle_libuv_LibUV
  * Method:    _getCPUs
  * Signature: ()[Ljava/lang/Object;
  */
-JNIEXPORT jobjectArray JNICALL Java_net_java_libuv_LibUV__1getCPUs
+JNIEXPORT jobjectArray JNICALL Java_com_oracle_libuv_LibUV__1getCPUs
   (JNIEnv *env, jclass cls) {
 
   uv_cpu_info_t* cpu_infos;
@@ -139,11 +139,11 @@ JNIEXPORT jobjectArray JNICALL Java_net_java_libuv_LibUV__1getCPUs
 }
 
 /*
- * Class:     net_java_libuv_LibUV
+ * Class:     com_oracle_libuv_LibUV
  * Method:    _isIPv6
  * Signature: (Ljava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_net_java_libuv_LibUV__1isIPv6
+JNIEXPORT jboolean JNICALL Java_com_oracle_libuv_LibUV__1isIPv6
   (JNIEnv *env, jclass cls, jstring ip) {
 
   const char *address = env->GetStringUTFChars(ip, JNI_FALSE);

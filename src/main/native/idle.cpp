@@ -31,7 +31,7 @@
 #include "uv.h"
 #include "exception.h"
 #include "stream.h"
-#include "net_java_libuv_handles_IdleHandle.h"
+#include "com_oracle_libuv_handles_IdleHandle.h"
 
 class IdleCallbacks {
 private:
@@ -125,11 +125,11 @@ static void _close_cb(uv_handle_t* handle) {
 }
 
 /*
- * Class:     net_java_libuv_handles_IdleHandle
+ * Class:     com_oracle_libuv_handles_IdleHandle
  * Method:    _new
  * Signature: (J)J
  */
-JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_IdleHandle__1new
+JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_IdleHandle__1new
   (JNIEnv *env, jclass cls, jlong loop) {
 
   assert(loop);
@@ -145,22 +145,22 @@ JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_IdleHandle__1new
 }
 
 /*
- * Class:     net_java_libuv_handles_IdleHandle
+ * Class:     com_oracle_libuv_handles_IdleHandle
  * Method:    _static_initialize
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_IdleHandle__1static_1initialize
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_IdleHandle__1static_1initialize
   (JNIEnv *env, jclass cls) {
 
   IdleCallbacks::static_initialize(env, cls);
 }
 
 /*
- * Class:     net_java_libuv_handles_IdleHandle
+ * Class:     com_oracle_libuv_handles_IdleHandle
  * Method:    _initialize
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_IdleHandle__1initialize
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_IdleHandle__1initialize
   (JNIEnv *env, jobject that, jlong idle) {
 
   assert(idle);
@@ -171,11 +171,11 @@ JNIEXPORT void JNICALL Java_net_java_libuv_handles_IdleHandle__1initialize
 }
 
 /*
- * Class:     net_java_libuv_handles_IdleHandle
+ * Class:     com_oracle_libuv_handles_IdleHandle
  * Method:    _start
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_IdleHandle__1start
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_IdleHandle__1start
   (JNIEnv *env, jobject that, jlong idle) {
 
   assert(idle);
@@ -188,11 +188,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_IdleHandle__1start
 }
 
 /*
- * Class:     net_java_libuv_handles_IdleHandle
+ * Class:     com_oracle_libuv_handles_IdleHandle
  * Method:    _stop
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_IdleHandle__1stop
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_IdleHandle__1stop
   (JNIEnv *env, jobject that, jlong idle) {
 
   assert(idle);
@@ -205,11 +205,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_IdleHandle__1stop
 }
 
 /*
- * Class:     net_java_libuv_handles_IdleHandle
+ * Class:     com_oracle_libuv_handles_IdleHandle
  * Method:    _close
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_IdleHandle__1close
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_IdleHandle__1close
   (JNIEnv *env, jobject that, jlong idle) {
 
   assert(idle);

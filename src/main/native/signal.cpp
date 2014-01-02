@@ -31,7 +31,7 @@
 #include "uv.h"
 #include "exception.h"
 #include "stream.h"
-#include "net_java_libuv_handles_SignalHandle.h"
+#include "com_oracle_libuv_handles_SignalHandle.h"
 
 class SignalCallbacks {
 private:
@@ -100,11 +100,11 @@ static void _signal_cb(uv_signal_t* handle, int signum) {
 }
 
 /*
- * Class:     net_java_libuv_handles_SignalHandle
+ * Class:     com_oracle_libuv_handles_SignalHandle
  * Method:    _new
  * Signature: (J)J
  */
-JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_SignalHandle__1new
+JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_SignalHandle__1new
   (JNIEnv *env, jclass cls, jlong loop) {
 
   assert(loop);
@@ -120,22 +120,22 @@ JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_SignalHandle__1new
 }
 
 /*
- * Class:     net_java_libuv_handles_SignalHandle
+ * Class:     com_oracle_libuv_handles_SignalHandle
  * Method:    _static_initialize
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_SignalHandle__1static_1initialize
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_SignalHandle__1static_1initialize
   (JNIEnv *env, jclass cls) {
 
   SignalCallbacks::static_initialize(env, cls);
 }
 
 /*
- * Class:     net_java_libuv_handles_SignalHandle
+ * Class:     com_oracle_libuv_handles_SignalHandle
  * Method:    _initialize
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_SignalHandle__1initialize
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_SignalHandle__1initialize
   (JNIEnv *env, jobject that, jlong signal) {
 
   assert(signal);
@@ -146,11 +146,11 @@ JNIEXPORT void JNICALL Java_net_java_libuv_handles_SignalHandle__1initialize
 }
 
 /*
- * Class:     net_java_libuv_handles_SignalHandle
+ * Class:     com_oracle_libuv_handles_SignalHandle
  * Method:    _start
  * Signature: (JI)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_SignalHandle__1start
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_SignalHandle__1start
   (JNIEnv *env, jobject that, jlong signal, jint signum) {
 
   assert(signal);
@@ -163,11 +163,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_SignalHandle__1start
 }
 
 /*
- * Class:     net_java_libuv_handles_SignalHandle
+ * Class:     com_oracle_libuv_handles_SignalHandle
  * Method:    _stop
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_SignalHandle__1stop
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_SignalHandle__1stop
   (JNIEnv *env, jobject that, jlong signal) {
 
   assert(signal);

@@ -28,7 +28,7 @@
 #include <fcntl.h>
 #include <signal.h>
 
-#include "net_java_libuv_Constants.h"
+#include "com_oracle_libuv_Constants.h"
 
 #ifdef _WIN32
 
@@ -128,11 +128,11 @@
 #endif  /* __POSIX__ */
 
 /*
- * Class:     net_java_libuv_Constants
+ * Class:     com_oracle_libuv_Constants
  * Method:    _getFieldValues
  * Signature: ([I)V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_Constants__1get_1field_1values
+JNIEXPORT void JNICALL Java_com_oracle_libuv_Constants__1get_1field_1values
   (JNIEnv *env, jclass cls, jintArray array) {
 
   jint* values = env->GetIntArrayElements(array, 0);

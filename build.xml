@@ -23,25 +23,25 @@
 
     <target name="javah" depends="compile">
         <javah destdir="${native.build.dir}" classpath="${classes.dir}">
-            <class name="net.java.libuv.Constants"/>
-            <class name="net.java.libuv.LibUV"/>
-            <class name="net.java.libuv.Files"/>
-            <class name="net.java.libuv.NativeException"/>
-            <class name="net.java.libuv.handles.AsyncHandle"/>
-            <class name="net.java.libuv.handles.CheckHandle"/>
-            <class name="net.java.libuv.handles.FileEventHandle"/>
-            <class name="net.java.libuv.handles.FilePollHandle"/>
-            <class name="net.java.libuv.handles.Handle"/>
-            <class name="net.java.libuv.handles.IdleHandle"/>
-            <class name="net.java.libuv.handles.LoopHandle"/>
-            <class name="net.java.libuv.handles.PipeHandle"/>
-            <class name="net.java.libuv.handles.ProcessHandle"/>
-            <class name="net.java.libuv.handles.SignalHandle"/>
-            <class name="net.java.libuv.handles.StreamHandle"/>
-            <class name="net.java.libuv.handles.TCPHandle"/>
-            <class name="net.java.libuv.handles.TimerHandle"/>
-            <class name="net.java.libuv.handles.TTYHandle"/>
-            <class name="net.java.libuv.handles.UDPHandle"/>
+            <class name="com.oracle.libuv.Constants"/>
+            <class name="com.oracle.libuv.LibUV"/>
+            <class name="com.oracle.libuv.Files"/>
+            <class name="com.oracle.libuv.NativeException"/>
+            <class name="com.oracle.libuv.handles.AsyncHandle"/>
+            <class name="com.oracle.libuv.handles.CheckHandle"/>
+            <class name="com.oracle.libuv.handles.FileEventHandle"/>
+            <class name="com.oracle.libuv.handles.FilePollHandle"/>
+            <class name="com.oracle.libuv.handles.Handle"/>
+            <class name="com.oracle.libuv.handles.IdleHandle"/>
+            <class name="com.oracle.libuv.handles.LoopHandle"/>
+            <class name="com.oracle.libuv.handles.PipeHandle"/>
+            <class name="com.oracle.libuv.handles.ProcessHandle"/>
+            <class name="com.oracle.libuv.handles.SignalHandle"/>
+            <class name="com.oracle.libuv.handles.StreamHandle"/>
+            <class name="com.oracle.libuv.handles.TCPHandle"/>
+            <class name="com.oracle.libuv.handles.TimerHandle"/>
+            <class name="com.oracle.libuv.handles.TTYHandle"/>
+            <class name="com.oracle.libuv.handles.UDPHandle"/>
         </javah>
     </target>
 
@@ -108,7 +108,7 @@
         <attribute name="tests" default=""/>
         <element name="args" optional="true"/>
         <sequential>
-            <java fork="true" failonerror="true" classname="net.java.libuv.runner.TestRunner">
+            <java fork="true" failonerror="true" classname="com.oracle.libuv.runner.TestRunner">
                 <classpath path="${classes.dir}"/>
                 <classpath path="${test.classes.dir}"/>
                 <classpath path="${testng.jar}"/>

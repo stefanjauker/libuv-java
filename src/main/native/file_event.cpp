@@ -31,7 +31,7 @@
 #include "uv.h"
 #include "exception.h"
 #include "stream.h"
-#include "net_java_libuv_handles_FileEventHandle.h"
+#include "com_oracle_libuv_handles_FileEventHandle.h"
 
 class FileEventCallbacks {
 private:
@@ -129,11 +129,11 @@ static void _close_cb(uv_handle_t* handle) {
 }
 
 /*
- * Class:     net_java_libuv_handles_FileEventHandle
+ * Class:     com_oracle_libuv_handles_FileEventHandle
  * Method:    _new
  * Signature: (V)J
  */
-JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_FileEventHandle__1new
+JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_FileEventHandle__1new
   (JNIEnv *env, jclass cls) {
 
   uv_fs_event_t* fs_event = new uv_fs_event_t();
@@ -142,22 +142,22 @@ JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_FileEventHandle__1new
 }
 
 /*
- * Class:     net_java_libuv_handles_FileEventHandle
+ * Class:     com_oracle_libuv_handles_FileEventHandle
  * Method:    _static_initialize
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_FileEventHandle__1static_1initialize
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_FileEventHandle__1static_1initialize
   (JNIEnv *env, jclass cls) {
 
   FileEventCallbacks::static_initialize(env, cls);
 }
 
 /*
- * Class:     net_java_libuv_handles_FileEventHandle
+ * Class:     com_oracle_libuv_handles_FileEventHandle
  * Method:    _initialize
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_FileEventHandle__1initialize
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_FileEventHandle__1initialize
   (JNIEnv *env, jobject that, jlong fs_event_ptr) {
 
   assert(fs_event_ptr);
@@ -168,11 +168,11 @@ JNIEXPORT void JNICALL Java_net_java_libuv_handles_FileEventHandle__1initialize
 }
 
 /*
- * Class:     net_java_libuv_handles_FileEventHandle
+ * Class:     com_oracle_libuv_handles_FileEventHandle
  * Method:    _start
  * Signature: (JJLjava/lang/String;Z)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileEventHandle__1start
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_FileEventHandle__1start
   (JNIEnv *env, jobject that, jlong loop_ptr, jlong fs_event_ptr, jstring path, jboolean persistent) {
 
   assert(loop_ptr);
@@ -194,11 +194,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_FileEventHandle__1start
 }
 
 /*
- * Class:     net_java_libuv_handles_FileEventHandle
+ * Class:     com_oracle_libuv_handles_FileEventHandle
  * Method:    _close
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_FileEventHandle__1close
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_FileEventHandle__1close
   (JNIEnv *env, jobject that, jlong fs_event_ptr) {
 
   assert(fs_event_ptr);

@@ -31,7 +31,7 @@
 #include <string>
 
 #include "uv.h"
-#include "net_java_libuv_NativeException.h"
+#include "com_oracle_libuv_NativeException.h"
 
 const char* get_uv_errno_string(int errorno) {
   uv_err_t err;
@@ -64,7 +64,7 @@ jthrowable NewException(JNIEnv* env, int errorno, const char *syscall, const cha
   std::string cons1 = errno_string + ", ";
   std::string cons2 = cons1 + message;
 
-  jclass nativeExceptionClassID = env->FindClass("net/java/libuv/NativeException");
+  jclass nativeExceptionClassID = env->FindClass("com/oracle/libuv/NativeException");
   assert(nativeExceptionClassID);
   jmethodID nativeExceptionConstructorMID = env->GetMethodID(
       nativeExceptionClassID,
@@ -118,11 +118,11 @@ void ThrowOutOfMemoryError(JNIEnv* env, const char* func, const char* file, cons
 }
 
 /*
- * Class:     net_java_libuv_NativeException
+ * Class:     com_oracle_libuv_NativeException
  * Method:    _static_initialize
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_NativeException__1static_1initialize
+JNIEXPORT void JNICALL Java_com_oracle_libuv_NativeException__1static_1initialize
   (JNIEnv* env, jclass cls) {
 
   assert(!_oom_cid);

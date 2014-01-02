@@ -31,7 +31,7 @@
 #include "uv.h"
 #include "exception.h"
 #include "stream.h"
-#include "net_java_libuv_handles_TimerHandle.h"
+#include "com_oracle_libuv_handles_TimerHandle.h"
 
 class TimerCallbacks {
 private:
@@ -125,11 +125,11 @@ static void _close_cb(uv_handle_t* handle) {
 }
 
 /*
- * Class:     net_java_libuv_handles_TimerHandle
+ * Class:     com_oracle_libuv_handles_TimerHandle
  * Method:    _new
  * Signature: (J)J
  */
-JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_TimerHandle__1new
+JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_TimerHandle__1new
   (JNIEnv *env, jclass cls, jlong loop) {
 
   assert(loop);
@@ -145,22 +145,22 @@ JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_TimerHandle__1new
 }
 
 /*
- * Class:     net_java_libuv_handles_TimerHandle
+ * Class:     com_oracle_libuv_handles_TimerHandle
  * Method:    _static_initialize
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_TimerHandle__1static_1initialize
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_TimerHandle__1static_1initialize
   (JNIEnv *env, jclass cls) {
 
   TimerCallbacks::static_initialize(env, cls);
 }
 
 /*
- * Class:     net_java_libuv_handles_TimerHandle
+ * Class:     com_oracle_libuv_handles_TimerHandle
  * Method:    _initialize
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_TimerHandle__1initialize
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_TimerHandle__1initialize
   (JNIEnv *env, jobject that, jlong timer) {
 
   assert(timer);
@@ -171,11 +171,11 @@ JNIEXPORT void JNICALL Java_net_java_libuv_handles_TimerHandle__1initialize
 }
 
 /*
- * Class:     net_java_libuv_handles_TimerHandle
+ * Class:     com_oracle_libuv_handles_TimerHandle
  * Method:    _start
  * Signature: (JJJ)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_TimerHandle__1start
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TimerHandle__1start
   (JNIEnv *env, jobject that, jlong timer, jlong timeout, jlong repeat) {
 
   assert(timer);
@@ -188,11 +188,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_TimerHandle__1start
 }
 
 /*
- * Class:     net_java_libuv_handles_TimerHandle
+ * Class:     com_oracle_libuv_handles_TimerHandle
  * Method:    _again
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_TimerHandle__1again
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TimerHandle__1again
   (JNIEnv *env, jobject that, jlong timer) {
 
   assert(timer);
@@ -205,11 +205,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_TimerHandle__1again
 }
 
 /*
- * Class:     net_java_libuv_handles_TimerHandle
+ * Class:     com_oracle_libuv_handles_TimerHandle
  * Method:    _get_repeat
  * Signature: (J)J
  */
-JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_TimerHandle__1get_1repeat
+JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_TimerHandle__1get_1repeat
   (JNIEnv *env, jobject that, jlong timer) {
 
   assert(timer);
@@ -218,11 +218,11 @@ JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_TimerHandle__1get_1repeat
 }
 
 /*
- * Class:     net_java_libuv_handles_TimerHandle
+ * Class:     com_oracle_libuv_handles_TimerHandle
  * Method:    _set_repeat
  * Signature: (JJ)V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_TimerHandle__1set_1repeat
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_TimerHandle__1set_1repeat
   (JNIEnv *env, jobject that, jlong timer, jlong repeat) {
 
   assert(timer);
@@ -231,11 +231,11 @@ JNIEXPORT void JNICALL Java_net_java_libuv_handles_TimerHandle__1set_1repeat
 }
 
 /*
- * Class:     net_java_libuv_handles_TimerHandle
+ * Class:     com_oracle_libuv_handles_TimerHandle
  * Method:    _stop
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_TimerHandle__1stop
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TimerHandle__1stop
   (JNIEnv *env, jobject that, jlong timer) {
 
   assert(timer);
@@ -248,11 +248,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_TimerHandle__1stop
 }
 
 /*
- * Class:     net_java_libuv_handles_TimerHandle
+ * Class:     com_oracle_libuv_handles_TimerHandle
  * Method:    _close
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_TimerHandle__1close
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_TimerHandle__1close
   (JNIEnv *env, jobject that, jlong timer) {
 
   assert(timer);

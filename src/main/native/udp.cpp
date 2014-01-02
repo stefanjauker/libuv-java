@@ -32,7 +32,7 @@
 #include "context.h"
 #include "stream.h"
 #include "udp.h"
-#include "net_java_libuv_handles_UDPHandle.h"
+#include "com_oracle_libuv_handles_UDPHandle.h"
 
 uv_buf_t _alloc_cb(uv_handle_t* handle, size_t suggested_size) {
   // override - 64k buffers are too large for udp
@@ -55,7 +55,7 @@ void UDPCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _udp_handle_cid = (jclass) env->NewGlobalRef(cls);
   assert(_udp_handle_cid);
 
-  _recv_callback_mid = env->GetMethodID(_udp_handle_cid, "callRecv", "(ILjava/nio/ByteBuffer;Lnet/java/libuv/Address;)V");
+  _recv_callback_mid = env->GetMethodID(_udp_handle_cid, "callRecv", "(ILjava/nio/ByteBuffer;Lcom/oracle/libuv/Address;)V");
   assert(_recv_callback_mid);
   _send_callback_mid = env->GetMethodID(_udp_handle_cid, "callSend", "(ILjava/lang/Exception;Ljava/lang/Object;)V");
   assert(_send_callback_mid);
@@ -147,11 +147,11 @@ static void _send_cb(uv_udp_send_t* req, int status) {
 }
 
 /*
- * Class:     net_java_libuv_handles_UDPHandle
+ * Class:     com_oracle_libuv_handles_UDPHandle
  * Method:    _new
  * Signature: (J)J
  */
-JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_UDPHandle__1new
+JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_UDPHandle__1new
   (JNIEnv *env, jclass cls, jlong loop) {
 
   assert(loop);
@@ -167,22 +167,22 @@ JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_UDPHandle__1new
 }
 
 /*
- * Class:     net_java_libuv_handles_UDPHandle
+ * Class:     com_oracle_libuv_handles_UDPHandle
  * Method:    _static_initialize
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_UDPHandle__1static_1initialize
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_UDPHandle__1static_1initialize
   (JNIEnv *env, jclass cls) {
 
   UDPCallbacks::static_initialize(env, cls);
 }
 
 /*
- * Class:     net_java_libuv_handles_UDPHandle
+ * Class:     com_oracle_libuv_handles_UDPHandle
  * Method:    _initialize
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_UDPHandle__1initialize
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_UDPHandle__1initialize
   (JNIEnv *env, jobject that, jlong udp) {
 
   assert(udp);
@@ -193,11 +193,11 @@ JNIEXPORT void JNICALL Java_net_java_libuv_handles_UDPHandle__1initialize
 }
 
 /*
- * Class:     net_java_libuv_handles_UDPHandle
+ * Class:     com_oracle_libuv_handles_UDPHandle
  * Method:    _address
- * Signature: (J)Lnet/java/libuv/Address;
+ * Signature: (J)Lcom/oracle/libuv/Address;
  */
-JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_UDPHandle__1address
+JNIEXPORT jobject JNICALL Java_com_oracle_libuv_handles_UDPHandle__1address
   (JNIEnv *env, jobject that, jlong udp) {
 
   assert(udp);
@@ -215,11 +215,11 @@ JNIEXPORT jobject JNICALL Java_net_java_libuv_handles_UDPHandle__1address
 }
 
 /*
- * Class:     net_java_libuv_handles_UDPHandle
+ * Class:     com_oracle_libuv_handles_UDPHandle
  * Method:    _bind
  * Signature: (JILjava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1bind
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1bind
   (JNIEnv *env, jobject that, jlong udp, jint port, jstring host) {
 
   assert(udp);
@@ -236,11 +236,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1bind
 }
 
 /*
- * Class:     net_java_libuv_handles_UDPHandle
+ * Class:     com_oracle_libuv_handles_UDPHandle
  * Method:    _bind6
  * Signature: (JILjava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1bind6
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1bind6
   (JNIEnv *env, jobject that, jlong udp, jint port, jstring host) {
 
   assert(udp);
@@ -257,11 +257,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1bind6
 }
 
 /*
- * Class:     net_java_libuv_handles_UDPHandle
+ * Class:     com_oracle_libuv_handles_UDPHandle
  * Method:    _send
  * Signature: (JLjava/nio/ByteBuffer;[BIIILjava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1send
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1send
   (JNIEnv *env, jobject that, jlong udp, jobject buffer, jbyteArray data, jint offset, jint length, jint port, jstring host, jobject context) {
 
   assert(udp);
@@ -301,11 +301,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1send
 }
 
 /*
- * Class:     net_java_libuv_handles_UDPHandle
+ * Class:     com_oracle_libuv_handles_UDPHandle
  * Method:    _send6
  * Signature: (JLjava/nio/ByteBuffer;[BIIILjava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1send6
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1send6
   (JNIEnv *env, jobject that, jlong udp, jobject buffer, jbyteArray data, jint offset, jint length, jint port, jstring host, jobject context) {
 
   assert(udp);
@@ -335,11 +335,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1send6
 }
 
 /*
- * Class:     net_java_libuv_handles_UDPHandle
+ * Class:     com_oracle_libuv_handles_UDPHandle
  * Method:    _recv_start
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1recv_1start
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1recv_1start
   (JNIEnv *env, jobject that, jlong udp) {
 
   assert(udp);
@@ -353,11 +353,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1recv_1start
 }
 
 /*
- * Class:     net_java_libuv_handles_UDPHandle
+ * Class:     com_oracle_libuv_handles_UDPHandle
  * Method:    _recv_stop
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1recv_1stop
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1recv_1stop
   (JNIEnv *env, jobject that, jlong udp) {
 
   assert(udp);
@@ -370,11 +370,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1recv_1stop
 }
 
 /*
- * Class:     net_java_libuv_handles_UDPHandle
+ * Class:     com_oracle_libuv_handles_UDPHandle
  * Method:    _set_ttl
  * Signature: (JI)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1set_1ttl
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1set_1ttl
   (JNIEnv *env, jobject that, jlong udp, jint ttl) {
 
   assert(udp);
@@ -387,11 +387,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1set_1ttl
 }
 
 /*
- * Class:     net_java_libuv_handles_UDPHandle
+ * Class:     com_oracle_libuv_handles_UDPHandle
  * Method:    _set_membership
  * Signature: (JLjava/lang/String;Ljava/lang/String;I)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1set_1membership
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1set_1membership
   (JNIEnv *env, jobject that, jlong udp, jstring multicastAddress, jstring interfaceAddress, jint membership) {
 
   assert(udp);
@@ -408,11 +408,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1set_1membership
 }
 
 /*
- * Class:     net_java_libuv_handles_UDPHandle
+ * Class:     com_oracle_libuv_handles_UDPHandle
  * Method:    _set_multicast_loop
  * Signature: (JI)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1set_1multicast_1loop
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1set_1multicast_1loop
   (JNIEnv *env, jobject that, jlong udp, jint on) {
 
   assert(udp);
@@ -425,11 +425,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1set_1multicast_1l
 }
 
 /*
- * Class:     net_java_libuv_handles_UDPHandle
+ * Class:     com_oracle_libuv_handles_UDPHandle
  * Method:    _set_multicast_ttl
  * Signature: (JI)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1set_1multicast_1ttl
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1set_1multicast_1ttl
   (JNIEnv *env, jobject that, jlong udp, jint ttl) {
 
   assert(udp);
@@ -442,11 +442,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1set_1multicast_1t
 }
 
 /*
- * Class:     net_java_libuv_handles_UDPHandle
+ * Class:     com_oracle_libuv_handles_UDPHandle
  * Method:    _set_broadcast
  * Signature: (JI)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1set_1broadcast
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1set_1broadcast
   (JNIEnv *env, jobject that, jlong udp, jint on) {
 
   assert(udp);
@@ -459,11 +459,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_UDPHandle__1set_1broadcast
 }
 
 /*
- * Class:     net_java_libuv_handles_UDPHandle
+ * Class:     com_oracle_libuv_handles_UDPHandle
  * Method:    _close
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_UDPHandle__1close
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_UDPHandle__1close
   (JNIEnv *env, jobject that, jlong udp) {
 
   assert(udp);

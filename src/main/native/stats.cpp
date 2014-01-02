@@ -47,7 +47,7 @@ void Stats::static_initialize(JNIEnv* env) {
   _env = env;
   assert(_env);
 
-  _stats_cid = env->FindClass("net/java/libuv/Stats");
+  _stats_cid = env->FindClass("com/oracle/libuv/Stats");
   assert(_stats_cid);
   _stats_cid = (jclass) env->NewGlobalRef(_stats_cid);
   assert(_stats_cid);

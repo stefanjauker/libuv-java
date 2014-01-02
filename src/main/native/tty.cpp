@@ -28,7 +28,7 @@
 #include "uv.h"
 #include "exception.h"
 #include "stream.h"
-#include "net_java_libuv_handles_TTYHandle.h"
+#include "com_oracle_libuv_handles_TTYHandle.h"
 
 static jstring _FILE = NULL;
 static jstring _PIPE = NULL;
@@ -38,11 +38,11 @@ static jstring _UDP = NULL;
 static jstring _UNKNOWN = NULL;
 
 /*
- * Class:     net_java_libuv_handles_TTYHandle
+ * Class:     com_oracle_libuv_handles_TTYHandle
  * Method:    _static_initialize
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_TTYHandle__1static_1initialize
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_TTYHandle__1static_1initialize
   (JNIEnv *env, jclass cls) {
 
   _FILE = env->NewStringUTF("FILE");
@@ -65,11 +65,11 @@ JNIEXPORT void JNICALL Java_net_java_libuv_handles_TTYHandle__1static_1initializ
 }
 
 /*
- * Class:     net_java_libuv_handles_TTYHandle
+ * Class:     com_oracle_libuv_handles_TTYHandle
  * Method:    _new
  * Signature: (JIZ)J
  */
-JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_TTYHandle__1new
+JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_TTYHandle__1new
   (JNIEnv *env, jclass cls, jlong loop, jint fd, jboolean readable) {
 
   uv_tty_t* tty = new uv_tty_t();
@@ -84,11 +84,11 @@ JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_TTYHandle__1new
 }
 
 /*
- * Class:     net_java_libuv_handles_TTYHandle
+ * Class:     com_oracle_libuv_handles_TTYHandle
  * Method:    _set_mode
  * Signature: (JI)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_TTYHandle__1set_1mode
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TTYHandle__1set_1mode
   (JNIEnv *env, jobject that, jlong tty, jint mode) {
 
   assert(tty);
@@ -101,11 +101,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_TTYHandle__1set_1mode
 }
 
 /*
- * Class:     net_java_libuv_handles_TTYHandle
+ * Class:     com_oracle_libuv_handles_TTYHandle
  * Method:    _reset_mode
  * Signature: (J)
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_TTYHandle__1reset_1mode
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_TTYHandle__1reset_1mode
   (JNIEnv *env, jobject that, jlong tty) {
 
   assert(tty);
@@ -113,11 +113,11 @@ JNIEXPORT void JNICALL Java_net_java_libuv_handles_TTYHandle__1reset_1mode
 }
 
 /*
- * Class:     net_java_libuv_handles_TTYHandle
+ * Class:     com_oracle_libuv_handles_TTYHandle
  * Method:    _get_window_size
  * Signature: (J)[I
  */
-JNIEXPORT jintArray JNICALL Java_net_java_libuv_handles_TTYHandle__1get_1window_1size
+JNIEXPORT jintArray JNICALL Java_com_oracle_libuv_handles_TTYHandle__1get_1window_1size
   (JNIEnv *env, jobject that, jlong tty) {
 
   assert(tty);
@@ -139,22 +139,22 @@ JNIEXPORT jintArray JNICALL Java_net_java_libuv_handles_TTYHandle__1get_1window_
 }
 
 /*
- * Class:     net_java_libuv_handles_TTYHandle
+ * Class:     com_oracle_libuv_handles_TTYHandle
  * Method:    _is_tty
  * Signature: (I)Z
  */
-JNIEXPORT jboolean JNICALL Java_net_java_libuv_handles_TTYHandle__1is_1tty
+JNIEXPORT jboolean JNICALL Java_com_oracle_libuv_handles_TTYHandle__1is_1tty
   (JNIEnv *env, jclass cls, jint fd) {
 
   return uv_guess_handle(fd) == UV_TTY ? JNI_TRUE : JNI_FALSE;
 }
 
 /*
- * Class:     net_java_libuv_handles_TTYHandle
+ * Class:     com_oracle_libuv_handles_TTYHandle
  * Method:    _guess_handle_type
  * Signature: (I)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_net_java_libuv_handles_TTYHandle__1guess_1handle_1type
+JNIEXPORT jstring JNICALL Java_com_oracle_libuv_handles_TTYHandle__1guess_1handle_1type
   (JNIEnv *env, jclass cls, jint fd) {
 
   uv_handle_type type = uv_guess_handle(fd);

@@ -24,14 +24,14 @@
  */
 
 #include "uv.h"
-#include "net_java_libuv_LibUV.h"
+#include "com_oracle_libuv_LibUV.h"
 
 /*
- * Class:     net_java_libuv_LibUV
+ * Class:     com_oracle_libuv_LibUV
  * Method:    _version
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_net_java_libuv_LibUV__1version
+JNIEXPORT jstring JNICALL Java_com_oracle_libuv_LibUV__1version
   (JNIEnv *env, jclass cls) {
 
   const char* version = uv_version_string();

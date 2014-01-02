@@ -31,7 +31,7 @@
 #include "uv.h"
 #include "exception.h"
 #include "stream.h"
-#include "net_java_libuv_handles_AsyncHandle.h"
+#include "com_oracle_libuv_handles_AsyncHandle.h"
 
 class AsyncCallbacks {
 private:
@@ -108,11 +108,11 @@ static void _close_cb(uv_handle_t* handle) {
 }
 
 /*
- * Class:     net_java_libuv_handles_AsyncHandle
+ * Class:     com_oracle_libuv_handles_AsyncHandle
  * Method:    _new
  * Signature: (J)J
  */
-JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_AsyncHandle__1new
+JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_AsyncHandle__1new
   (JNIEnv *env, jclass cls, jlong loop) {
 
   assert(loop);
@@ -128,22 +128,22 @@ JNIEXPORT jlong JNICALL Java_net_java_libuv_handles_AsyncHandle__1new
 }
 
 /*
- * Class:     net_java_libuv_handles_AsyncHandle
+ * Class:     com_oracle_libuv_handles_AsyncHandle
  * Method:    _static_initialize
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_AsyncHandle__1static_1initialize
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_AsyncHandle__1static_1initialize
   (JNIEnv *env, jclass cls) {
 
   AsyncCallbacks::static_initialize(env, cls);
 }
 
 /*
- * Class:     net_java_libuv_handles_AsyncHandle
+ * Class:     com_oracle_libuv_handles_AsyncHandle
  * Method:    _initialize
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_AsyncHandle__1initialize
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_AsyncHandle__1initialize
   (JNIEnv *env, jobject that, jlong async) {
 
   assert(async);
@@ -154,11 +154,11 @@ JNIEXPORT void JNICALL Java_net_java_libuv_handles_AsyncHandle__1initialize
 }
 
 /*
- * Class:     net_java_libuv_handles_AsyncHandle
+ * Class:     com_oracle_libuv_handles_AsyncHandle
  * Method:    _send
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL Java_net_java_libuv_handles_AsyncHandle__1send
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_AsyncHandle__1send
   (JNIEnv *env, jobject that, jlong async) {
 
   assert(async);
@@ -171,11 +171,11 @@ JNIEXPORT jint JNICALL Java_net_java_libuv_handles_AsyncHandle__1send
 }
 
 /*
- * Class:     net_java_libuv_handles_AsyncHandle
+ * Class:     com_oracle_libuv_handles_AsyncHandle
  * Method:    _close
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_net_java_libuv_handles_AsyncHandle__1close
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_AsyncHandle__1close
   (JNIEnv *env, jobject that, jlong async) {
 
   assert(async);
