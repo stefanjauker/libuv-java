@@ -42,6 +42,10 @@ public final class LibUV {
         return _version();
     }
 
+    public static void disableStdioInheritance() {
+        _disable_stdio_inheritance();
+    }
+
     // process
 
     public static String exePath() {
@@ -109,6 +113,8 @@ public final class LibUV {
     // misc
 
     private static native String _version();
+
+    private static native void _disable_stdio_inheritance();
 
     // process
 
