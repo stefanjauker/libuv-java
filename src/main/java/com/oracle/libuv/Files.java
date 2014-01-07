@@ -113,8 +113,8 @@ public final class Files {
 
     // should be private but used by unit tests.
     static final class OpenedFile {
-        private int flags;
-        private String path;
+        private final int flags;
+        private final String path;
         private OpenedFile(final String path, final int flags) {
             this.path = path;
             this.flags = flags;
@@ -129,6 +129,10 @@ public final class Files {
         assert pointer != 0;
         this.loop = loop;
         _initialize(pointer, loop.pointer());
+
+        openedFiles.put(0, new OpenedFile("stdin", 0));
+        openedFiles.put(1, new OpenedFile("stdout", 0));
+        openedFiles.put(2, new OpenedFile("stderr", 0));
     }
 
     public void setCustomCallback(final FileCallback callback) {

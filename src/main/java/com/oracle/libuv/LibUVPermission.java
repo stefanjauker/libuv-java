@@ -208,6 +208,11 @@ public final class LibUVPermission extends BasicPermission {
     }
 
     public static void checkReadFile(final int fd, final String path) {
+        // stdin, stdout, and stderr does not need to be checked as they are provided by the underlying platform.
+        // Needed to support command line redirection.
+        if (fd == 0 || fd == 1 || fd == 2) {
+            return;
+        }
         final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkRead(path);
@@ -215,6 +220,11 @@ public final class LibUVPermission extends BasicPermission {
     }
 
     public static void checkWriteFile(final int fd, final String path) {
+        // stdin, stdout, and stderr does not need to be checked as they are provided by the underlying platform.
+        // Needed to support command line redirection.
+        if (fd == 0 || fd == 1 || fd == 2) {
+            return;
+        }
         final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkWrite(path);
