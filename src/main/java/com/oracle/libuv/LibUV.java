@@ -74,6 +74,11 @@ public final class LibUV {
         _setTitle(value);
     }
 
+    public static void initArgv(final String[] args) {
+        Objects.requireNonNull(args);
+        _initArgv(args);
+    }
+
     public static int kill(final int pid, final int signal) {
         LibUVPermission.checkPermission(LibUVPermission.PROCESS_KILL);
         return _kill(pid, signal);
@@ -127,6 +132,8 @@ public final class LibUV {
     private static native String _getTitle();
 
     private static native void _setTitle(String value);
+
+    private static native void _initArgv(String[] argv);
 
     private static native int _kill(int pid, int signal);
 
