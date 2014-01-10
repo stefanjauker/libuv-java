@@ -37,6 +37,8 @@
 # define ARRAY_SIZE(a) (sizeof((a)) / sizeof((a)[0]))
 #endif
 
+extern "C" void uv__set_process_title(const char* title);
+
 /*
  * Class:     com_oracle_libuv_LibUV
  * Method:    _exe_path
@@ -101,6 +103,8 @@ JNIEXPORT void JNICALL Java_com_oracle_libuv_LibUV__1chdir
   env->ReleaseStringUTFChars(arg, dir);
 }
 
+static char* process_title = NULL; // last set value
+
 /*
  * Class:     com_oracle_libuv_LibUV
  * Method:    _getTitle
@@ -109,9 +113,7 @@ JNIEXPORT void JNICALL Java_com_oracle_libuv_LibUV__1chdir
 JNIEXPORT jstring JNICALL Java_com_oracle_libuv_LibUV__1getTitle
   (JNIEnv *env, jclass cls) {
 
-  char buffer[512];
-  uv_get_process_title(buffer, sizeof(buffer));
-  return env->NewStringUTF(buffer);
+  return env->NewStringUTF(process_title ? process_title : "");
 }
 
 /*
@@ -122,42 +124,13 @@ JNIEXPORT jstring JNICALL Java_com_oracle_libuv_LibUV__1getTitle
 JNIEXPORT void JNICALL Java_com_oracle_libuv_LibUV__1setTitle
   (JNIEnv *env, jclass cls, jstring title) {
 
-  const char *t = env->GetStringUTFChars(title, JNI_FALSE);
-  uv_set_process_title(t);
+  const char* t = env->GetStringUTFChars(title, JNI_FALSE);
+  if (process_title) {
+    free(process_title);
+  }
+  process_title = strdup(t);
+  uv__set_process_title(process_title);
   env->ReleaseStringUTFChars(title, t);
-}
-
-/*
- * Class:     com_oracle_libuv_LibUV
- * Method:    _initArgv
- * Signature: ([Ljava/lang/String;)V
- */
-JNIEXPORT void JNICALL Java_com_oracle_libuv_LibUV__1initArgv
-  (JNIEnv *env, jclass cls, jobjectArray jargs) {
- int length = env->GetArrayLength(jargs);
- size_t size = 0;
- // Complexity comes from the fact that uv_setup_args expects a memory layout
- for (int i = 0; i < length; i++) {
-   jstring str = (jstring) env->GetObjectArrayElement(jargs, i);
-   const char* cstring = env->GetStringUTFChars(str, 0);
-   size += strlen(cstring) + 1;
-   env->ReleaseStringUTFChars(str, cstring);
- }
- char** argv;
- size += (length + 1) * sizeof(char*);
- argv = (char**) malloc(size);
- char* s = (char*) &argv[length + 1];
- for (int i = 0; i < length; i++) {
-  jstring str = (jstring) env->GetObjectArrayElement(jargs, i);
-  const char* cstring = env->GetStringUTFChars(str, 0);
-  int strsize = strlen(cstring) + 1;
-  memcpy(s, cstring, strsize);
-  argv[i] = s;
-  s += strsize;
-  env->ReleaseStringUTFChars(str, cstring);
- }
- uv_setup_args(length, argv);
- free(argv);
 }
 
 /*
