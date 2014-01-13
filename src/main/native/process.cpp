@@ -129,7 +129,9 @@ JNIEXPORT void JNICALL Java_com_oracle_libuv_LibUV__1setTitle
     free(process_title);
   }
   process_title = strdup(t);
+#ifdef __POSIX__
   uv__set_process_title(process_title);
+#endif // __POSIX__
   env->ReleaseStringUTFChars(title, t);
 }
 
