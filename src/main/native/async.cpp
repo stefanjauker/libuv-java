@@ -39,8 +39,7 @@ private:
 
   static jmethodID _send_callback_mid;
 
-  static JNIEnv* _env;
-
+  JNIEnv* _env;
   jobject _instance;
 
 public:
@@ -49,7 +48,7 @@ public:
   AsyncCallbacks();
   ~AsyncCallbacks();
 
-  void initialize(jobject instance);
+  void initialize(JNIEnv *env, jobject instance);
 
   void on_send(int status);
 };
@@ -58,12 +57,7 @@ jclass AsyncCallbacks::_async_handle_cid = NULL;
 
 jmethodID AsyncCallbacks::_send_callback_mid = NULL;
 
-JNIEnv* AsyncCallbacks::_env = NULL;
-
 void AsyncCallbacks::static_initialize(JNIEnv* env, jclass cls) {
-  _env = env;
-  assert(_env);
-
   _async_handle_cid = (jclass) env->NewGlobalRef(cls);
   assert(_async_handle_cid);
 
@@ -71,13 +65,15 @@ void AsyncCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   assert(_send_callback_mid);
 }
 
-void AsyncCallbacks::initialize(jobject instance) {
+void AsyncCallbacks::initialize(JNIEnv *env, jobject instance) {
+  _env = env;
   assert(_env);
   assert(instance);
   _instance = _env->NewGlobalRef(instance);
 }
 
 AsyncCallbacks::AsyncCallbacks() {
+  _env = NULL;
 }
 
 AsyncCallbacks::~AsyncCallbacks() {
@@ -150,7 +146,7 @@ JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_AsyncHandle__1initialize
   uv_async_t* handle = reinterpret_cast<uv_async_t*>(async);
   assert(handle->data);
   AsyncCallbacks* cb = reinterpret_cast<AsyncCallbacks*>(handle->data);
-  cb->initialize(that);
+  cb->initialize(env, that);
 }
 
 /*

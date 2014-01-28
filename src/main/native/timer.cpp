@@ -39,8 +39,7 @@ private:
 
   static jmethodID _callback_mid;
 
-  static JNIEnv* _env;
-
+  JNIEnv* _env;
   jobject _instance;
 
 public:
@@ -49,7 +48,7 @@ public:
   TimerCallbacks();
   ~TimerCallbacks();
 
-  void initialize(jobject instance);
+  void initialize(JNIEnv *env, jobject instance);
 
   void on_timer(int status);
   void on_close();
@@ -64,12 +63,7 @@ jclass TimerCallbacks::_timer_handle_cid = NULL;
 
 jmethodID TimerCallbacks::_callback_mid = NULL;
 
-JNIEnv* TimerCallbacks::_env = NULL;
-
 void TimerCallbacks::static_initialize(JNIEnv* env, jclass cls) {
-  _env = env;
-  assert(_env);
-
   _timer_handle_cid = (jclass) env->NewGlobalRef(cls);
   assert(_timer_handle_cid);
 
@@ -77,13 +71,15 @@ void TimerCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   assert(_callback_mid);
 }
 
-void TimerCallbacks::initialize(jobject instance) {
+void TimerCallbacks::initialize(JNIEnv *env, jobject instance) {
+  _env = env;
   assert(_env);
   assert(instance);
   _instance = _env->NewGlobalRef(instance);
 }
 
 TimerCallbacks::TimerCallbacks() {
+  _env = NULL;
 }
 
 TimerCallbacks::~TimerCallbacks() {
@@ -167,7 +163,7 @@ JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_TimerHandle__1initialize
   uv_timer_t* handle = reinterpret_cast<uv_timer_t*>(timer);
   assert(handle->data);
   TimerCallbacks* cb = reinterpret_cast<TimerCallbacks*>(handle->data);
-  cb->initialize(that);
+  cb->initialize(env, that);
 }
 
 /*

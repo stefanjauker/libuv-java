@@ -98,8 +98,7 @@ private:
   static jmethodID _write_callback_mid;
   static jmethodID _stats_init_mid;
 
-  static JNIEnv* _env;
-
+  JNIEnv* _env;
   jobject _instance;
   uv_loop_t* _loop;
 
@@ -107,14 +106,14 @@ public:
   static jclass _string_cid;
 
   static void static_initialize(JNIEnv* env, jclass cls);
-  static JNIEnv* env() { return _env; }
 
   FileCallback();
   ~FileCallback();
 
   uv_loop_t* loop() { return _loop; }
+  JNIEnv* env() { return _env; }
 
-  void initialize(jobject instance, uv_loop_t* loop);
+  void initialize(JNIEnv* env, jobject instance, uv_loop_t* loop);
   void fs_cb(FileRequest* request, uv_fs_type fs_type, ssize_t result, void* ptr);
   void fs_cb(FileRequest* request, uv_fs_type fs_type, const char* target_path, int errorno);
 };
@@ -133,8 +132,6 @@ jmethodID FileCallback::_stats_callback_mid = NULL;
 jmethodID FileCallback::_utime_callback_mid = NULL;
 jmethodID FileCallback::_write_callback_mid = NULL;
 jmethodID FileCallback::_stats_init_mid = NULL;
-
-JNIEnv* FileCallback::_env = NULL;
 
 FileRequest::FileRequest(FileCallback* ptr, jobject callback, jint fd, jstring path, jint flags, jobject context) {
   init(ptr, callback, fd, path, flags, context);
@@ -205,9 +202,6 @@ void FileRequest::set_bytes(jsize length) {
 }
 
 void FileCallback::static_initialize(JNIEnv* env, jclass cls) {
-  _env = env;
-  assert(_env);
-
   _stats_cid = env->FindClass("com/oracle/libuv/Stats");
   assert(_stats_cid);
   _stats_cid = (jclass) env->NewGlobalRef(_stats_cid);
@@ -254,13 +248,15 @@ void FileCallback::static_initialize(JNIEnv* env, jclass cls) {
 }
 
 FileCallback::FileCallback() {
+  _env = NULL;
 }
 
 FileCallback::~FileCallback() {
   _env->DeleteGlobalRef(_instance);
 }
 
-void FileCallback::initialize(jobject instance, uv_loop_t* loop) {
+void FileCallback::initialize(JNIEnv* env, jobject instance, uv_loop_t* loop) {
+  _env = env;
   assert(_env);
   assert(instance);
   assert(loop);
@@ -600,7 +596,7 @@ JNIEXPORT void JNICALL Java_com_oracle_libuv_Files__1initialize
   FileCallback* cb = reinterpret_cast<FileCallback*>(ptr);
   assert(loop_ptr);
   uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
-  cb->initialize(that, loop);
+  cb->initialize(env, that, loop);
 }
 
 /*

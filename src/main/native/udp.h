@@ -38,8 +38,7 @@ private:
   static jmethodID _send_callback_mid;
   static jmethodID _close_callback_mid;
 
-  static JNIEnv* _env;
-
+  JNIEnv* _env;
   jobject _instance;
 
 public:
@@ -48,7 +47,7 @@ public:
   UDPCallbacks();
   ~UDPCallbacks();
 
-  void initialize(jobject instance);
+  void initialize(JNIEnv *env, jobject instance);
 
   void on_recv(ssize_t nread, uv_buf_t buf, struct sockaddr* addr, unsigned flags);
   void on_send(int status, int error_code, jobject buffer, jobject domain);

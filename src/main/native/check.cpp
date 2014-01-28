@@ -39,8 +39,7 @@ private:
 
   static jmethodID _callback_mid;
 
-  static JNIEnv* _env;
-
+  JNIEnv* _env;
   jobject _instance;
 
 public:
@@ -49,7 +48,7 @@ public:
   CheckCallbacks();
   ~CheckCallbacks();
 
-  void initialize(jobject instance);
+  void initialize(JNIEnv* env, jobject instance);
 
   void on_check(int status);
   void on_close();
@@ -64,12 +63,7 @@ jclass CheckCallbacks::_check_handle_cid = NULL;
 
 jmethodID CheckCallbacks::_callback_mid = NULL;
 
-JNIEnv* CheckCallbacks::_env = NULL;
-
 void CheckCallbacks::static_initialize(JNIEnv* env, jclass cls) {
-  _env = env;
-  assert(_env);
-
   _check_handle_cid = (jclass) env->NewGlobalRef(cls);
   assert(_check_handle_cid);
 
@@ -77,13 +71,15 @@ void CheckCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   assert(_callback_mid);
 }
 
-void CheckCallbacks::initialize(jobject instance) {
+void CheckCallbacks::initialize(JNIEnv* env, jobject instance) {
+  _env = env;
   assert(_env);
   assert(instance);
   _instance = _env->NewGlobalRef(instance);
 }
 
 CheckCallbacks::CheckCallbacks() {
+  _env = NULL;
 }
 
 CheckCallbacks::~CheckCallbacks() {
@@ -167,7 +163,7 @@ JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_CheckHandle__1initialize
   uv_check_t* handle = reinterpret_cast<uv_check_t*>(check);
   assert(handle->data);
   CheckCallbacks* cb = reinterpret_cast<CheckCallbacks*>(handle->data);
-  cb->initialize(that);
+  cb->initialize(env, that);
 }
 
 /*

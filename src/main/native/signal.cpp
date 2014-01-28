@@ -39,8 +39,7 @@ private:
 
   static jmethodID _callback_mid;
 
-  static JNIEnv* _env;
-
+  JNIEnv* _env;
   jobject _instance;
 
 public:
@@ -49,7 +48,7 @@ public:
   SignalCallbacks();
   ~SignalCallbacks();
 
-  void initialize(jobject instance);
+  void initialize(JNIEnv *env, jobject instance);
 
   void on_signal(int status);
 };
@@ -58,12 +57,7 @@ jclass SignalCallbacks::_signal_handle_cid = NULL;
 
 jmethodID SignalCallbacks::_callback_mid = NULL;
 
-JNIEnv* SignalCallbacks::_env = NULL;
-
 void SignalCallbacks::static_initialize(JNIEnv* env, jclass cls) {
-  _env = env;
-  assert(_env);
-
   _signal_handle_cid = (jclass) env->NewGlobalRef(cls);
   assert(_signal_handle_cid);
 
@@ -71,13 +65,15 @@ void SignalCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   assert(_callback_mid);
 }
 
-void SignalCallbacks::initialize(jobject instance) {
+void SignalCallbacks::initialize(JNIEnv *env, jobject instance) {
+  _env = env;
   assert(_env);
   assert(instance);
   _instance = _env->NewGlobalRef(instance);
 }
 
 SignalCallbacks::SignalCallbacks() {
+  _env = NULL;
 }
 
 SignalCallbacks::~SignalCallbacks() {
@@ -142,7 +138,7 @@ JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_SignalHandle__1initialize
   uv_signal_t* handle = reinterpret_cast<uv_signal_t*>(signal);
   assert(handle->data);
   SignalCallbacks* cb = reinterpret_cast<SignalCallbacks*>(handle->data);
-  cb->initialize(that);
+  cb->initialize(env, that);
 }
 
 /*

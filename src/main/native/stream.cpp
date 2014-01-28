@@ -49,12 +49,7 @@ jmethodID StreamCallbacks::_call_connection_callback_mid = NULL;
 jmethodID StreamCallbacks::_call_close_callback_mid = NULL;
 jmethodID StreamCallbacks::_call_shutdown_callback_mid = NULL;
 
-JNIEnv* StreamCallbacks::_env = NULL;
-
 void StreamCallbacks::static_initialize(JNIEnv* env, jclass cls) {
-  _env = env;
-  assert(_env);
-
   _IPV4 = env->NewStringUTF("IPv4");
   _IPV4 = (jstring) env->NewGlobalRef(_IPV4);
 
@@ -102,13 +97,15 @@ void StreamCallbacks::static_initialize_address(JNIEnv* env) {
   }
 }
 
-void StreamCallbacks::initialize(jobject instance) {
+void StreamCallbacks::initialize(JNIEnv *env, jobject instance) {
+  _env = env;
   assert(_env);
   assert(instance);
   _instance = _env->NewGlobalRef(instance);
 }
 
 StreamCallbacks::StreamCallbacks() {
+  _env = NULL;
 }
 
 StreamCallbacks::~StreamCallbacks() {
@@ -368,7 +365,7 @@ JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_StreamHandle__1initialize
   uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(stream);
   assert(handle->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(handle->data);
-  cb->initialize(that);
+  cb->initialize(env, that);
 }
 
 /*

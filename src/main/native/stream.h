@@ -47,8 +47,7 @@ private:
   static jmethodID _call_close_callback_mid;
   static jmethodID _call_shutdown_callback_mid;
 
-  static JNIEnv* _env;
-
+  JNIEnv* _env;
   jobject _instance;
 
 public:
@@ -59,7 +58,7 @@ public:
   StreamCallbacks();
   ~StreamCallbacks();
 
-  void initialize(jobject instance);
+  void initialize(JNIEnv *env, jobject instance);
   void throw_exception(int code, const char* message);
 
   void on_read(uv_buf_t* buf, jsize nread);

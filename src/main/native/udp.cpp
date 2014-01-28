@@ -46,12 +46,7 @@ jmethodID UDPCallbacks::_recv_callback_mid = NULL;
 jmethodID UDPCallbacks::_send_callback_mid = NULL;
 jmethodID UDPCallbacks::_close_callback_mid = NULL;
 
-JNIEnv* UDPCallbacks::_env = NULL;
-
 void UDPCallbacks::static_initialize(JNIEnv* env, jclass cls) {
-  _env = env;
-  assert(_env);
-
   _udp_handle_cid = (jclass) env->NewGlobalRef(cls);
   assert(_udp_handle_cid);
 
@@ -66,13 +61,15 @@ void UDPCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   StreamCallbacks::static_initialize_address(env);
 }
 
-void UDPCallbacks::initialize(jobject instance) {
+void UDPCallbacks::initialize(JNIEnv *env, jobject instance) {
+  _env = env;
   assert(_env);
   assert(instance);
   _instance = _env->NewGlobalRef(instance);
 }
 
 UDPCallbacks::UDPCallbacks() {
+  _env = NULL;
 }
 
 UDPCallbacks::~UDPCallbacks() {
@@ -189,7 +186,7 @@ JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_UDPHandle__1initialize
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
   assert(handle->data);
   UDPCallbacks* cb = reinterpret_cast<UDPCallbacks*>(handle->data);
-  cb->initialize(that);
+  cb->initialize(env, that);
 }
 
 /*

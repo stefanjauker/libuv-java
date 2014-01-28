@@ -39,8 +39,7 @@ private:
 
   static jmethodID _callback_mid;
 
-  static JNIEnv* _env;
-
+  JNIEnv* _env;
   jobject _instance;
 
 public:
@@ -49,7 +48,7 @@ public:
   IdleCallbacks();
   ~IdleCallbacks();
 
-  void initialize(jobject instance);
+  void initialize(JNIEnv* env, jobject instance);
 
   void on_idle(int status);
   void on_close();
@@ -64,12 +63,7 @@ jclass IdleCallbacks::_idle_handle_cid = NULL;
 
 jmethodID IdleCallbacks::_callback_mid = NULL;
 
-JNIEnv* IdleCallbacks::_env = NULL;
-
 void IdleCallbacks::static_initialize(JNIEnv* env, jclass cls) {
-  _env = env;
-  assert(_env);
-
   _idle_handle_cid = (jclass) env->NewGlobalRef(cls);
   assert(_idle_handle_cid);
 
@@ -77,13 +71,15 @@ void IdleCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   assert(_callback_mid);
 }
 
-void IdleCallbacks::initialize(jobject instance) {
+void IdleCallbacks::initialize(JNIEnv* env, jobject instance) {
+  _env = env;
   assert(_env);
   assert(instance);
   _instance = _env->NewGlobalRef(instance);
 }
 
 IdleCallbacks::IdleCallbacks() {
+  _env = NULL;
 }
 
 IdleCallbacks::~IdleCallbacks() {
@@ -167,7 +163,7 @@ JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_IdleHandle__1initialize
   uv_idle_t* handle = reinterpret_cast<uv_idle_t*>(idle);
   assert(handle->data);
   IdleCallbacks* cb = reinterpret_cast<IdleCallbacks*>(handle->data);
-  cb->initialize(that);
+  cb->initialize(env, that);
 }
 
 /*
