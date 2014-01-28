@@ -38,7 +38,7 @@ public class LoopHandleTest extends TestBase {
     private static final String DOT_SPLIT_REGEX = "\\.";
 
     @Test
-    public void testList() throws Exception {
+    public void testList() throws Throwable {
         final LoopHandle loop = new LoopHandle();
         //loop.run();
         final String[] handles = loop.list();
@@ -74,7 +74,7 @@ public class LoopHandleTest extends TestBase {
         Assert.assertTrue(pointers.isEmpty());
     }
 
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) throws Throwable {
         final LoopHandleTest test = new LoopHandleTest();
         test.testList();
     }

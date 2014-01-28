@@ -49,7 +49,7 @@ public class FileEventHandleTest extends TestBase {
     }
 
     @Test
-    public void testFileChangeEvent() throws Exception {
+    public void testFileChangeEvent() throws Throwable {
         final AtomicBoolean gotCallback = new AtomicBoolean(false);
         final AtomicBoolean gotClose = new AtomicBoolean(false);
         final AtomicInteger times = new AtomicInteger(0);
@@ -98,7 +98,7 @@ public class FileEventHandleTest extends TestBase {
     }
 
     @Test
-    public void testFileRenameEvent() throws Exception {
+    public void testFileRenameEvent() throws Throwable {
         final String newName = testName + "_new";
         final AtomicBoolean gotCallback = new AtomicBoolean(false);
         final AtomicBoolean gotClose = new AtomicBoolean(false);
@@ -149,7 +149,7 @@ public class FileEventHandleTest extends TestBase {
         Assert.assertEquals(times.get(), 1);
     }
 
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) throws Throwable {
         final FileEventHandleTest test = new FileEventHandleTest();
         test.testFileChangeEvent();
         test.testFileRenameEvent();

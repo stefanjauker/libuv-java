@@ -49,7 +49,7 @@ public class TCPHandleTest extends TestBase {
     private static final int TIMES = 10;
 
     @Test
-    public void testConnection() throws Exception {
+    public void testConnection() throws Throwable {
         final AtomicInteger serverSendCount = new AtomicInteger(0);
         final AtomicInteger clientSendCount = new AtomicInteger(0);
 
@@ -158,7 +158,7 @@ public class TCPHandleTest extends TestBase {
     }
 
     @Test
-    public void testConnection6() throws Exception {
+    public void testConnection6() throws Throwable {
         final LoopHandle loop = new LoopHandle();
         if (!UDPHandleTest.isIPv6Enabled(loop)) {
             return;
@@ -270,7 +270,7 @@ public class TCPHandleTest extends TestBase {
         Assert.assertEquals(clientRecvCount.get(), TIMES);
     }
 
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) throws Throwable {
         final TCPHandleTest test = new TCPHandleTest();
         test.testConnection();
         test.testConnection6();

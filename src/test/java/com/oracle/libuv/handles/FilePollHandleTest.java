@@ -51,7 +51,7 @@ public class FilePollHandleTest extends TestBase {
     }
 
     @Test
-    public void testFilePoll() throws Exception {
+    public void testFilePoll() throws Throwable {
         final AtomicBoolean gotCallback = new AtomicBoolean(false);
         final AtomicBoolean gotStop = new AtomicBoolean(false);
         final AtomicInteger times = new AtomicInteger(0);
@@ -110,7 +110,7 @@ public class FilePollHandleTest extends TestBase {
         Assert.assertEquals(times.get(), 1);
     }
 
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) throws Throwable {
         final FilePollHandleTest test = new FilePollHandleTest();
         test.testFilePoll();
     }

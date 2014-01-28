@@ -46,7 +46,7 @@ public class ProcessHandleTest extends TestBase {
     private static final String OS = System.getProperty("os.name");
 
     @Test
-    public void testExitCode() throws Exception {
+    public void testExitCode() throws Throwable {
         final String MESSAGE = "TEST";
         final String PIPE_NAME;
         if (OS.startsWith("Windows")) {
@@ -130,7 +130,7 @@ public class ProcessHandleTest extends TestBase {
         }
     }
 
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) throws Throwable {
         final ProcessHandleTest test = new ProcessHandleTest();
         test.testExitCode();
     }

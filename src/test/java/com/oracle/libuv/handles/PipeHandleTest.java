@@ -47,7 +47,7 @@ public class PipeHandleTest extends TestBase {
     private static final int TIMES = 10;
 
     @Test
-    public void testConnection() throws Exception {
+    public void testConnection() throws Throwable {
         final String PIPE_NAME;
         if (OS.startsWith("Windows")) {
             PIPE_NAME = "\\\\.\\pipe\\libuv-java-pipe-handle-test-pipe";
@@ -160,7 +160,7 @@ public class PipeHandleTest extends TestBase {
         Assert.assertEquals(clientRecvCount.get(), TIMES);
     }
 
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) throws Throwable {
         new PipeHandleTest().testConnection();
     }
 

@@ -101,7 +101,7 @@ public class FilesTest extends TestBase {
     }
 
     @Test
-    public void testOpenWriteReadAndCloseAsync() throws Exception {
+    public void testOpenWriteReadAndCloseAsync() throws Throwable {
         final String filename = testName + ".txt";
         final String data = "some data";
         final LoopHandle loop = new LoopHandle();
@@ -181,7 +181,7 @@ public class FilesTest extends TestBase {
     }
 
     @Test
-    public void testUnlinkAsync() throws Exception {
+    public void testUnlinkAsync() throws Throwable {
         final String filename = testName + ".txt";
         final LoopHandle loop = new LoopHandle();
         final Files handle = new Files(loop);
@@ -215,7 +215,7 @@ public class FilesTest extends TestBase {
     }
 
     @Test
-    public void testMkdirRmdirAsync() throws Exception {
+    public void testMkdirRmdirAsync() throws Throwable {
         final String dirname = testName;
         final LoopHandle loop = new LoopHandle();
         final Files handle = new Files(loop);
@@ -259,7 +259,7 @@ public class FilesTest extends TestBase {
     }
 
     @Test
-    public void testReaddirAsync() throws Exception {
+    public void testReaddirAsync() throws Throwable {
         final LoopHandle loop = new LoopHandle();
         final Files handle = new Files(loop);
         final String filename = "src";
@@ -296,7 +296,7 @@ public class FilesTest extends TestBase {
 
 
     @Test
-    public void testRenameAsync() throws Exception {
+    public void testRenameAsync() throws Throwable {
         final String filename = testName + ".txt";
         final String newName = testName + "-new" + ".txt";
         final LoopHandle loop = new LoopHandle();
@@ -335,7 +335,7 @@ public class FilesTest extends TestBase {
     }
 
     @Test
-    public void testFtruncateAsync() throws Exception {
+    public void testFtruncateAsync() throws Throwable {
         final String filename = testName + ".txt";
         final LoopHandle loop = new LoopHandle();
         final Files handle = new Files(loop);
@@ -378,7 +378,7 @@ public class FilesTest extends TestBase {
     }
 
     @Test
-    public void testLinkAsync() throws Exception {
+    public void testLinkAsync() throws Throwable {
         final String filename = testName + ".txt";
         final String filename2 = testName + "2.txt";
         final LoopHandle loop = new LoopHandle();

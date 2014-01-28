@@ -31,7 +31,7 @@ import com.oracle.libuv.TestBase;
 public class SignalHandleTest extends TestBase {
 
     // this test needs to be run manually, so no @Test annotation
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) throws Throwable {
         if (TestBase.IS_WINDOWS) {
             System.err.println("Sorry this test does not work on windows");
             return;

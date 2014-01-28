@@ -46,7 +46,7 @@ public final class LoopHandle {
     protected final CallbackHandlerFactory callbackHandlerFactory;
     protected final ContextProvider contextProvider;
     private final long pointer;
-    private Exception pendingException;
+    private Throwable pendingException;
 
     private enum RunMode {
 
@@ -87,7 +87,7 @@ public final class LoopHandle {
 
         this.exceptionHandler = new CallbackExceptionHandler() {
             @Override
-            public void handle(final Exception ex) {
+            public void handle(final Throwable ex) {
                 if (pendingException == null) {
                     pendingException = ex;
                 } else {
@@ -122,17 +122,17 @@ public final class LoopHandle {
         return exceptionHandler;
     }
 
-    public boolean runNoWait() throws Exception {
+    public boolean runNoWait() throws Throwable {
         throwPendingException();
         return _run(pointer, RunMode.NOWAIT.value) != 0;
     }
 
-    public boolean runOnce() throws Exception {
+    public boolean runOnce() throws Throwable {
         throwPendingException();
         return _run(pointer, RunMode.ONCE.value) != 0;
     }
 
-    public boolean run() throws Exception {
+    public boolean run() throws Throwable {
         throwPendingException();
         return _run(pointer, RunMode.DEFAULT.value) != 0;
     }
@@ -161,9 +161,9 @@ public final class LoopHandle {
         return pointer;
     }
 
-    private void throwPendingException() throws Exception {
+    private void throwPendingException() throws Throwable {
         if (pendingException != null) {
-            final Exception pex = pendingException;
+            final Throwable pex = pendingException;
             pendingException = null;
             throw pex;
         }

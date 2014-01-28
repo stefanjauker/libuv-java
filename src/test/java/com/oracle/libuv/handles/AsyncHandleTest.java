@@ -40,7 +40,7 @@ import com.oracle.libuv.cb.AsyncCallback;
 public class AsyncHandleTest extends TestBase {
 
     @Test
-    public void testAsync() throws Exception {
+    public void testAsync() throws Throwable {
         final AtomicBoolean gotCallback = new AtomicBoolean(false);
         final AtomicInteger times = new AtomicInteger(0);
 
@@ -72,7 +72,7 @@ public class AsyncHandleTest extends TestBase {
         Assert.assertEquals(times.get(), 1);
     }
 
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) throws Throwable {
         final AsyncHandleTest test = new AsyncHandleTest();
         test.testAsync();
     }

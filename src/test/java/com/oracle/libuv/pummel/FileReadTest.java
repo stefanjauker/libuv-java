@@ -93,7 +93,7 @@ public class FileReadTest extends TestBase {
         });
     }
 
-    public void readFile() throws Exception {
+    public void readFile() throws Throwable {
         startTime = System.currentTimeMillis();
         fill(readBuffer, (byte) 0);
         fd = files.open(filename, Constants.O_WRONLY | Constants.O_CREAT, Constants.S_IRWXU);
@@ -108,7 +108,7 @@ public class FileReadTest extends TestBase {
         loop.run();
     }
 
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) throws Throwable {
         FileReadTest f = new FileReadTest();
         try {
             f.readFile();

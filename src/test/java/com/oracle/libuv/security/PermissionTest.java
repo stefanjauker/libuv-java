@@ -269,7 +269,7 @@ public class PermissionTest extends TestBase {
     }
 
     @Test
-    public void testPipeAuth() throws Exception {
+    public void testPipeAuth() throws Throwable {
         final String PIPE_NAME;
 
         if (OS.startsWith("Windows")) {
@@ -400,7 +400,7 @@ public class PermissionTest extends TestBase {
     }
 
     // @Test // TODO: test hangs on windows
-    public void testConnectionAuth() throws Exception {
+    public void testConnectionAuth() throws Throwable {
         final AtomicBoolean serverDone = new AtomicBoolean(false);
         final int port = getPort();
         final int port2 = getPort();
@@ -477,7 +477,7 @@ public class PermissionTest extends TestBase {
     }
 
     @Test
-    public void testConnection6Auth() throws Exception {
+    public void testConnection6Auth() throws Throwable {
         final LoopHandle lh = new LoopHandle();
         if (!UDPHandleTest.isIPv6Enabled(lh)) {
             return;

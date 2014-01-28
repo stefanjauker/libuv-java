@@ -93,12 +93,12 @@ public class TTYHandleTest extends TestBase {
     }
 
     @Test
-    public void testWrite() throws Exception {
+    public void testWrite() throws Throwable {
         testWrite("stdout", 1);
         testWrite("stderr", 2);
     }
 
-    private void testWrite(final String name, final int fd) throws Exception {
+    private void testWrite(final String name, final int fd) throws Throwable {
         final LoopHandle loop = new LoopHandle();
         final TTYHandle tty = newTTY(loop, fd, false);
         if (tty == null) {
@@ -117,7 +117,7 @@ public class TTYHandleTest extends TestBase {
     }
 
     @Test
-    public void testRead() throws Exception {
+    public void testRead() throws Throwable {
         final LoopHandle loop = new LoopHandle();
         final TTYHandle tty = newTTY(loop, 0, true);
         if (tty == null) {
@@ -140,7 +140,7 @@ public class TTYHandleTest extends TestBase {
         loop.run();
     }
 
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) throws Throwable {
         final TTYHandleTest test = new TTYHandleTest();
         test.testWrite();
         test.testStdOutErrWindowSize();

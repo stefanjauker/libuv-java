@@ -39,7 +39,7 @@ public class TimerHandleTest extends TestBase {
     private static final int TIMES = 100;
 
     @Test
-    public void testOnce() throws Exception {
+    public void testOnce() throws Throwable {
         final AtomicBoolean gotCallback = new AtomicBoolean(false);
         final AtomicBoolean gotClose = new AtomicBoolean(false);
 
@@ -78,7 +78,7 @@ public class TimerHandleTest extends TestBase {
     }
 
     @Test
-    public void testRepeat() throws Exception {
+    public void testRepeat() throws Throwable {
         final AtomicBoolean gotCallback = new AtomicBoolean(false);
         final AtomicBoolean gotClose = new AtomicBoolean(false);
         final AtomicInteger callbackCount = new AtomicInteger(0);
@@ -121,7 +121,7 @@ public class TimerHandleTest extends TestBase {
         Assert.assertTrue(callbackCount.get() == TIMES);
     }
 
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) throws Throwable {
         final TimerHandleTest test = new TimerHandleTest();
         test.testOnce();
         test.testRepeat();

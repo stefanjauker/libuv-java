@@ -27,6 +27,6 @@ package com.oracle.libuv.cb;
 
 public interface CallbackExceptionHandler {
 
-    public void handle(Exception ex);
+    public void handle(Throwable ex);
 
 }

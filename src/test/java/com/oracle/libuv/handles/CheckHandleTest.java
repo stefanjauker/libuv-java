@@ -37,7 +37,7 @@ import com.oracle.libuv.TestBase;
 public class CheckHandleTest extends TestBase {
 
     @Test
-    public void testCheck() throws Exception {
+    public void testCheck() throws Throwable {
         final AtomicBoolean gotCallback = new AtomicBoolean(false);
         final AtomicBoolean gotClose = new AtomicBoolean(false);
         final AtomicInteger times = new AtomicInteger(0);
@@ -77,7 +77,7 @@ public class CheckHandleTest extends TestBase {
         Assert.assertTrue(gotClose.get());
         Assert.assertEquals(times.get(), 1);
     }
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) throws Throwable {
         final CheckHandleTest test = new CheckHandleTest();
         test.testCheck();
     }
