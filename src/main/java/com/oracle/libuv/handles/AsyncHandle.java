@@ -49,7 +49,6 @@ public final class AsyncHandle extends Handle {
     }
 
     public int send() {
-        assert !closed.get();
         return closed.get() ? -1 : _send(pointer);
     }
 
