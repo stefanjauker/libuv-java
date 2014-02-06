@@ -25,11 +25,13 @@
 
 package com.oracle.libuv.handles;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import com.oracle.libuv.cb.AsyncCallback;
 
 public final class AsyncHandle extends Handle {
 
-    private boolean closed;
+    private final AtomicBoolean closed = new AtomicBoolean(false);
 
     private AsyncCallback onSend = null;
 
@@ -47,14 +49,14 @@ public final class AsyncHandle extends Handle {
     }
 
     public int send() {
-        return _send(pointer);
+        assert !closed.get();
+        return closed.get() ? -1 : _send(pointer);
     }
 
     public void close() {
-        if (!closed) {
+        if (closed.compareAndSet(false, true)) {
             _close(pointer);
         }
-        closed = true;
     }
 
     @Override
