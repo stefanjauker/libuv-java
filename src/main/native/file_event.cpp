@@ -39,8 +39,7 @@ private:
 
   static jmethodID _file_event_callback_mid;
 
-  static JNIEnv* _env;
-
+  JNIEnv* _env;
   jobject _instance;
 
 public:
@@ -49,7 +48,7 @@ public:
   FileEventCallbacks();
   ~FileEventCallbacks();
 
-  void initialize(jobject instance);
+  void initialize(JNIEnv* env, jobject instance);
   void on_event(int status, int event, const char* filename);
   void on_close();
 };
@@ -63,12 +62,7 @@ jclass FileEventCallbacks::_file_event_handle_cid = NULL;
 
 jmethodID FileEventCallbacks::_file_event_callback_mid = NULL;
 
-JNIEnv* FileEventCallbacks::_env = NULL;
-
 void FileEventCallbacks::static_initialize(JNIEnv* env, jclass cls) {
-  _env = env;
-  assert(_env);
-
   _file_event_handle_cid = (jclass) env->NewGlobalRef(cls);
   assert(_file_event_handle_cid);
 
@@ -76,7 +70,8 @@ void FileEventCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   assert(_file_event_callback_mid);
 }
 
-void FileEventCallbacks::initialize(jobject instance) {
+void FileEventCallbacks::initialize(JNIEnv* env, jobject instance) {
+  _env = env;
   assert(_env);
   assert(instance);
   _instance = _env->NewGlobalRef(instance);
@@ -164,7 +159,7 @@ JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_FileEventHandle__1initializ
   uv_fs_event_t* handle = reinterpret_cast<uv_fs_event_t*>(fs_event_ptr);
   assert(handle->data);
   FileEventCallbacks* cb = reinterpret_cast<FileEventCallbacks*>(handle->data);
-  cb->initialize(that);
+  cb->initialize(env, that);
 }
 
 /*

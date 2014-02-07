@@ -334,7 +334,7 @@ void FileCallback::fs_cb(FileRequest* request, uv_fs_type fs_type, ssize_t resul
           _stats_callback_mid,
           fs_type,
           request->callback(),
-          Stats::create(static_cast<uv_statbuf_t*>(ptr)),
+          Stats::create(_env, static_cast<uv_statbuf_t*>(ptr)),
           NULL,
           request->context());
       return;
@@ -901,7 +901,7 @@ JNIEXPORT jobject JNICALL Java_com_oracle_libuv_Files__1stat
   } else {
     uv_fs_t req;
     int r = uv_fs_stat(cb->loop(), &req, cpath, NULL);
-    stats = Stats::create(static_cast<uv_statbuf_t *>(req.ptr));
+    stats = Stats::create(env, static_cast<uv_statbuf_t *>(req.ptr));
     uv_fs_req_cleanup(&req);
     if (r < 0) {
       ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_stat", NULL, cpath);
@@ -930,7 +930,7 @@ JNIEXPORT jobject JNICALL Java_com_oracle_libuv_Files__1fstat
   } else {
     uv_fs_t req;
     int r = uv_fs_fstat(cb->loop(), &req, fd, NULL);
-    stats = Stats::create(static_cast<uv_statbuf_t*>(req.ptr));
+    stats = Stats::create(env, static_cast<uv_statbuf_t*>(req.ptr));
     uv_fs_req_cleanup(&req);
     if (r < 0) {
       ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_fstat");
@@ -1189,7 +1189,7 @@ JNIEXPORT jobject JNICALL Java_com_oracle_libuv_Files__1lstat
   } else {
     uv_fs_t req;
     int r = uv_fs_lstat(cb->loop(), &req, cpath, NULL);
-    stats = Stats::create(static_cast<uv_statbuf_t*>(req.ptr));
+    stats = Stats::create(env, static_cast<uv_statbuf_t*>(req.ptr));
     uv_fs_req_cleanup(&req);
     if (r < 0) {
       ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_lstat", NULL, cpath);

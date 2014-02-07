@@ -32,8 +32,6 @@ jclass Stats::_stats_cid = NULL;
 jmethodID Stats::_stats_init_mid = NULL;
 jmethodID Stats::_stats_set_mid = NULL;
 
-JNIEnv* Stats::_env = NULL;
-
 Stats::Stats() {
 }
 
@@ -41,25 +39,25 @@ Stats::~Stats() {
 }
 
 void Stats::static_initialize(JNIEnv* env) {
-  if (_env) {
-    return;
+  if (!_stats_cid) {
+      _stats_cid = env->FindClass("com/oracle/libuv/Stats");
+      assert(_stats_cid);
+      _stats_cid = (jclass) env->NewGlobalRef(_stats_cid);
+      assert(_stats_cid);
   }
-  _env = env;
-  assert(_env);
 
-  _stats_cid = env->FindClass("com/oracle/libuv/Stats");
-  assert(_stats_cid);
-  _stats_cid = (jclass) env->NewGlobalRef(_stats_cid);
-  assert(_stats_cid);
+  if (!_stats_init_mid) {
+    _stats_init_mid = env->GetMethodID(_stats_cid, "<init>", "(IIIIIIIJIJJJJ)V");
+    assert(_stats_init_mid);
+  }
 
-  _stats_init_mid = env->GetMethodID(_stats_cid, "<init>", "(IIIIIIIJIJJJJ)V");
-  assert(_stats_init_mid);
-
-  _stats_set_mid = env->GetMethodID(_stats_cid, "set", "(IIIIIIIJIJJJJ)V");
-  assert(_stats_set_mid);
+  if (!_stats_set_mid) {
+    _stats_set_mid = env->GetMethodID(_stats_cid, "set", "(IIIIIIIJIJJJJ)V");
+    assert(_stats_set_mid);
+  }
 }
 
- jobject Stats::create(const uv_statbuf_t* ptr) {
+ jobject Stats::create(JNIEnv* env, const uv_statbuf_t* ptr) {
   if (ptr) {
     int blksize = 0;
     jlong blocks = 0;
@@ -68,7 +66,7 @@ void Stats::static_initialize(JNIEnv* env) {
     blocks = ptr->st_blocks;
 #endif
 
-    return _env->NewObject(
+    return env->NewObject(
         _stats_cid,
         _stats_init_mid,
         ptr->st_dev,
@@ -88,7 +86,7 @@ void Stats::static_initialize(JNIEnv* env) {
   return NULL;
 }
 
-void Stats::update(jobject stats, const uv_statbuf_t* ptr) {
+void Stats::update(JNIEnv* env, jobject stats, const uv_statbuf_t* ptr) {
   if (ptr) {
     int blksize = 0;
     jlong blocks = 0;
@@ -97,7 +95,7 @@ void Stats::update(jobject stats, const uv_statbuf_t* ptr) {
     blocks = ptr->st_blocks;
 #endif
 
-    _env->CallVoidMethod(
+    env->CallVoidMethod(
         stats,
         _stats_set_mid,
         ptr->st_dev,

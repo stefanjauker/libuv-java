@@ -35,12 +35,11 @@ private:
   static jclass _stats_cid;
   static jmethodID _stats_init_mid;
   static jmethodID _stats_set_mid;
-  static JNIEnv* _env;
 
 public:
   static void static_initialize(JNIEnv* env);
-  static jobject create(const uv_statbuf_t* ptr);
-  static void update(jobject stats, const uv_statbuf_t* ptr);
+  static jobject create(JNIEnv* env, const uv_statbuf_t* ptr);
+  static void update(JNIEnv* env, jobject stats, const uv_statbuf_t* ptr);
 
   Stats();
   ~Stats();

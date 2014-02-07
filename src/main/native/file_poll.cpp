@@ -41,8 +41,7 @@ private:
   static jmethodID _file_poll_callback_mid;
   static jmethodID _file_poll_stop_callback_mid;
 
-  static JNIEnv* _env;
-
+  JNIEnv* _env;
   jobject _instance;
   jobject _previous_stats;
   jobject _current_stats;
@@ -53,7 +52,7 @@ public:
   FilePollCallbacks();
   ~FilePollCallbacks();
 
-  void initialize(jobject instance);
+  void initialize(JNIEnv* env, jobject instance);
   void on_poll(int status, const uv_statbuf_t* previous, const uv_statbuf_t* current);
   void on_stop();
   void set_stats(jobject previous, jobject current);
@@ -69,12 +68,7 @@ jclass FilePollCallbacks::_file_poll_handle_cid = NULL;
 jmethodID FilePollCallbacks::_file_poll_callback_mid = NULL;
 jmethodID FilePollCallbacks::_file_poll_stop_callback_mid = NULL;
 
-JNIEnv* FilePollCallbacks::_env = NULL;
-
 void FilePollCallbacks::static_initialize(JNIEnv* env, jclass cls) {
-  _env = env;
-  assert(_env);
-
   _file_poll_handle_cid = (jclass) env->NewGlobalRef(cls);
   assert(_file_poll_handle_cid);
 
@@ -100,7 +94,8 @@ FilePollCallbacks::~FilePollCallbacks() {
   }
 }
 
-void FilePollCallbacks::initialize(jobject instance) {
+void FilePollCallbacks::initialize(JNIEnv* env, jobject instance) {
+  _env = env;
   assert(_env);
   assert(instance);
   _instance = _env->NewGlobalRef(instance);
@@ -109,8 +104,8 @@ void FilePollCallbacks::initialize(jobject instance) {
 void FilePollCallbacks::on_poll(int status, const uv_statbuf_t* previous, const uv_statbuf_t* current) {
   assert(_env);
 
-  Stats::update(_previous_stats, previous);
-  Stats::update(_current_stats, current);
+  Stats::update(_env, _previous_stats, previous);
+  Stats::update(_env, _current_stats, current);
 
   _env->CallVoidMethod(
       _instance,
@@ -190,7 +185,7 @@ JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_FilePollHandle__1initialize
   uv_fs_poll_t* handle = reinterpret_cast<uv_fs_poll_t*>(fs_poll_ptr);
   assert(handle->data);
   FilePollCallbacks* cb = reinterpret_cast<FilePollCallbacks*>(handle->data);
-  cb->initialize(that);
+  cb->initialize(env, that);
 }
 
 /*

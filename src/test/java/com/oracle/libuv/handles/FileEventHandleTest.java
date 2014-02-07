@@ -151,7 +151,9 @@ public class FileEventHandleTest extends TestBase {
 
     public static void main(final String[] args) throws Throwable {
         final FileEventHandleTest test = new FileEventHandleTest();
+        test.startSession(test.getClass().getMethod("testFileChangeEvent"));
         test.testFileChangeEvent();
+        test.startSession(test.getClass().getMethod("testFileRenameEvent"));
         test.testFileRenameEvent();
     }
 
