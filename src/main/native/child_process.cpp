@@ -37,8 +37,7 @@ private:
   static jmethodID _process_close_mid;
   static jmethodID _process_exit_mid;
 
-  static JNIEnv* _env;
-
+  JNIEnv* _env;
   jobject _instance;
 
 public:
@@ -47,7 +46,7 @@ public:
   ProcessCallbacks();
   ~ProcessCallbacks();
 
-  void initialize(jobject instance);
+  void initialize(JNIEnv* env, jobject instance);
 
   void on_exit(int status, int signal);
   void on_exit(int status, int signal, int error_code);
@@ -64,12 +63,7 @@ jclass ProcessCallbacks::_process_handle_cid = NULL;
 jmethodID ProcessCallbacks::_process_close_mid = NULL;
 jmethodID ProcessCallbacks::_process_exit_mid = NULL;
 
-JNIEnv* ProcessCallbacks::_env = NULL;
-
 void ProcessCallbacks::static_initialize(JNIEnv* env, jclass cls) {
-  _env = env;
-  assert(_env);
-
   _process_handle_cid = (jclass) env->NewGlobalRef(cls);
   assert(_process_handle_cid);
 
@@ -79,7 +73,8 @@ void ProcessCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   assert(_process_exit_mid);
 }
 
-void ProcessCallbacks::initialize(jobject instance) {
+void ProcessCallbacks::initialize(JNIEnv* env, jobject instance) {
+  _env = env;
   assert(_env);
   assert(instance);
   _instance = _env->NewGlobalRef(instance);
@@ -182,7 +177,7 @@ JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_ProcessHandle__1initialize
   uv_process_t* handle = reinterpret_cast<uv_process_t*>(process);
   assert(handle->data);
   ProcessCallbacks* cb = reinterpret_cast<ProcessCallbacks*>(handle->data);
-  cb->initialize(that);
+  cb->initialize(env, that);
 }
 
 /*
