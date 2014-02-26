@@ -52,18 +52,25 @@ static void _list_cb(uv_handle_t* handle, void* arg) {
 
 /*
  * Class:     com_oracle_libuv_handles_LoopHandle
+ * Method:    _static_initialize
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_LoopHandle__1static_1initialize
+  (JNIEnv *env, jclass cls) {
+
+  _string_cid = env->FindClass("java/lang/String");
+  assert(_string_cid);
+  _string_cid = (jclass) env->NewGlobalRef(_string_cid);
+  assert(_string_cid);
+}
+
+/*
+ * Class:     com_oracle_libuv_handles_LoopHandle
  * Method:    _new
  * Signature: ()J
  */
 JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_LoopHandle__1new
   (JNIEnv *env, jclass cls) {
-
-  if (!_string_cid) {
-    _string_cid = env->FindClass("java/lang/String");
-    assert(_string_cid);
-    _string_cid = (jclass) env->NewGlobalRef(_string_cid);
-    assert(_string_cid);
-  }
 
   uv_loop_t* ptr = uv_loop_new();
   assert(ptr);
@@ -129,6 +136,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_oracle_libuv_handles_LoopHandle__1list
   (JNIEnv *env, jobject that, jlong ptr) {
 
   assert(ptr);
+  assert(_string_cid);
   uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(ptr);
   std::vector<const char*> bag;
   uv_walk(loop, _list_cb, &bag);

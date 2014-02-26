@@ -37,6 +37,7 @@ public final class LoopHandle {
 
     static {
         NativeException.static_initialize();
+        _static_initialize();
     }
 
     // Track the number of created LoopHandles.
@@ -170,6 +171,8 @@ public final class LoopHandle {
     }
 
     private static native long _new();
+
+    private static native void _static_initialize();
 
     private native int _run(final long ptr, final int mode);
 
