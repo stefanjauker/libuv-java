@@ -86,13 +86,15 @@ FileEventCallbacks::~FileEventCallbacks() {
 
 void FileEventCallbacks::on_event(int status, int events, const char* filename) {
   assert(_env);
+  jstring f = _env->NewStringUTF(filename);
   _env->CallVoidMethod(
       _instance,
       _file_event_callback_mid,
       FILE_EVENT_CALLBACK,
       status,
       events,
-      _env->NewStringUTF(filename));
+      f);
+  if (f) { _env->DeleteLocalRef(f); }
 }
 
 void FileEventCallbacks::on_close() {

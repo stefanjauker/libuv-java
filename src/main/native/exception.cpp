@@ -52,6 +52,8 @@ static inline jstring utf(JNIEnv* env, const std::string& s) {
 }
 
 jthrowable NewException(JNIEnv* env, int errorno, const char *syscall, const char *msg, const char *path) {
+  assert(env);
+
   jobject syscall_arg = syscall ? env->NewStringUTF(syscall) : NULL;
 
   std::string errno_message = get_uv_errno_message(errorno);
@@ -99,7 +101,7 @@ jthrowable NewException(JNIEnv* env, int errorno, const char *syscall, const cha
   return e;
 }
 
-#define MESSAGE_SIZE 1024
+#define MESSAGE_SIZE 4096
 
 static char _message[MESSAGE_SIZE];
 static jclass _oom_cid = NULL;

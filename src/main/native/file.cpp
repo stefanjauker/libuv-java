@@ -252,6 +252,8 @@ FileCallback::FileCallback() {
 }
 
 FileCallback::~FileCallback() {
+  assert(_env);
+  assert(_instance);
   _env->DeleteGlobalRef(_instance);
 }
 
@@ -339,15 +341,19 @@ void FileCallback::fs_cb(FileRequest* request, uv_fs_type fs_type, ssize_t resul
           request->context());
       return;
 
-    case UV_FS_READLINK:
+    case UV_FS_READLINK: {
+      jstring s = _env->NewStringUTF(static_cast<char*>(ptr));
+      OOM(_env, s);
       _env->CallVoidMethod(
           _instance,
           _readlink_callback_mid,
           request->callback(),
-          _env->NewStringUTF(static_cast<char*>(ptr)),
+          s,
           NULL,
           request->context());
+      if (s) { _env->DeleteLocalRef(s); }
       return;
+    }
 
     case UV_FS_READDIR: {
       char* namebuf = static_cast<char*>(ptr);
@@ -375,6 +381,7 @@ void FileCallback::fs_cb(FileRequest* request, uv_fs_type fs_type, ssize_t resul
           names,
           NULL,
           request->context());
+      if (names) { _env->DeleteLocalRef(names); }
       return;
     }
 
@@ -861,9 +868,11 @@ JNIEXPORT jobjectArray JNICALL Java_com_oracle_libuv_Files__1readdir
         char *namebuf = static_cast<char*>(req.ptr);
         int nnames = static_cast<int>(req.result);
         names = env->NewObjectArray(nnames, FileCallback::_string_cid, 0);
+        OOMN(env, names);
 
         for (int i = 0; i < nnames; i++) {
           jstring name = env->NewStringUTF(namebuf);
+          OOMN(env, name);
           env->SetObjectArrayElement(names, i, name);
 #ifndef NDEBUG
           namebuf += strlen(namebuf);
@@ -1290,7 +1299,7 @@ JNIEXPORT jstring JNICALL Java_com_oracle_libuv_Files__1readlink
     link = env->NewStringUTF(static_cast<char*>(req.ptr));
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_readklink", NULL, cpath);
+      ThrowException(env, uv_last_error(cb->loop()).code, "uv_fs_readlink", NULL, cpath);
     }
   }
   env->ReleaseStringUTFChars(path, cpath);

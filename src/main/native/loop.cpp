@@ -134,8 +134,11 @@ JNIEXPORT jobjectArray JNICALL Java_com_oracle_libuv_handles_LoopHandle__1list
   uv_walk(loop, _list_cb, &bag);
   jsize size = static_cast<jsize>(bag.size());
   jobjectArray handles = env->NewObjectArray(size, _string_cid, 0);
+  OOMN(env, handles);
   for (int i=0; i < size; i++) {
-    env->SetObjectArrayElement(handles, i, env->NewStringUTF(bag[i]));
+    jstring s = env->NewStringUTF(bag[i]);
+    OOMN(env, s);
+    env->SetObjectArrayElement(handles, i, s);
   }
   return handles;
 }
@@ -146,7 +149,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_oracle_libuv_handles_LoopHandle__1list
  * Signature: (J)Lcom/oracle/libuv/NativeException;
  */
 JNIEXPORT jthrowable JNICALL Java_com_oracle_libuv_handles_LoopHandle__1get_1last_1error
-  (JNIEnv * env, jobject that, jlong ptr) {
+  (JNIEnv *env, jobject that, jlong ptr) {
 
   assert(ptr);
   uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(ptr);

@@ -57,7 +57,7 @@ void Stats::static_initialize(JNIEnv* env) {
   }
 }
 
- jobject Stats::create(JNIEnv* env, const uv_statbuf_t* ptr) {
+jobject Stats::create(JNIEnv* env, const uv_statbuf_t* ptr) {
   if (ptr) {
     int blksize = 0;
     jlong blocks = 0;

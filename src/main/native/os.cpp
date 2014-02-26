@@ -118,9 +118,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_oracle_libuv_LibUV__1getCPUs
   assert(integerConstructorMID);
 
   jobjectArray array = env->NewObjectArray(count * 7, objectClassID, NULL);
-  if (!array) {
-    return NULL;
-  }
+  OOMN(env, array);
 
   int j = 0;
   for (int i = 0; i < count; i++) {

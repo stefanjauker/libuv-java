@@ -128,11 +128,15 @@ void StreamCallbacks::on_read(uv_buf_t* buf, jsize nread) {
     jbyte* data = new jbyte[nread];
     memcpy(data, buf->base, nread);
     jobject arg = _env->NewDirectByteBuffer(data, nread);
-    _env->CallVoidMethod(
-        _instance,
-        _call_read_callback_mid,
-        arg);
-    _env->DeleteLocalRef(arg);
+    if (arg) {
+      _env->CallVoidMethod(
+          _instance,
+          _call_read_callback_mid,
+          arg);
+      _env->DeleteLocalRef(arg);
+    } else {
+      ThrowOutOfMemoryError(_env, (FUNCTION_NAME), (__FILE__), (TOSTRING(__LINE__)), NULL);
+    }
   }
   delete[] buf->base;
 }
@@ -150,13 +154,17 @@ void StreamCallbacks::on_read2(uv_buf_t* buf, jsize nread, jlong ptr, uv_handle_
     jbyte* data = new jbyte[nread];
     memcpy(data, buf->base, nread);
     jobject array = _env->NewDirectByteBuffer(data, nread);
-    _env->CallVoidMethod(
-        _instance,
-        _call_read2_callback_mid,
-        array,
-        ptr,
-        pending);
-    _env->DeleteLocalRef(array);
+    if (array) {
+      _env->CallVoidMethod(
+          _instance,
+          _call_read2_callback_mid,
+          array,
+          ptr,
+          pending);
+      _env->DeleteLocalRef(array);
+    } else {
+      ThrowOutOfMemoryError(_env, (FUNCTION_NAME), (__FILE__), (TOSTRING(__LINE__)), NULL);
+    }
   }
   delete[] buf->base;
 }
@@ -192,12 +200,14 @@ void StreamCallbacks::on_connection(int status, int error_code) {
 
 void StreamCallbacks::on_shutdown(int status, int error_code, jobject context) {
   assert(_env);
+  jthrowable exception = error_code ? NewException(_env, error_code) : NULL;
   _env->CallVoidMethod(
       _instance,
       _call_shutdown_callback_mid,
       status,
-      error_code ? NewException(_env, error_code) : NULL,
+      exception,
       context);
+  if (exception) { _env->DeleteLocalRef(exception); }
 }
 
 void StreamCallbacks::on_close() {

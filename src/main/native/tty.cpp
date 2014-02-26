@@ -130,9 +130,7 @@ JNIEXPORT jintArray JNICALL Java_com_oracle_libuv_handles_TTYHandle__1get_1windo
     return NULL;
   }
   jintArray size = env->NewIntArray(2);
-  if (!size) {
-    return NULL;
-  }
+  OOMN(env, size);
   env->SetIntArrayRegion(size, 0, 1, reinterpret_cast<const jint*>(&width));
   env->SetIntArrayRegion(size, 1, 1, reinterpret_cast<const jint*>(&height));
   return size;
