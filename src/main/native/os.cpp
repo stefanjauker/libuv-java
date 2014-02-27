@@ -123,13 +123,39 @@ JNIEXPORT jobjectArray JNICALL Java_com_oracle_libuv_LibUV__1getCPUs
   int j = 0;
   for (int i = 0; i < count; i++) {
       jstring model = env->NewStringUTF(cpu_infos[i].model);
+      OOMN(env, model);
       env->SetObjectArrayElement(array, j++, model);
-      env->SetObjectArrayElement(array, j++, env->NewObject(integerClassID, integerConstructorMID, cpu_infos[i].speed));
-      env->SetObjectArrayElement(array, j++, env->NewObject(integerClassID, integerConstructorMID, cpu_infos[i].cpu_times.user));
-      env->SetObjectArrayElement(array, j++, env->NewObject(integerClassID, integerConstructorMID, cpu_infos[i].cpu_times.nice));
-      env->SetObjectArrayElement(array, j++, env->NewObject(integerClassID, integerConstructorMID, cpu_infos[i].cpu_times.sys));
-      env->SetObjectArrayElement(array, j++, env->NewObject(integerClassID, integerConstructorMID, cpu_infos[i].cpu_times.idle));
-      env->SetObjectArrayElement(array, j++, env->NewObject(integerClassID, integerConstructorMID, cpu_infos[i].cpu_times.irq));
+      env->DeleteLocalRef(model);
+
+      jobject speed = env->NewObject(integerClassID, integerConstructorMID, cpu_infos[i].speed);
+      OOMN(env, speed);
+      env->SetObjectArrayElement(array, j++, speed);
+      env->DeleteLocalRef(speed);
+
+      jobject user = env->NewObject(integerClassID, integerConstructorMID, cpu_infos[i].cpu_times.user);
+      OOMN(env, user);
+      env->SetObjectArrayElement(array, j++, user);
+      env->DeleteLocalRef(user);
+
+      jobject nice = env->NewObject(integerClassID, integerConstructorMID, cpu_infos[i].cpu_times.nice);
+      OOMN(env, nice);
+      env->SetObjectArrayElement(array, j++, nice);
+      env->DeleteLocalRef(nice);
+
+      jobject sys = env->NewObject(integerClassID, integerConstructorMID, cpu_infos[i].cpu_times.sys);
+      OOMN(env, sys);
+      env->SetObjectArrayElement(array, j++, sys);
+      env->DeleteLocalRef(sys);
+
+      jobject idle = env->NewObject(integerClassID, integerConstructorMID, cpu_infos[i].cpu_times.idle);
+      OOMN(env, idle);
+      env->SetObjectArrayElement(array, j++, idle);
+      env->DeleteLocalRef(idle);
+
+      jobject irq = env->NewObject(integerClassID, integerConstructorMID, cpu_infos[i].cpu_times.irq);
+      OOMN(env, irq);
+      env->SetObjectArrayElement(array, j++, irq);
+      env->DeleteLocalRef(irq);
   }
   uv_free_cpu_info(cpu_infos, count);
 

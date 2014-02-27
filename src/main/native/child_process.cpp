@@ -102,12 +102,14 @@ void ProcessCallbacks::on_exit(int status, int signal, int error_code) {
   assert(_env);
   assert(status < 0);
 
+  jthrowable exception = NewException(_env, error_code);
   _env->CallVoidMethod(
       _instance,
       _process_exit_mid,
       status,
       signal,
-      NewException(_env, error_code));
+      exception);
+  if (exception) { _env->DeleteLocalRef(exception); }
 }
 
 void ProcessCallbacks::on_close() {

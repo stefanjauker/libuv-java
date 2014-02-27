@@ -128,15 +128,12 @@ void StreamCallbacks::on_read(uv_buf_t* buf, jsize nread) {
     jbyte* data = new jbyte[nread];
     memcpy(data, buf->base, nread);
     jobject arg = _env->NewDirectByteBuffer(data, nread);
-    if (arg) {
-      _env->CallVoidMethod(
-          _instance,
-          _call_read_callback_mid,
-          arg);
-      _env->DeleteLocalRef(arg);
-    } else {
-      ThrowOutOfMemoryError(_env, (FUNCTION_NAME), (__FILE__), (TOSTRING(__LINE__)), NULL);
-    }
+    OOM(_env, arg);
+    _env->CallVoidMethod(
+        _instance,
+        _call_read_callback_mid,
+        arg);
+    _env->DeleteLocalRef(arg);
   }
   delete[] buf->base;
 }
@@ -154,48 +151,51 @@ void StreamCallbacks::on_read2(uv_buf_t* buf, jsize nread, jlong ptr, uv_handle_
     jbyte* data = new jbyte[nread];
     memcpy(data, buf->base, nread);
     jobject array = _env->NewDirectByteBuffer(data, nread);
-    if (array) {
-      _env->CallVoidMethod(
-          _instance,
-          _call_read2_callback_mid,
-          array,
-          ptr,
-          pending);
-      _env->DeleteLocalRef(array);
-    } else {
-      ThrowOutOfMemoryError(_env, (FUNCTION_NAME), (__FILE__), (TOSTRING(__LINE__)), NULL);
-    }
+    OOM(_env, array);
+    _env->CallVoidMethod(
+        _instance,
+        _call_read2_callback_mid,
+        array,
+        ptr,
+        pending);
+    _env->DeleteLocalRef(array);
   }
   delete[] buf->base;
 }
 
 void StreamCallbacks::on_write(int status, int error_code, jobject buffer, jobject context) {
   assert(_env);
+  jthrowable exception = error_code ? NewException(_env, error_code) : NULL;
   _env->CallVoidMethod(
       _instance,
       _call_write_callback_mid,
       status,
-      error_code ? NewException(_env, error_code) : NULL,
+      exception,
       context);
+  if (exception) { _env->DeleteLocalRef(exception); }
 }
 
 void StreamCallbacks::on_connect(int status, int error_code, jobject context) {
   assert(_env);
+  jthrowable exception = error_code ? NewException(_env, error_code) : NULL;
   _env->CallVoidMethod(
       _instance,
       _call_connect_callback_mid,
       status,
-      error_code ? NewException(_env, error_code) : NULL,
+      exception,
       context);
+  if (exception) { _env->DeleteLocalRef(exception); }
 }
 
 void StreamCallbacks::on_connection(int status, int error_code) {
   assert(_env);
+  jthrowable exception = error_code ? NewException(_env, error_code) : NULL;
   _env->CallVoidMethod(
       _instance,
       _call_connection_callback_mid,
       status,
-      error_code ? NewException(_env, error_code) : NULL);
+      exception);
+  if (exception) { _env->DeleteLocalRef(exception); }
 }
 
 void StreamCallbacks::on_shutdown(int status, int error_code, jobject context) {

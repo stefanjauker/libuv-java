@@ -147,6 +147,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_oracle_libuv_handles_LoopHandle__1list
     jstring s = env->NewStringUTF(bag[i]);
     OOMN(env, s);
     env->SetObjectArrayElement(handles, i, s);
+    env->DeleteLocalRef(s);
   }
   return handles;
 }

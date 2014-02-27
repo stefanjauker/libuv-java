@@ -40,31 +40,38 @@ public class LoopHandleTest extends TestBase {
     @Test
     public void testList() throws Throwable {
         final LoopHandle loop = new LoopHandle();
-        //loop.run();
         final String[] handles = loop.list();
         Assert.assertNotNull(handles);
         Assert.assertEquals(handles.length, 0);
 
+        final AsyncHandle async = new AsyncHandle(loop);
+        final CheckHandle check = new CheckHandle(loop);
+        final IdleHandle idle = new IdleHandle(loop);
         final SignalHandle signal = new SignalHandle(loop);
         final PipeHandle pipe = new PipeHandle(loop, false);
         final TCPHandle tcp = new TCPHandle(loop);
         final UDPHandle udp = new UDPHandle(loop);
 
+        System.out.println(async);
+        System.out.println(check);
+        System.out.println(idle);
         System.out.println(signal);
         System.out.println(pipe);
         System.out.println(tcp);
         System.out.println(udp);
 
         final Set<String> pointers = new HashSet<>();
+        pointers.add(async.toString().split(DOT_SPLIT_REGEX)[1]);
+        pointers.add(check.toString().split(DOT_SPLIT_REGEX)[1]);
+        pointers.add(idle.toString().split(DOT_SPLIT_REGEX)[1]);
         pointers.add(signal.toString().split(DOT_SPLIT_REGEX)[1]);
         pointers.add(pipe.toString().split(DOT_SPLIT_REGEX)[1]);
         pointers.add(tcp.toString().split(DOT_SPLIT_REGEX)[1]);
         pointers.add(udp.toString().split(DOT_SPLIT_REGEX)[1]);
 
         final String[] handles1 = loop.list();
-
         Assert.assertNotNull(handles1);
-        Assert.assertEquals(handles1.length, 4);
+        Assert.assertEquals(handles1.length, 7);
         for (final String handle : handles1) {
             System.out.println(handle);
             Assert.assertNotNull(handle);

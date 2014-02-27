@@ -365,6 +365,7 @@ void FileCallback::fs_cb(FileRequest* request, uv_fs_type fs_type, ssize_t resul
         jstring name = _env->NewStringUTF(namebuf);
         OOM(_env, name);
         _env->SetObjectArrayElement(names, i, name);
+        _env->DeleteLocalRef(name);
 #ifndef NDEBUG
         namebuf += strlen(namebuf);
         assert(*namebuf == '\0');
@@ -544,6 +545,10 @@ void FileCallback::fs_cb(FileRequest* request, uv_fs_type fs_type, const char* t
 
   if (path) {
     _env->ReleaseStringUTFChars(path, cpath);
+  }
+
+  if (exception) {
+    _env->DeleteLocalRef(exception);
   }
 }
 
@@ -874,6 +879,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_oracle_libuv_Files__1readdir
           jstring name = env->NewStringUTF(namebuf);
           OOMN(env, name);
           env->SetObjectArrayElement(names, i, name);
+          env->DeleteLocalRef(name);
 #ifndef NDEBUG
           namebuf += strlen(namebuf);
           assert(*namebuf == '\0');
