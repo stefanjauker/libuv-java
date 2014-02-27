@@ -76,6 +76,10 @@ jthrowable NewException(JNIEnv* env, int errorno, const char *syscall, const cha
 
   jthrowable e;
   std::string path_str;
+
+  jstring err_str = utf(env, errno_string);
+  jstring err_msg = utf(env, errno_message);
+
   if (path) {
 #ifdef _WIN32
     if (strncmp(path, "\\\\?\\UNC\\", 8) == 0) {
@@ -92,12 +96,30 @@ jthrowable NewException(JNIEnv* env, int errorno, const char *syscall, const cha
     std::string cons3 = cons2 + " '";
     std::string cons4 = cons3 + path_str;
     std::string cons5 = cons4 + "'";
+
+    jstring err_cons5 = utf(env, cons5);
+    jstring err_path = utf(env, path_str);
+
     e = (jthrowable) env->NewObject(nativeExceptionClassID, nativeExceptionConstructorMID,
-        errorno, utf(env, errno_string), utf(env, errno_message), syscall_arg, utf(env, cons5), utf(env, path_str));
+        errorno, err_str, err_msg, syscall_arg, err_cons5, err_path);
+
+    env->DeleteLocalRef(err_cons5);
+    env->DeleteLocalRef(err_path);
   } else {
+    jstring err_cons2 = utf(env, cons2);
+
     e = (jthrowable) env->NewObject(nativeExceptionClassID, nativeExceptionConstructorMID,
-        errorno, utf(env, errno_string), utf(env, errno_message), syscall_arg, utf(env, cons2), NULL);
+        errorno, err_str, err_msg, syscall_arg, err_cons2, NULL);
+
+    env->DeleteLocalRef(err_cons2);
   }
+
+  if (syscall_arg != NULL) {
+    env->DeleteLocalRef(syscall_arg);
+  }
+  env->DeleteLocalRef(err_str);
+  env->DeleteLocalRef(err_msg);
+
   return e;
 }
 
