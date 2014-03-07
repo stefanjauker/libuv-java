@@ -150,10 +150,6 @@ public final class LoopHandle {
         _close_all(pointer);
     }
 
-    public NativeException getLastError() {
-        return _get_last_error(pointer);
-    }
-
     public String[] list() {
         return _list(pointer);
     }
@@ -183,7 +179,5 @@ public final class LoopHandle {
     private native void _close_all(final long ptr);
 
     private native String[] _list(final long ptr);
-
-    private native NativeException _get_last_error(final long ptr);
 
 }

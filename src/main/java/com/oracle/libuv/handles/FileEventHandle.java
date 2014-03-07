@@ -65,16 +65,16 @@ public final class FileEventHandle extends Handle {
     public FileEventHandle(final LoopHandle loop) {
         super(_new(), loop);
         _initialize(pointer);
+        _init(loop.pointer(), pointer);
     }
 
     public int start(final String path, final boolean persistent) {
         Objects.requireNonNull(path);
-        return _start(loop.pointer(), pointer, path, persistent);
+        return _start(pointer, path, persistent);
     }
 
     public void stop() {
-        _close(pointer);
-        closed = true;
+        _stop(pointer);
     }
 
     public void close() {
@@ -113,7 +113,11 @@ public final class FileEventHandle extends Handle {
 
     private native void _initialize(final long ptr);
 
-    private native int _start(final long loopPtr, final long ptr, final String path, final boolean persistent);
+    private native int _init(final long loopPtr, final long ptr);
+
+    private native int _start(final long ptr, final String path, final boolean persistent);
+
+    private native int _stop(final long ptr);
 
     private native void _close(final long ptr);
 

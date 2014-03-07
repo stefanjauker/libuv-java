@@ -77,7 +77,7 @@ public class PermissionTest extends TestBase {
     private static final String OS = System.getProperty("os.name");
     private static final String ADDRESS = "127.0.0.1";
     private static final String ADDRESS6 = "::1";
-    private static int p = 49152;
+    private static int p = 49952;
 
     private static int getPort() {
         return ++p;
@@ -392,14 +392,14 @@ public class PermissionTest extends TestBase {
         testSuccess(new Runnable() {
             @Override
             public void run() {
-                process.kill(-9);
+                process.kill(9);
             }
         });
 
         System.out.println("Security child process Auth test passed");
     }
 
-    // @Test // TODO: test hangs on windows
+    @Test
     public void testConnectionAuth() throws Throwable {
         final AtomicBoolean serverDone = new AtomicBoolean(false);
         final int port = getPort();
@@ -1030,9 +1030,11 @@ public class PermissionTest extends TestBase {
         } catch (final Exception ex) {
             if (ex instanceof AccessControlException) {
                 System.out.println("UNEXPECTED SECURITY EXCEPTION " + ex);
-                ex.printStackTrace();
-                throw ex;
+            } else {
+                System.out.println("UNEXPECTED EXCEPTION " + ex);
             }
+            ex.printStackTrace();
+            throw ex;
         }
     }
 

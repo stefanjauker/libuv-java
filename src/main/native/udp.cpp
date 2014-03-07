@@ -34,10 +34,20 @@
 #include "udp.h"
 #include "com_oracle_libuv_handles_UDPHandle.h"
 
-uv_buf_t _alloc_cb(uv_handle_t* handle, size_t suggested_size) {
+void _alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
+  assert(handle);
+  assert(handle->data);
+  assert(buf);
+
   // override - 64k buffers are too large for udp
   if (suggested_size >= 64 * 1024) suggested_size = 2 * 1024;
-  return uv_buf_init(new char[suggested_size], static_cast<unsigned int>(suggested_size));
+
+  buf->base = new char[suggested_size];
+  buf->len = static_cast<unsigned int>(suggested_size);
+  if (!buf->base && suggested_size > 0) {
+    UDPCallbacks* cb = reinterpret_cast<UDPCallbacks*>(handle->data);
+    cb->on_oom(buf->base);
+  }
 }
 
 jclass UDPCallbacks::_udp_handle_cid = NULL;
@@ -76,12 +86,12 @@ UDPCallbacks::~UDPCallbacks() {
   _env->DeleteGlobalRef(_instance);
 }
 
-void UDPCallbacks::on_recv(ssize_t nread, uv_buf_t buf, struct sockaddr* addr, unsigned flags) {
+void UDPCallbacks::on_recv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags) {
   if (nread == 0) return;
   jobject buffer_arg = NULL;
   if (nread > 0) {
     jbyte* data = new jbyte[nread];
-    memcpy(data, buf.base, nread);
+    memcpy(data, buf->base, nread);
     buffer_arg = _env->NewDirectByteBuffer(data, nread);
     OOM(_env, buffer_arg);
   }
@@ -95,7 +105,7 @@ void UDPCallbacks::on_recv(ssize_t nread, uv_buf_t buf, struct sockaddr* addr, u
   if (buffer_arg) {
     _env->DeleteLocalRef(buffer_arg);
   }
-  delete[] buf.base;
+  delete[] buf->base;
 }
 
 void UDPCallbacks::on_send(int status, int error_code, jobject buffer, jobject context) {
@@ -125,7 +135,7 @@ static void _close_cb(uv_handle_t* handle) {
   delete handle;
 }
 
-static void _recv_cb(uv_udp_t* udp, ssize_t nread, uv_buf_t buf, struct sockaddr* addr, unsigned flags) {
+static void _recv_cb(uv_udp_t* udp, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags) {
   assert(udp);
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
   assert(handle->data);
@@ -139,7 +149,7 @@ static void _send_cb(uv_udp_send_t* req, int status) {
   assert(req->handle->data);
   UDPCallbacks* cb = reinterpret_cast<UDPCallbacks*>(req->handle->data);
   ContextHolder* req_data = reinterpret_cast<ContextHolder*>(req->data);
-  cb->on_send(status, status < 0 ? uv_last_error(req->handle->loop).code : 0, req_data->data(), req_data->context());
+  cb->on_send(status, status, req_data->data(), req_data->context());
   delete req_data;
   delete req;
 }
@@ -157,7 +167,7 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_UDPHandle__1new
   uv_udp_t* udp = new uv_udp_t();
   int r = uv_udp_init(lp, udp);
   if (r) {
-    ThrowException(env, udp->loop, "uv_udp_init");
+    ThrowException(env, r, "uv_udp_init");
   } else {
     udp->data = new UDPCallbacks();
   }
@@ -205,7 +215,7 @@ JNIEXPORT jobject JNICALL Java_com_oracle_libuv_handles_UDPHandle__1address
   int addrlen = sizeof(address);
   int r = uv_udp_getsockname(handle, sock, &addrlen);
   if (r) {
-    ThrowException(env, handle->loop, "uv_udp_getsockname");
+    ThrowException(env, r, "uv_udp_getsockname");
     return NULL;
   }
   const sockaddr* addr = reinterpret_cast<const sockaddr*>(&address);
@@ -215,40 +225,28 @@ JNIEXPORT jobject JNICALL Java_com_oracle_libuv_handles_UDPHandle__1address
 /*
  * Class:     com_oracle_libuv_handles_UDPHandle
  * Method:    _bind
- * Signature: (JILjava/lang/String;)I
+ * Signature: (JILjava/lang/String;Z)I
  */
 JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1bind
-  (JNIEnv *env, jobject that, jlong udp, jint port, jstring host) {
+  (JNIEnv *env, jobject that, jlong udp, jint port, jstring host, jboolean ipv6) {
 
   assert(udp);
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
   const char* h = env->GetStringUTFChars(host, 0);
-  sockaddr_in addr = uv_ip4_addr(h, port);
-  unsigned flags = 0;
-  int r = uv_udp_bind(handle, addr, flags);
+  char addr[sizeof sockaddr_in6];
+  int r = ipv6 ?
+    uv_ip6_addr(h, port, reinterpret_cast<sockaddr_in6*>(&addr)) :
+    uv_ip4_addr(h, port, reinterpret_cast<sockaddr_in*>(&addr));
   if (r) {
-    ThrowException(env, handle->loop, "uv_udp_bind", h);
+    ThrowException(env, r, ipv6 ? "uv_ip6_addr" : "uv_ip4_addr", h);
+    env->ReleaseStringUTFChars(host, h);
+    return r;
   }
-  env->ReleaseStringUTFChars(host, h);
-  return r;
-}
 
-/*
- * Class:     com_oracle_libuv_handles_UDPHandle
- * Method:    _bind6
- * Signature: (JILjava/lang/String;)I
- */
-JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1bind6
-  (JNIEnv *env, jobject that, jlong udp, jint port, jstring host) {
-
-  assert(udp);
-  uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
-  const char* h = env->GetStringUTFChars(host, 0);
-  sockaddr_in6 addr = uv_ip6_addr(h, port);
   unsigned flags = 0;
-  int r = uv_udp_bind6(handle, addr, flags);
+  r = uv_udp_bind(handle, reinterpret_cast<const sockaddr*>(&addr), flags);
   if (r) {
-    ThrowException(env, handle->loop, "uv_udp_bind6", h);
+    ThrowException(env, r, "uv_udp_bind", h);
   }
   env->ReleaseStringUTFChars(host, h);
   return r;
@@ -257,19 +255,27 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1bind6
 /*
  * Class:     com_oracle_libuv_handles_UDPHandle
  * Method:    _send
- * Signature: (JLjava/nio/ByteBuffer;[BIIILjava/lang/String;)I
+ * Signature: (JLjava/nio/ByteBuffer;[BIIILjava/lang/String;ZLjava/lang/Object;)I
  */
 JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1send
-  (JNIEnv *env, jobject that, jlong udp, jobject buffer, jbyteArray data, jint offset, jint length, jint port, jstring host, jobject context) {
+  (JNIEnv *env, jobject that, jlong udp, jobject buffer, jbyteArray data, jint offset, jint length, jint port, jstring host, jboolean ipv6, jobject context) {
 
   assert(udp);
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
   const char* h = env->GetStringUTFChars(host, 0);
-  sockaddr_in addr = uv_ip4_addr(h, port);
+  char addr[sizeof sockaddr_in6];
+  int r = ipv6 ?
+    uv_ip6_addr(h, port, reinterpret_cast<sockaddr_in6*>(&addr)) :
+    uv_ip4_addr(h, port, reinterpret_cast<sockaddr_in*>(&addr));
+  if (r) {
+    ThrowException(env, r, ipv6 ? "uv_ip6_addr" : "uv_ip4_addr", h);
+    env->ReleaseStringUTFChars(host, h);
+    return r;
+  }
+
   uv_udp_send_t* req = new uv_udp_send_t();
   req->handle = handle;
   ContextHolder* req_data = NULL;
-  int r;
   if (data) {
     jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
     OOME(env, base);
@@ -278,7 +284,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1send
     buf.len = length;
     req_data = new ContextHolder(env, context);
     req->data = req_data;
-    r = uv_udp_send(req, handle, &buf, 1, addr, _send_cb);
+    r = uv_udp_send(req, handle, &buf, 1, reinterpret_cast<const sockaddr*>(&addr), _send_cb);
     env->ReleasePrimitiveArrayCritical(data, base, 0);
   } else {
     jbyte* base = (jbyte*) env->GetDirectBufferAddress(buffer);
@@ -287,46 +293,12 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1send
     buf.len = length;
     req_data = new ContextHolder(env, buffer, context);
     req->data = req_data;
-    r = uv_udp_send(req, handle, &buf, 1, addr, _send_cb);
+    r = uv_udp_send(req, handle, &buf, 1, reinterpret_cast<const sockaddr*>(&addr), _send_cb);
   }
   if (r) {
     delete req_data;
     delete req;
-    ThrowException(env, handle->loop, "uv_udp_send", h);
-  }
-  env->ReleaseStringUTFChars(host, h);
-  return r;
-}
-
-/*
- * Class:     com_oracle_libuv_handles_UDPHandle
- * Method:    _send6
- * Signature: (JLjava/nio/ByteBuffer;[BIIILjava/lang/String;)I
- */
-JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1send6
-  (JNIEnv *env, jobject that, jlong udp, jobject buffer, jbyteArray data, jint offset, jint length, jint port, jstring host, jobject context) {
-
-  assert(udp);
-  uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
-  const char* h = env->GetStringUTFChars(host, 0);
-  sockaddr_in6 addr = uv_ip6_addr(h, port);
-
-  jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
-  OOME(env, base);
-  uv_buf_t buf;
-  buf.base = reinterpret_cast<char*>(base + offset);
-  buf.len = length;
-
-  uv_udp_send_t* req = new uv_udp_send_t();
-  req->handle = handle;
-  ContextHolder* req_data = new ContextHolder(env, context);
-  req->data = req_data;
-  int r = uv_udp_send6(req, handle, &buf, 1, addr, _send_cb);
-  env->ReleasePrimitiveArrayCritical(data, base, 0);
-  if (r) {
-    delete req_data;
-    delete req;
-    ThrowException(env, handle->loop, "uv_udp_send6", h);
+    ThrowException(env, r, "uv_udp_send", h);
   }
   env->ReleaseStringUTFChars(host, h);
   return r;
@@ -344,8 +316,8 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1recv_1start
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
   int r = uv_udp_recv_start(handle, _alloc_cb, _recv_cb);
   // UV_EALREADY means that the socket is already bound but that's okay
-  if (r && uv_last_error(handle->loop).code != UV_EALREADY) {
-    ThrowException(env, handle->loop, "uv_udp_recv_start");
+  if (r && errno != UV_EALREADY) {
+    ThrowException(env, r, "uv_udp_recv_start");
   }
   return r;
 }
@@ -362,7 +334,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1recv_1stop
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
   int r = uv_udp_recv_stop(handle);
   if (r) {
-    ThrowException(env, handle->loop, "uv_udp_recv_stop");
+    ThrowException(env, r, "uv_udp_recv_stop");
   }
   return r;
 }
@@ -379,7 +351,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1set_1ttl
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
   int r = uv_udp_set_ttl(handle, ttl);
   if (r) {
-    ThrowException(env, handle->loop, "uv_udp_set_ttl");
+    ThrowException(env, r, "uv_udp_set_ttl");
   }
   return r;
 }
@@ -400,7 +372,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1set_1membership
   env->ReleaseStringUTFChars(multicastAddress, maddr);
   env->ReleaseStringUTFChars(interfaceAddress, iaddr);
   if (r) {
-    ThrowException(env, handle->loop, "uv_udp_set_membership");
+    ThrowException(env, r, "uv_udp_set_membership");
   }
   return r;
 }
@@ -417,7 +389,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1set_1multicast_
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
   int r = uv_udp_set_multicast_loop(handle, on);
   if (r) {
-    ThrowException(env, handle->loop, "uv_udp_set_multicast_loop");
+    ThrowException(env, r, "uv_udp_set_multicast_loop");
   }
   return r;
 }
@@ -434,7 +406,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1set_1multicast_
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
   int r = uv_udp_set_multicast_ttl(handle, ttl);
   if (r) {
-    ThrowException(env, handle->loop, "uv_udp_set_multicast_ttl");
+    ThrowException(env, r, "uv_udp_set_multicast_ttl");
   }
   return r;
 }
@@ -451,7 +423,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1set_1broadcast
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
   int r = uv_udp_set_broadcast(handle, on);
   if (r) {
-    ThrowException(env, handle->loop, "uv_udp_set_broadcast");
+    ThrowException(env, r, "uv_udp_set_broadcast");
   }
   return r;
 }

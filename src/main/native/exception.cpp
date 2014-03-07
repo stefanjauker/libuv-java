@@ -33,20 +33,6 @@
 #include "uv.h"
 #include "com_oracle_libuv_NativeException.h"
 
-const char* get_uv_errno_string(int errorno) {
-  uv_err_t err;
-  memset(&err, 0, sizeof err);
-  err.code = (uv_err_code)errorno;
-  return uv_err_name(err);
-}
-
-const char* get_uv_errno_message(int errorno) {
-  uv_err_t err;
-  memset(&err, 0, sizeof err);
-  err.code = (uv_err_code)errorno;
-  return uv_strerror(err);
-}
-
 static inline jstring utf(JNIEnv* env, const std::string& s) {
     return env->NewStringUTF(s.data());
 }
@@ -56,12 +42,12 @@ jthrowable NewException(JNIEnv* env, int errorno, const char *syscall, const cha
 
   jobject syscall_arg = syscall ? env->NewStringUTF(syscall) : NULL;
 
-  std::string errno_message = get_uv_errno_message(errorno);
+  std::string errno_message = uv_strerror(errorno);
   if (!msg || !msg[0]) {
     msg = errno_message.data();
   }
 
-  std::string errno_string = get_uv_errno_string(errorno);
+  std::string errno_string = uv_err_name(errorno);
   std::string message = msg;
   std::string cons1 = errno_string + ", ";
   std::string cons2 = cons1 + message;
@@ -148,8 +134,6 @@ void ThrowOutOfMemoryError(JNIEnv* env, const char* func, const char* file, cons
  */
 JNIEXPORT void JNICALL Java_com_oracle_libuv_NativeException__1static_1initialize
   (JNIEnv* env, jclass cls) {
-
-  assert(!_oom_cid);
 
   _oom_cid = env->FindClass("java/lang/OutOfMemoryError");
   assert(_oom_cid);

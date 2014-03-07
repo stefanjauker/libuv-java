@@ -79,7 +79,7 @@ public final class LibUV {
         return _kill(pid, signal);
     }
 
-    public static int rss() {
+    public static long rss() {
         return _rss();
     }
 
@@ -130,7 +130,7 @@ public final class LibUV {
 
     private static native int _kill(int pid, int signal);
 
-    private static native int _rss();
+    private static native long _rss();
 
     // os
 

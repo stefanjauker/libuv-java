@@ -57,7 +57,11 @@ void Stats::static_initialize(JNIEnv* env) {
   }
 }
 
-jobject Stats::create(JNIEnv* env, const uv_statbuf_t* ptr) {
+inline static long to_millis(const uv_timespec_t& t) {
+    return (t.tv_nsec / 1000000) + (t.tv_sec * 1000);
+}
+
+jobject Stats::create(JNIEnv* env, const uv_stat_t* ptr) {
   if (ptr) {
     int blksize = 0;
     jlong blocks = 0;
@@ -79,14 +83,14 @@ jobject Stats::create(JNIEnv* env, const uv_statbuf_t* ptr) {
         ptr->st_size,
         blksize,
         blocks,
-        ptr->st_atime * 1000,     // Convert seconds to milliseconds
-        ptr->st_mtime * 1000,     // Convert seconds to milliseconds
-        ptr->st_ctime * 1000);    // Convert seconds to milliseconds
+        to_millis(ptr->st_atim),
+        to_millis(ptr->st_mtim),
+        to_millis(ptr->st_ctim));
   }
   return NULL;
 }
 
-void Stats::update(JNIEnv* env, jobject stats, const uv_statbuf_t* ptr) {
+void Stats::update(JNIEnv* env, jobject stats, const uv_stat_t* ptr) {
   if (ptr) {
     int blksize = 0;
     jlong blocks = 0;
@@ -108,8 +112,8 @@ void Stats::update(JNIEnv* env, jobject stats, const uv_statbuf_t* ptr) {
         ptr->st_size,
         blksize,
         blocks,
-        ptr->st_atime * 1000,     // Convert seconds to milliseconds
-        ptr->st_mtime * 1000,     // Convert seconds to milliseconds
-        ptr->st_ctime * 1000);    // Convert seconds to milliseconds
+        to_millis(ptr->st_atim),
+        to_millis(ptr->st_mtim),
+        to_millis(ptr->st_ctim));
   }
 }

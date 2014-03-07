@@ -38,7 +38,7 @@ static void _pipe_connect_cb(uv_connect_t* req, int status) {
   assert(req->handle->data);
   ContextHolder* req_data = reinterpret_cast<ContextHolder*>(req->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(req->handle->data);
-  cb->on_connect(status, status < 0 ? uv_last_error(req->handle->loop).code : 0, req_data->context());
+  cb->on_connect(status, 0, req_data->context());
   delete req_data;
   delete req;
 }
@@ -56,10 +56,8 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_PipeHandle__1new
   uv_loop_t* lp = reinterpret_cast<uv_loop_t*>(loop);
   int r = uv_pipe_init(lp, pipe, ipc == JNI_FALSE ? 0 : 1);
   if (r) {
-    ThrowException(env, lp, "uv_pipe_init");
-    return (jlong) NULL;
+    ThrowException(env, r, "uv_pipe_init");
   }
-  assert(pipe);
   pipe->data = new StreamCallbacks();
   return reinterpret_cast<jlong>(pipe);
 }
@@ -76,7 +74,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_PipeHandle__1open
   uv_pipe_t* handle = reinterpret_cast<uv_pipe_t*>(pipe);
   int r = uv_pipe_open(handle, fd);
   if (r) {
-    ThrowException(env, handle->loop, "uv_pipe_open");
+    ThrowException(env, r, "uv_pipe_open");
   }
   return r;
 }
@@ -94,7 +92,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_PipeHandle__1bind
   const char* n = env->GetStringUTFChars(name, 0);
   int r = uv_pipe_bind(handle, n);
   if (r) {
-    ThrowException(env, handle->loop, "uv_pipe_bind", n);
+    ThrowException(env, r, "uv_pipe_bind", n);
   }
   env->ReleaseStringUTFChars(name, n);
   return r;

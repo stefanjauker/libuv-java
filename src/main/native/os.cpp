@@ -42,12 +42,10 @@
 JNIEXPORT jdouble JNICALL Java_com_oracle_libuv_LibUV__1getUptime
   (JNIEnv *env, jclass cls) {
 
-  double uptime;
-
-  uv_err_t err = uv_uptime(&uptime);
-
-  if (err.code != UV_OK) {
-    return 0;
+  double uptime = 0;
+  int r = uv_uptime(&uptime);
+  if (r) {
+    ThrowException(env, r, "uv_uptime");
   }
 
   return uptime;
@@ -103,10 +101,11 @@ JNIEXPORT jobjectArray JNICALL Java_com_oracle_libuv_LibUV__1getCPUs
   (JNIEnv *env, jclass cls) {
 
   uv_cpu_info_t* cpu_infos;
-  int count;
+  int count = 0;
 
-  uv_err_t err = uv_cpu_info(&cpu_infos, &count);
-  if (err.code != UV_OK) {
+  int r = uv_cpu_info(&cpu_infos, &count);
+  if (r) {
+    ThrowException(env, r, "uv_cpu_info");
     return NULL;
   }
 
@@ -172,7 +171,7 @@ JNIEXPORT jboolean JNICALL Java_com_oracle_libuv_LibUV__1isIPv6
 
   const char *address = env->GetStringUTFChars(ip, JNI_FALSE);
   char address_buffer[sizeof(struct in6_addr)];
-  if (uv_inet_pton(AF_INET6, address, &address_buffer).code == UV_OK) {
+  if (uv_inet_pton(AF_INET6, address, &address_buffer) == 0) {
     return JNI_TRUE;
   }
   return JNI_FALSE;

@@ -55,7 +55,7 @@ public interface CallbackHandler {
     public void handleFilePollCallback(FilePollCallback cb, int status, Stats previous, Stats current);
     public void handleFilePollStopCallback(FilePollStopCallback cb);
     public void handleProcessCloseCallback(ProcessCloseCallback cb);
-    public void handleProcessExitCallback(ProcessExitCallback cb, int status, int signal, Exception error);
+    public void handleProcessExitCallback(ProcessExitCallback cb, long status, int signal);
     public void handleTimerCallback(TimerCallback cb, int status);
     public void handleUDPRecvCallback(UDPRecvCallback cb, int nread, ByteBuffer data, Address address);
     public void handleUDPSendCallback(UDPSendCallback cb, int status, Exception error);

@@ -103,7 +103,7 @@ JNIEXPORT jboolean JNICALL Java_com_oracle_libuv_handles_Handle__1closing
   uv_handle_t* handle = reinterpret_cast<uv_handle_t*>(ptr);
   int r = uv_is_closing(handle);
   if (r) {
-    ThrowException(env, handle->loop, "uv_is_closing");
+    ThrowException(env, r, "uv_is_closing");
   }
   return r == 0 ? JNI_TRUE : JNI_FALSE;
 }

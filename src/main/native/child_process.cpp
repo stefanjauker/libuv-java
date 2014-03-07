@@ -48,8 +48,8 @@ public:
 
   void initialize(JNIEnv* env, jobject instance);
 
-  void on_exit(int status, int signal);
-  void on_exit(int status, int signal, int error_code);
+  void on_exit(int64_t status, int signal);
+  void on_exit(int64_t status, int signal, int error_code);
   void on_close();
 };
 
@@ -69,7 +69,7 @@ void ProcessCallbacks::static_initialize(JNIEnv* env, jclass cls) {
 
   _process_close_mid = env->GetMethodID(_process_handle_cid, "callClose", "()V");
   assert(_process_close_mid);
-  _process_exit_mid = env->GetMethodID(_process_handle_cid, "callExit", "(IILjava/lang/Exception;)V");
+  _process_exit_mid = env->GetMethodID(_process_handle_cid, "callExit", "(II)V");
   assert(_process_exit_mid);
 }
 
@@ -87,7 +87,7 @@ ProcessCallbacks::~ProcessCallbacks() {
   _env->DeleteGlobalRef(_instance);
 }
 
-void ProcessCallbacks::on_exit(int status, int signal) {
+void ProcessCallbacks::on_exit(int64_t status, int signal) {
   assert(_env);
 
   _env->CallVoidMethod(
@@ -98,7 +98,7 @@ void ProcessCallbacks::on_exit(int status, int signal) {
       NULL);
 }
 
-void ProcessCallbacks::on_exit(int status, int signal, int error_code) {
+void ProcessCallbacks::on_exit(int64_t status, int signal, int error_code) {
   assert(_env);
   assert(status < 0);
 
@@ -128,17 +128,12 @@ static void _close_cb(uv_handle_t* handle) {
   delete handle;
 }
 
-static void _exit_cb(uv_process_t* process, int exit_status, int term_signal) {
+static void _exit_cb(uv_process_t* process, int64_t exit_status, int term_signal) {
   assert(process);
   uv_process_t* handle = reinterpret_cast<uv_process_t*>(process);
   assert(handle->data);
   ProcessCallbacks* cb = reinterpret_cast<ProcessCallbacks*>(handle->data);
-  if (exit_status < 0) {
-    int error_code = uv_last_error(handle->loop).code;
-    cb->on_exit(exit_status, term_signal, error_code);
-  } else {
-    cb->on_exit(exit_status, term_signal);
-  }
+  cb->on_exit(exit_status, term_signal);
 }
 
 /*
@@ -220,7 +215,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_ProcessHandle__1spawn
 
   if (uid != -1) {
     if (uid & ~((uv_uid_t) ~0)) {
-        ThrowException(env, handle->loop, "uv_spawn", "uid is out of range");
+        ThrowException(env, EINVAL, "uv_spawn", "uid is out of range");
     } else {
         options.flags |= UV_PROCESS_SETUID;
         options.uid = (uv_uid_t) uid;
@@ -229,7 +224,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_ProcessHandle__1spawn
 
   if (gid != -1) {
     if (gid & ~((uv_gid_t) ~0)) {
-      ThrowException(env, handle->loop, "uv_spawn", "gid is out of range");
+      ThrowException(env, EINVAL, "uv_spawn", "gid is out of range");
     } else {
       options.flags |= UV_PROCESS_SETGID;
       options.gid = (uv_gid_t) gid;
@@ -294,9 +289,9 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_ProcessHandle__1spawn
     options.flags |= UV_PROCESS_DETACHED;
   }
 
-  int r = uv_spawn(handle->loop, handle, options);
+  int r = uv_spawn(handle->loop, handle, &options);
   if (r) {
-    ThrowException(env, handle->loop, "uv_spawn", program_chars);
+    ThrowException(env, r, "uv_spawn", program_chars);
   } else {
     r = handle->pid;
   }
@@ -350,7 +345,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_ProcessHandle__1kill
   uv_process_t* handle = reinterpret_cast<uv_process_t*>(ptr);
   int r = uv_process_kill(handle, signal);
   if (r) {
-    ThrowException(env, handle->loop, "uv_process_kill", "error killing process");
+    ThrowException(env, r, "uv_process_kill", "error killing process");
   }
   return r;
 }

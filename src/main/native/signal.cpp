@@ -108,7 +108,7 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_SignalHandle__1new
   uv_signal_t* signal = new uv_signal_t();
   int r = uv_signal_init(lp, signal);
   if (r) {
-    ThrowException(env, signal->loop, "uv_signal_init");
+    ThrowException(env, r, "uv_signal_init");
   } else {
     signal->data = new SignalCallbacks();
   }
@@ -153,7 +153,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_SignalHandle__1start
   uv_signal_t* handle = reinterpret_cast<uv_signal_t*>(signal);
   int r = uv_signal_start(handle, _signal_cb, signum);
   if (r) {
-    ThrowException(env, handle->loop, "uv_signal_start");
+    ThrowException(env, r, "uv_signal_start");
   }
   return r;
 }
@@ -170,7 +170,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_SignalHandle__1stop
   uv_signal_t* handle = reinterpret_cast<uv_signal_t*>(signal);
   int r = uv_signal_stop(handle);
   if (r) {
-    ThrowException(env, handle->loop, "uv_signal_stop");
+    ThrowException(env, r, "uv_signal_stop");
   }
   SignalCallbacks* cb = reinterpret_cast<SignalCallbacks*>(handle->data);
   delete cb;

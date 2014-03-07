@@ -38,7 +38,7 @@ static void _tcp_connect_cb(uv_connect_t* req, int status) {
   assert(req->handle->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(req->handle->data);
   ContextHolder* req_data = reinterpret_cast<ContextHolder*>(req->data);
-  cb->on_connect(status, status < 0 ? uv_last_error(req->handle->loop).code : 0, req_data->context());
+  cb->on_connect(status, status, req_data->context());
   delete req;
   delete req_data;
 }
@@ -56,7 +56,7 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_TCPHandle__1new
   uv_loop_t* lp = reinterpret_cast<uv_loop_t*>(loop);
   int r = uv_tcp_init(lp, tcp);
   if (r) {
-    ThrowException(env, lp, "uv_tcp_init");
+    ThrowException(env, r, "uv_tcp_init");
     return (jlong) NULL;
   }
   assert(tcp);
@@ -67,38 +67,29 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_TCPHandle__1new
 /*
  * Class:     com_oracle_libuv_handles_TCPHandle
  * Method:    _bind
- * Signature: (JLjava/lang/String;I)I
+ * Signature: (JLjava/lang/String;ZI)I
  */
 JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TCPHandle__1bind
-  (JNIEnv *env, jobject that, jlong tcp, jstring host, jint port) {
+  (JNIEnv *env, jobject that, jlong tcp, jstring host, jboolean ipv6, jint port) {
 
   assert(tcp);
   uv_tcp_t* handle = reinterpret_cast<uv_tcp_t*>(tcp);
   const char* h = env->GetStringUTFChars(host, 0);
-  sockaddr_in addr = uv_ip4_addr(h, port);
-  int r = uv_tcp_bind(handle, addr);
+
+  char addr[sizeof sockaddr_in6];
+  int r = ipv6 ?
+    uv_ip6_addr(h, port, reinterpret_cast<sockaddr_in6*>(&addr)) :
+    uv_ip4_addr(h, port, reinterpret_cast<sockaddr_in*>(&addr));
   if (r) {
-    ThrowException(env, handle->loop, "uv_tcp_bind", h);
+    ThrowException(env, r, ipv6 ? "uv_ip6_addr" : "uv_ip4_addr", h);
+    env->ReleaseStringUTFChars(host, h);
+    return r;
   }
-  env->ReleaseStringUTFChars(host, h);
-  return r;
-}
 
-/*
- * Class:     com_oracle_libuv_handles_TCPHandle
- * Method:    _bind6
- * Signature: (JLjava/lang/String;I)I
- */
-JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TCPHandle__1bind6
-  (JNIEnv *env, jobject that, jlong tcp, jstring host, jint port) {
-
-  assert(tcp);
-  uv_tcp_t* handle = reinterpret_cast<uv_tcp_t*>(tcp);
-  const char* h = env->GetStringUTFChars(host, 0);
-  sockaddr_in6 addr = uv_ip6_addr(h, port);
-  int r = uv_tcp_bind6(handle, addr);
+  int flags = 0;
+  r = uv_tcp_bind(handle, reinterpret_cast<const sockaddr*>(&addr), flags);
   if (r) {
-    ThrowException(env, handle->loop, "uv_tcp_bind6", h);
+    ThrowException(env, r, "uv_tcp_bind", h);
   }
   env->ReleaseStringUTFChars(host, h);
   return r;
@@ -107,50 +98,33 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TCPHandle__1bind6
 /*
  * Class:     com_oracle_libuv_handles_TCPHandle
  * Method:    _connect
- * Signature: (JLjava/lang/String;I)I
+ * Signature: (JLjava/lang/String;ZILjava/lang/Object;)I
  */
 JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TCPHandle__1connect
-  (JNIEnv *env, jobject that, jlong tcp, jstring host, jint port, jobject context) {
+  (JNIEnv *env, jobject that, jlong tcp, jstring host, jboolean ipv6, jint port, jobject context) {
 
   assert(tcp);
   uv_tcp_t* handle = reinterpret_cast<uv_tcp_t*>(tcp);
   const char* h = env->GetStringUTFChars(host, 0);
-  sockaddr_in addr = uv_ip4_addr(h, port);
-  uv_connect_t* req = new uv_connect_t();
-  req->handle = reinterpret_cast<uv_stream_t*>(handle);
-  ContextHolder* req_data = new ContextHolder(env, context);
-  req->data = req_data;
-  int r = uv_tcp_connect(req, handle, addr, _tcp_connect_cb);
+  char addr[sizeof sockaddr_in6];
+  int r = ipv6 ?
+    uv_ip6_addr(h, port, reinterpret_cast<sockaddr_in6*>(&addr)) :
+    uv_ip4_addr(h, port, reinterpret_cast<sockaddr_in*>(&addr));
   if (r) {
-    delete req_data;
-    delete req;
-    ThrowException(env, handle->loop, "uv_tcp_connect", h);
+    ThrowException(env, r, ipv6 ? "uv_ip6_addr" : "uv_ip4_addr", h);
+    env->ReleaseStringUTFChars(host, h);
+    return r;
   }
-  env->ReleaseStringUTFChars(host, h);
-  return r;
-}
 
-/*
- * Class:     com_oracle_libuv_handles_TCPHandle
- * Method:    _connect6
- * Signature: (JLjava/lang/String;I)I
- */
-JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TCPHandle__1connect6
-  (JNIEnv *env, jobject that, jlong tcp, jstring host, jint port, jobject context) {
-
-  assert(tcp);
-  uv_tcp_t* handle = reinterpret_cast<uv_tcp_t*>(tcp);
-  const char* h = env->GetStringUTFChars(host, 0);
-  sockaddr_in6 addr = uv_ip6_addr(h, port);
   uv_connect_t* req = new uv_connect_t();
   req->handle = reinterpret_cast<uv_stream_t*>(handle);
   ContextHolder* req_data = new ContextHolder(env, context);
   req->data = req_data;
-  int r = uv_tcp_connect6(req, handle, addr, _tcp_connect_cb);
+  r = uv_tcp_connect(req, handle, reinterpret_cast<const sockaddr*>(&addr), _tcp_connect_cb);
   if (r) {
     delete req_data;
     delete req;
-    ThrowException(env, handle->loop, "uv_tcp_connect6", h);
+    ThrowException(env, r, "uv_tcp_connect", h);
   }
   env->ReleaseStringUTFChars(host, h);
   return r;
@@ -168,7 +142,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TCPHandle__1open
   uv_tcp_t* handle = reinterpret_cast<uv_tcp_t*>(tcp);
   int r = uv_tcp_open(handle, fd);
   if (r) {
-    ThrowException(env, handle->loop, "uv_tcp_open");
+    ThrowException(env, r, "uv_tcp_open");
   }
   return r;
 }
@@ -190,7 +164,7 @@ JNIEXPORT jobject JNICALL Java_com_oracle_libuv_handles_TCPHandle__1socket_1name
                              reinterpret_cast<sockaddr*>(&address),
                              &addrlen);
   if (r) {
-    ThrowException(env, handle->loop, "uv_tcp_getsockname");
+    ThrowException(env, r, "uv_tcp_getsockname");
     return NULL;
   }
   const sockaddr* addr = reinterpret_cast<const sockaddr*>(&address);
@@ -214,7 +188,7 @@ JNIEXPORT jobject JNICALL Java_com_oracle_libuv_handles_TCPHandle__1peer_1name
                              reinterpret_cast<sockaddr*>(&address),
                              &addrlen);
   if (r) {
-    ThrowException(env, handle->loop, "uv_tcp_getpeername");
+    ThrowException(env, r, "uv_tcp_getpeername");
     return NULL;
   }
   const sockaddr* addr = reinterpret_cast<const sockaddr*>(&address);
@@ -234,7 +208,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TCPHandle__1no_1delay
 
   int r = uv_tcp_nodelay(handle, enable);
   if (r) {
-    ThrowException(env, handle->loop, "uv_tcp_nodelay");
+    ThrowException(env, r, "uv_tcp_nodelay");
   }
   return r;
 }
@@ -252,7 +226,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TCPHandle__1keep_1alive
 
   int r = uv_tcp_keepalive(handle, enable, delay);
   if (r) {
-    ThrowException(env, handle->loop, "uv_tcp_keepalive");
+    ThrowException(env, r, "uv_tcp_keepalive");
   }
   return r;
 }
@@ -271,7 +245,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TCPHandle__1simultaneous_1a
   int r = uv_tcp_simultaneous_accepts(handle, enable);
   if (r) {
     // TODO: Node.js as of v0.10.23 ignores the error.
-    // ThrowException(env, handle->loop, "uv_tcp_simultaneous_accepts");
+    // ThrowException(env, r, "uv_tcp_simultaneous_accepts");
   }
   return r;
 }

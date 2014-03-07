@@ -185,9 +185,9 @@ public final class ProcessHandle extends Handle {
         }
     }
 
-    private void callExit(final int status, final int signal, final Exception error) {
+    private void callExit(final int status, final int signal) {
         if (onExit != null) {
-            loop.getCallbackHandler().handleProcessExitCallback(onExit, status, signal, error);
+            loop.getCallbackHandler().handleProcessExitCallback(onExit, status, signal);
         }
     }
 

@@ -38,8 +38,8 @@ private:
 
 public:
   static void static_initialize(JNIEnv* env);
-  static jobject create(JNIEnv* env, const uv_statbuf_t* ptr);
-  static void update(JNIEnv* env, jobject stats, const uv_statbuf_t* ptr);
+  static jobject create(JNIEnv* env, const uv_stat_t* ptr);
+  static void update(JNIEnv* env, jobject stats, const uv_stat_t* ptr);
 
   Stats();
   ~Stats();

@@ -2,7 +2,7 @@
 
 <project name="libuv" default="build" basedir=".">
 
-    <property file="${user.home}/.avatar-js.properties"/>
+    <property file="${user.home}/.avatar-js-unstable.properties"/>
     <import file="${avatar-js.home}/common.xml"/>
 
     <target name="setup" depends="init, copy-source-files"/>

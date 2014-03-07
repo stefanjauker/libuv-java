@@ -166,27 +166,63 @@ JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_FileEventHandle__1initializ
 
 /*
  * Class:     com_oracle_libuv_handles_FileEventHandle
- * Method:    _start
- * Signature: (JJLjava/lang/String;Z)I
+ * Method:    _init
+ * Signature: (JJ)I
  */
-JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_FileEventHandle__1start
-  (JNIEnv *env, jobject that, jlong loop_ptr, jlong fs_event_ptr, jstring path, jboolean persistent) {
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_FileEventHandle__1init
+  (JNIEnv *env, jobject that, jlong loop_ptr, jlong fs_event_ptr) {
 
   assert(loop_ptr);
   assert(fs_event_ptr);
 
   uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
   uv_fs_event_t* handle = reinterpret_cast<uv_fs_event_t*>(fs_event_ptr);
+  int r = uv_fs_event_init(loop, handle);
+  if (r) {
+    ThrowException(env, r, "uv_fs_event_init");
+  }
+  return r;
+}
+
+/*
+ * Class:     com_oracle_libuv_handles_FileEventHandle
+ * Method:    _start
+ * Signature: (JLjava/lang/String;Z)I
+ */
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_FileEventHandle__1start
+  (JNIEnv *env, jobject that, jlong fs_event_ptr, jstring path, jboolean persistent) {
+
+  assert(fs_event_ptr);
+
+  uv_fs_event_t* handle = reinterpret_cast<uv_fs_event_t*>(fs_event_ptr);
   const char* cpath = env->GetStringUTFChars(path, 0);
 
-  int r = uv_fs_event_init(loop, handle, cpath, on_event_cb, 0);
-  if (r == 0 && !persistent) {
+  if (!persistent) {
     uv_unref(reinterpret_cast<uv_handle_t*>(handle));
   }
+  int r = uv_fs_event_start(handle, on_event_cb, cpath, persistent);
   if (r) {
-    ThrowException(env, loop, "uv_fs_event_init");
+    ThrowException(env, r, "uv_fs_event_start");
   }
   env->ReleaseStringUTFChars(path, cpath);
+  return r;
+}
+
+/*
+ * Class:     com_oracle_libuv_handles_FileEventHandle
+ * Method:    _stop
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_FileEventHandle__1stop
+  (JNIEnv *env, jobject that, jlong fs_event_ptr) {
+
+  assert(fs_event_ptr);
+
+  uv_fs_event_t* handle = reinterpret_cast<uv_fs_event_t*>(fs_event_ptr);
+  int r = uv_fs_event_stop(handle);
+  if (r) {
+    ThrowException(env, r, "uv_fs_event_stop");
+  }
   return r;
 }
 

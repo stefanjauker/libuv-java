@@ -80,12 +80,4 @@ inline void ThrowException(JNIEnv* env, int errorno, const char *syscall, const 
   ThrowException(env, errorno, syscall, msg, NULL);
 }
 
-inline void ThrowException(JNIEnv* env, uv_loop_t* loop, const char *syscall) {
-  ThrowException(env, uv_last_error(loop).code, syscall, NULL, NULL);
-}
-
-inline void ThrowException(JNIEnv* env, uv_loop_t* loop, const char *syscall, const char *msg) {
-  ThrowException(env, uv_last_error(loop).code, syscall, msg, NULL);
-}
-
 #endif // _libuv_java_throw_h_

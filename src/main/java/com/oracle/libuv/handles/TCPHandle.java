@@ -44,29 +44,32 @@ public class TCPHandle extends StreamHandle {
     }
 
     public int bind(final String address, final int port) {
-        Objects.requireNonNull(address);
-        bindPort = port;
-        LibUVPermission.checkBind(address, port);
-        return _bind(pointer, address, port);
+        return bind(address, false, port);
     }
 
     public int bind6(final String address, final int port) {
+        return bind(address, true, port);
+    }
+
+    private int bind(final String address, final boolean ipv6, final int port) {
         Objects.requireNonNull(address);
-        bindPort = port;
         LibUVPermission.checkBind(address, port);
-        return _bind6(pointer, address, port);
+        bindPort = port;
+        return _bind(pointer, address, ipv6, port);
     }
 
     public int connect(final String address, final int port) {
-        Objects.requireNonNull(address);
-        LibUVPermission.checkConnect(address, port);
-        return _connect(pointer, address, port, loop.getContext());
+        return connect(address, false, port);
     }
 
     public int connect6(final String address, final int port) {
+        return connect(address, true, port);
+    }
+
+    private int connect(final String address, final boolean ipv6, final int port) {
         Objects.requireNonNull(address);
         LibUVPermission.checkConnect(address, port);
-        return _connect6(pointer, address, port, loop.getContext());
+        return _connect(pointer, address, ipv6, port, loop.getContext());
     }
 
     @Override
@@ -120,13 +123,9 @@ public class TCPHandle extends StreamHandle {
 
     private static native long _new(final long loop);
 
-    private native int _bind(final long ptr, final String address, final int port);
+    private native int _bind(final long ptr, final String address, final boolean ipv6, final int port);
 
-    private native int _bind6(final long ptr, final String address, final int port);
-
-    private native int _connect(final long ptr, final String address, final int port, final Object context);
-
-    private native int _connect6(final long ptr, final String address, final int port, final Object context);
+    private native int _connect(final long ptr, final String address, final boolean ipv6, final int port, final Object context);
 
     private native int _open(final long ptr, final int fd);
 

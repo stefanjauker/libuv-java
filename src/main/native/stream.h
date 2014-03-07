@@ -61,13 +61,16 @@ public:
   void initialize(JNIEnv *env, jobject instance);
   void throw_exception(int code, const char* message);
 
-  void on_read(uv_buf_t* buf, jsize nread);
-  void on_read2(uv_buf_t* buf, jsize nread, jlong ptr, uv_handle_type pending);
+  void on_read(const uv_buf_t* buf, jsize nread);
+  void on_read2(const uv_buf_t* buf, jsize nread, jlong ptr, uv_handle_type pending);
   void on_write(int status, int error_code, jobject buffer, jobject domain);
   void on_shutdown(int status, int error_code, jobject domain);
   void on_connect(int status, int error_code, jobject domain);
   void on_connection(int status, int error_code);
   void on_close();
+
+  inline void on_oom(const char* buf) { OOM(_env, buf); }
+
 };
 
 #endif // _libuv_java_stream_h_

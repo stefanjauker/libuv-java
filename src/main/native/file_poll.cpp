@@ -53,7 +53,7 @@ public:
   ~FilePollCallbacks();
 
   void initialize(JNIEnv* env, jobject instance);
-  void on_poll(int status, const uv_statbuf_t* previous, const uv_statbuf_t* current);
+  void on_poll(int status, const uv_stat_t* previous, const uv_stat_t* current);
   void on_stop();
   void set_stats(jobject previous, jobject current);
 };
@@ -101,7 +101,7 @@ void FilePollCallbacks::initialize(JNIEnv* env, jobject instance) {
   _instance = _env->NewGlobalRef(instance);
 }
 
-void FilePollCallbacks::on_poll(int status, const uv_statbuf_t* previous, const uv_statbuf_t* current) {
+void FilePollCallbacks::on_poll(int status, const uv_stat_t* previous, const uv_stat_t* current) {
   assert(_env);
 
   Stats::update(_env, _previous_stats, previous);
@@ -125,7 +125,7 @@ void FilePollCallbacks::set_stats(jobject previous, jobject current) {
   _current_stats = _env->NewGlobalRef(current);
 }
 
-static void _poll_cb(uv_fs_poll_t* handle, int status, const uv_statbuf_t* previous, const uv_statbuf_t* current) {
+static void _poll_cb(uv_fs_poll_t* handle, int status, const uv_stat_t* previous, const uv_stat_t* current) {
   assert(handle);
   assert(handle->data);
   FilePollCallbacks* cb = reinterpret_cast<FilePollCallbacks*>(handle->data);
@@ -154,7 +154,7 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_FilePollHandle__1new
   uv_fs_poll_t* fs_poll = new uv_fs_poll_t();
   int r = uv_fs_poll_init(lp, fs_poll);
   if (r) {
-    ThrowException(env, fs_poll->loop, "uv_fs_poll_init");
+    ThrowException(env, r, "uv_fs_poll_init");
   } else {
     fs_poll->data = new FilePollCallbacks();
   }
@@ -209,7 +209,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_FilePollHandle__1start
 
   int r = uv_fs_poll_start(handle, _poll_cb, cpath, interval);
   if (r) {
-    ThrowException(env, handle->loop, "uv_fs_poll_start");
+    ThrowException(env, r, "uv_fs_poll_start");
   }
   env->ReleaseStringUTFChars(path, cpath);
   return r;
@@ -227,7 +227,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_FilePollHandle__1stop
   uv_fs_poll_t* fs_poll = reinterpret_cast<uv_fs_poll_t*>(fs_poll_ptr);
   int r = uv_fs_poll_stop(fs_poll);
   if (r) {
-    ThrowException(env, fs_poll->loop, "uv_fs_poll_stop");
+    ThrowException(env, r, "uv_fs_poll_stop");
   }
   return r;
 }

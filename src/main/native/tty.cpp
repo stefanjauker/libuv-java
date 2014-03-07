@@ -76,7 +76,7 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_TTYHandle__1new
   uv_loop_t* lp = reinterpret_cast<uv_loop_t*>(loop);
   int r = uv_tty_init(lp, tty, fd, readable);
   if (r) {
-    ThrowException(env, lp, "uv_tty_init");
+    ThrowException(env, r, "uv_tty_init");
     return (jlong) NULL;
   }
   tty->data = new StreamCallbacks();
@@ -95,7 +95,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TTYHandle__1set_1mode
   uv_tty_t* handle = reinterpret_cast<uv_tty_t*>(tty);
   int r = uv_tty_set_mode(handle, mode);
   if (r) {
-    ThrowException(env, handle->loop, "uv_tty_set_mode");
+    ThrowException(env, r, "uv_tty_set_mode");
   }
   return r;
 }
@@ -126,7 +126,7 @@ JNIEXPORT jintArray JNICALL Java_com_oracle_libuv_handles_TTYHandle__1get_1windo
   int height = 0;
   int r = uv_tty_get_winsize(handle, &width, &height);
   if (r) {
-    ThrowException(env, handle->loop, "uv_tty_set_mode");
+    ThrowException(env, r, "uv_tty_set_mode");
     return NULL;
   }
   jintArray size = env->NewIntArray(2);
