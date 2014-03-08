@@ -27,6 +27,6 @@ package com.oracle.libuv.cb;
 
 public interface ProcessExitCallback {
 
-    public void onExit(long status, int signal) throws Exception;
+    public void onExit(long status, int signal, Exception error) throws Exception;
 
 }

@@ -94,8 +94,8 @@ public class ProcessHandleTest extends TestBase {
 
         process.setExitCallback(new ProcessExitCallback() {
             @Override
-            public void onExit(final long status, final int signal) throws Exception {
-                System.out.println("status " + status + ", signal " + signal);
+            public void onExit(final long status, final int signal, final Exception ex) throws Exception {
+                System.out.println("status " + status + ", signal " + signal + ", ex " + ex);
                 child.connect(PIPE_NAME);
                 exitCalled.set(true);
             }

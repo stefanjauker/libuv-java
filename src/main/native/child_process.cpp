@@ -49,7 +49,7 @@ public:
   void initialize(JNIEnv* env, jobject instance);
 
   void on_exit(int64_t status, int signal);
-  void on_exit(int64_t status, int signal, int error_code);
+  void on_exit(int64_t status, int signal, jthrowable exception);
   void on_close();
 };
 
@@ -69,7 +69,7 @@ void ProcessCallbacks::static_initialize(JNIEnv* env, jclass cls) {
 
   _process_close_mid = env->GetMethodID(_process_handle_cid, "callClose", "()V");
   assert(_process_close_mid);
-  _process_exit_mid = env->GetMethodID(_process_handle_cid, "callExit", "(II)V");
+  _process_exit_mid = env->GetMethodID(_process_handle_cid, "callExit", "(IILjava/lang/Exception;)V");
   assert(_process_exit_mid);
 }
 
@@ -98,18 +98,17 @@ void ProcessCallbacks::on_exit(int64_t status, int signal) {
       NULL);
 }
 
-void ProcessCallbacks::on_exit(int64_t status, int signal, int error_code) {
+void ProcessCallbacks::on_exit(int64_t status, int signal, jthrowable exception) {
   assert(_env);
   assert(status < 0);
 
-  jthrowable exception = NewException(_env, error_code);
   _env->CallVoidMethod(
       _instance,
       _process_exit_mid,
       status,
       signal,
       exception);
-  if (exception) { _env->DeleteLocalRef(exception); }
+  _env->DeleteLocalRef(exception);
 }
 
 void ProcessCallbacks::on_close() {
@@ -201,6 +200,8 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_ProcessHandle__1spawn
 
   assert(process);
   uv_process_t* handle = reinterpret_cast<uv_process_t*>(process);
+  assert(handle->data);
+  ProcessCallbacks* cb = reinterpret_cast<ProcessCallbacks*>(handle->data);
   assert(handle->loop);
 
   uv_process_options_t options;
@@ -291,7 +292,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_ProcessHandle__1spawn
 
   int r = uv_spawn(handle->loop, handle, &options);
   if (r) {
-    ThrowException(env, r, "uv_spawn", program_chars);
+    cb->on_exit(-1, 0, NewException(env, r, "uv_spawn", program_chars, NULL));
   } else {
     r = handle->pid;
   }
