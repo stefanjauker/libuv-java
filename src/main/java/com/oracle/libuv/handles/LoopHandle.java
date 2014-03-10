@@ -158,8 +158,8 @@ public final class LoopHandle {
         return pointer;
     }
 
-    public void updateTime() {
-        _update_time(pointer);
+    public long updateTime() {
+        return _update_time(pointer);
     }
 
     public long now() {
@@ -188,7 +188,7 @@ public final class LoopHandle {
 
     private native String[] _list(final long ptr);
 
-    private native void _update_time(final long ptr);
+    private native long _update_time(final long ptr);
 
     private native long _now(final long ptr);
 

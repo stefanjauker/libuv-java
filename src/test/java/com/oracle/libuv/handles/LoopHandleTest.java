@@ -87,11 +87,16 @@ public class LoopHandleTest extends TestBase {
         final LoopHandle loop = new LoopHandle();
         final long start = loop.now();
         Thread.sleep(DELAY);
-        loop.updateTime();
+        final long mid = loop.updateTime();
+        Thread.sleep(DELAY);
         final long end = loop.now();
         Assert.assertTrue(start > 0);
+        Assert.assertTrue(mid > 0);
         Assert.assertTrue(end > 0);
+        // end is cached, not updated after mid
+        Assert.assertEquals(end, mid);
         // be conservative, sometimes the difference is slightly less than DELAY
+        Assert.assertTrue(mid - start >= DELAY / 2);
         Assert.assertTrue(end - start >= DELAY / 2);
     }
 
