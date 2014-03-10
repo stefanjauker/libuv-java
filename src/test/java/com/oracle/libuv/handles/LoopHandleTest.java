@@ -81,9 +81,24 @@ public class LoopHandleTest extends TestBase {
         Assert.assertTrue(pointers.isEmpty());
     }
 
+    @Test
+    public void testTime() throws Throwable {
+        final long DELAY = 100;
+        final LoopHandle loop = new LoopHandle();
+        final long start = loop.now();
+        Thread.sleep(DELAY);
+        loop.updateTime();
+        final long end = loop.now();
+        Assert.assertTrue(start > 0);
+        Assert.assertTrue(end > 0);
+        // be conservative, sometimes the difference is slightly less than DELAY
+        Assert.assertTrue(end - start >= DELAY / 2);
+    }
+
     public static void main(final String[] args) throws Throwable {
         final LoopHandleTest test = new LoopHandleTest();
         test.testList();
+        test.testTime();
     }
 
 }

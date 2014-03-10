@@ -151,3 +151,30 @@ JNIEXPORT jobjectArray JNICALL Java_com_oracle_libuv_handles_LoopHandle__1list
   }
   return handles;
 }
+
+/*
+ * Class:     com_oracle_libuv_handles_LoopHandle
+ * Method:    _update_time
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_LoopHandle__1update_1time
+  (JNIEnv *env, jobject that, jlong ptr) {
+
+  assert(ptr);
+  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(ptr);
+  uv_update_time(loop);
+}
+
+/*
+ * Class:     com_oracle_libuv_handles_LoopHandle
+ * Method:    _now
+ * Signature: (J)J
+ */
+JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_LoopHandle__1now
+  (JNIEnv *env, jobject that, jlong ptr) {
+
+  assert(ptr);
+  uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(ptr);
+  return uv_now(loop);
+}
+
