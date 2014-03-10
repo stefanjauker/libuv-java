@@ -233,7 +233,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1bind
   assert(udp);
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
   const char* h = env->GetStringUTFChars(host, 0);
-  char addr[sizeof sockaddr_in6];
+  char addr[sizeof(sockaddr_in6)];
   int r = ipv6 ?
     uv_ip6_addr(h, port, reinterpret_cast<sockaddr_in6*>(&addr)) :
     uv_ip4_addr(h, port, reinterpret_cast<sockaddr_in*>(&addr));
@@ -263,7 +263,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1send
   assert(udp);
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
   const char* h = env->GetStringUTFChars(host, 0);
-  char addr[sizeof sockaddr_in6];
+  char addr[sizeof(sockaddr_in6)];
   int r = ipv6 ?
     uv_ip6_addr(h, port, reinterpret_cast<sockaddr_in6*>(&addr)) :
     uv_ip4_addr(h, port, reinterpret_cast<sockaddr_in*>(&addr));
