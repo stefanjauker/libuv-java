@@ -59,6 +59,7 @@
             <arg value="--depth=."/>
             <arg value="--format=make"/>
             <arg value="-Dlibrary=shared_library"/>
+            <arg value="-Duv_library=shared_library"/>
             <arg value="-Dtarget=${build.type}"/>
             <arg value="${product.name}.gyp"/>
             <arg value="-Dtarget_arch=x64"/>
@@ -74,6 +75,7 @@
             <arg value="--depth=."/>
             <arg value="--format=make"/>
             <arg value="-Dlibrary=shared_library"/>
+            <arg value="-Duv_library=shared_library"/>
             <arg value="-Dtarget=${build.type}"/>
             <arg value="${product.name}.gyp"/>
             <arg value="-Dtarget_arch=x64"/>
@@ -89,6 +91,7 @@
             <arg value="${source.home}/tools/gyp/gyp_main.py"/>
             <arg value="--depth=."/>
             <arg value="-Dlibrary=shared_library"/>
+            <arg value="-Duv_library=shared_library"/>
             <arg value="-Dtarget=${build.type}"/>
             <arg value="${product.name}.gyp"/>
             <arg value="-Dtarget_arch=x64"/>

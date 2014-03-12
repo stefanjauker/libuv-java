@@ -42,7 +42,6 @@ jclass StreamCallbacks::_stream_handle_cid = NULL;
 
 jmethodID StreamCallbacks::_address_init_mid = NULL;
 jmethodID StreamCallbacks::_call_read_callback_mid = NULL;
-jmethodID StreamCallbacks::_call_read2_callback_mid = NULL;
 jmethodID StreamCallbacks::_call_write_callback_mid = NULL;
 jmethodID StreamCallbacks::_call_connect_callback_mid = NULL;
 jmethodID StreamCallbacks::_call_connection_callback_mid = NULL;
@@ -61,9 +60,6 @@ void StreamCallbacks::static_initialize(JNIEnv* env, jclass cls) {
 
   _call_read_callback_mid = env->GetMethodID(_stream_handle_cid, "callRead", "(Ljava/nio/ByteBuffer;)V");
   assert(_call_read_callback_mid);
-
-  _call_read2_callback_mid = env->GetMethodID(_stream_handle_cid, "callRead2", "(Ljava/nio/ByteBuffer;JI)V");
-  assert(_call_read2_callback_mid);
 
   _call_write_callback_mid = env->GetMethodID(_stream_handle_cid, "callWrite", "(ILjava/lang/Exception;Ljava/lang/Object;)V");
   assert(_call_write_callback_mid);
@@ -134,31 +130,6 @@ void StreamCallbacks::on_read(const uv_buf_t* buf, jsize nread) {
         _call_read_callback_mid,
         arg);
     _env->DeleteLocalRef(arg);
-  }
-  delete[] buf->base;
-}
-
-void StreamCallbacks::on_read2(const uv_buf_t* buf, jsize nread, jlong ptr, uv_handle_type pending) {
-  assert(_env);
-  if (nread < 0) {
-    _env->CallVoidMethod(
-        _instance,
-        _call_read2_callback_mid,
-        NULL,
-        ptr,
-        pending);
-  } else if (nread > 0) {
-    jbyte* data = new jbyte[nread];
-    memcpy(data, buf->base, nread);
-    jobject array = _env->NewDirectByteBuffer(data, nread);
-    OOM(_env, array);
-    _env->CallVoidMethod(
-        _instance,
-        _call_read2_callback_mid,
-        array,
-        ptr,
-        pending);
-    _env->DeleteLocalRef(array);
   }
   delete[] buf->base;
 }
@@ -290,60 +261,6 @@ static void _close_cb(uv_handle_t* handle) {
   delete handle;
 }
 
-static void _read2_cb(uv_pipe_t* pipe, ssize_t nread, const uv_buf_t* buf, uv_handle_type pending) {
-  int r;
-  StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(pipe->data);
-  assert(cb);
-  uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(pipe);
-  jsize size = static_cast<jsize>(nread);
-  if (pending == UV_TCP) {
-    uv_tcp_t* tcp = new uv_tcp_t();
-    r = uv_tcp_init(handle->loop, tcp);
-    if (r) {
-      cb->throw_exception(r, "read2_cb.uv_tcp_init");
-      return;
-    }
-    tcp->data = new StreamCallbacks();
-    r = uv_accept(handle, reinterpret_cast<uv_stream_t*>(tcp));
-    if (r) {
-      cb->throw_exception(r, "read2_cb.uv_accept(tcp)");
-      return;
-    }
-    cb->on_read2(buf, size, reinterpret_cast<jlong>(tcp), pending);
-  } else if (pending == UV_NAMED_PIPE) {
-    uv_pipe_t* p = new uv_pipe_t();
-    r = uv_pipe_init(handle->loop, p, 1);
-    if (r) {
-      cb->throw_exception(r, "read2_cb.uv_pipe_init");
-      return;
-    }
-    p->data = new StreamCallbacks();
-    r = uv_accept(handle, reinterpret_cast<uv_stream_t*>(p));
-    if (r) {
-      cb->throw_exception(r, "read2_cb.uv_accept(pipe)");
-      return;
-    }
-    cb->on_read2(buf, size, reinterpret_cast<jlong>(p), pending);
-  } else if (pending == UV_UDP) {
-    uv_udp_t* udp = new uv_udp_t();
-    r = uv_udp_init(handle->loop, udp);
-    if (r) {
-      cb->throw_exception(r, "read2_cb.uv_udp_init");
-      return;
-    }
-    udp->data = new UDPCallbacks();
-    r = uv_accept(handle, reinterpret_cast<uv_stream_t*>(udp));
-    if (r) {
-      cb->throw_exception(r, "read2_cb.uv_accept(udp)");
-      return;
-    }
-    cb->on_read2(buf, size, reinterpret_cast<jlong>(udp), pending);
-  } else {
-    assert(pending == UV_UNKNOWN_HANDLE);
-    cb->on_read(buf, size);
-  }
-}
-
 static void _write_cb(uv_write_t* req, int status) {
   assert(req->handle);
   assert(req->handle->data);
@@ -398,30 +315,9 @@ JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_StreamHandle__1read_1start
   assert(stream);
   uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(stream);
 
-  bool ipc_pipe = handle->type == UV_NAMED_PIPE && ((uv_pipe_t*)handle)->ipc;
-  if (!ipc_pipe) {
-    int r = uv_read_start(handle, _alloc_cb, _read_cb);
-    if (r) {
-      ThrowException(env, r, "uv_read_start");
-    }
-  } else {
-    Java_com_oracle_libuv_handles_StreamHandle__1read2_1start(env, that, stream);
-  }
-}
-
-/*
- * Class:     com_oracle_libuv_handles_StreamHandle
- * Method:    _read2_start
- * Signature: (J)V
- */
-JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_StreamHandle__1read2_1start
-  (JNIEnv *env, jobject that, jlong stream) {
-
-  assert(stream);
-  uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(stream);
-  int r = uv_read2_start(handle, _alloc_cb, _read2_cb);
+  int r = uv_read_start(handle, _alloc_cb, _read_cb);
   if (r) {
-    ThrowException(env, r, "uv_read2_start");
+    ThrowException(env, r, "uv_read_start");
   }
 }
 
@@ -595,6 +491,23 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1close_1write
     delete req_data;
     delete req;
     ThrowException(env, r, "uv_close_write");
+  }
+  return r;
+}
+
+/*
+ * Class:     com_oracle_libuv_handles_StreamHandle
+ * Method:    _set_blocking
+ * Signature: (JI)I
+ */
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1set_1blocking
+  (JNIEnv *env, jobject that, jlong stream, jint blocking) {
+
+  assert(stream);
+  uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(stream);
+  int r = uv_stream_set_blocking(handle, static_cast<int>(blocking));
+  if (r) {
+    ThrowException(env, r, "uv_set_blocking");
   }
   return r;
 }

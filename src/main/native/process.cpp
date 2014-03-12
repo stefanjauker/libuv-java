@@ -33,10 +33,6 @@
 #include "exception.h"
 #include "com_oracle_libuv_LibUV.h"
 
-#ifndef ARRAY_SIZE
-# define ARRAY_SIZE(a) (sizeof((a)) / sizeof((a)[0]))
-#endif
-
 extern "C" void uv__set_process_title(const char* title);
 
 /*
@@ -54,12 +50,14 @@ JNIEXPORT jstring JNICALL Java_com_oracle_libuv_LibUV__1exe_1path
   char buf[PATH_MAX + 1];
 #endif
 
-  size_t size = ARRAY_SIZE(buf);
+  size_t size = sizeof(buf);
+  memset(buf, 0, size);
   int r = uv_exepath(buf, &size);
   if (r) {
     ThrowException(env, r, "uv_exepath");
     return NULL;
   }
+  buf[size - 1] = '\0';
   return env->NewStringUTF(buf);
 }
 
@@ -78,12 +76,14 @@ JNIEXPORT jstring JNICALL Java_com_oracle_libuv_LibUV__1cwd
   char buf[PATH_MAX + 1];
 #endif
 
-  int r = uv_cwd(buf, ARRAY_SIZE(buf) - 1);
+  size_t size = sizeof(buf);
+  memset(buf, 0, size);
+  int r = uv_cwd(buf, &size);
   if (r) {
     ThrowException(env, r, "uv_cwd");
     return NULL;
   }
-  buf[ARRAY_SIZE(buf) - 1] = '\0';
+  buf[size - 1] = '\0';
   return env->NewStringUTF(buf);
 }
 

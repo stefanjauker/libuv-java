@@ -699,17 +699,26 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_Files__1read
     request->get_bytes(buffer, data, static_cast<jsize>(offset), static_cast<jsize>(length));
     req->data = request;
     jbyte* base = request->bytes();
-    r = uv_fs_read(cb->loop(), req, fd, base + offset, length, position, _fs_cb);
+    uv_buf_t buf = uv_buf_init(reinterpret_cast<char*>(base + offset), static_cast<unsigned int>(length));
+    uv_buf_t bufs[1];
+    bufs[0] = buf;
+    r = uv_fs_read(cb->loop(), req, fd, bufs, 1, position, _fs_cb);
   } else {
     uv_fs_t req;
     if (data) {
       jbyte* base = new jbyte[length];
-      r = uv_fs_read(cb->loop(), &req, fd, base, length, position, NULL);
+      uv_buf_t buf = uv_buf_init(reinterpret_cast<char*>(base), static_cast<unsigned int>(length));
+      uv_buf_t bufs[1];
+      bufs[0] = buf;
+      r = uv_fs_read(cb->loop(), &req, fd, bufs, 1, position, NULL);
       env->SetByteArrayRegion(data, (jsize) offset, (jsize) length, base);
       delete[] base;
     } else {
       jbyte* base = (jbyte*) env->GetDirectBufferAddress(buffer);
-      r = uv_fs_read(cb->loop(), &req, fd, base + offset, length, position, NULL);
+      uv_buf_t buf = uv_buf_init(reinterpret_cast<char*>(base + offset), static_cast<unsigned int>(length));
+      uv_buf_t bufs[1];
+      bufs[0] = buf;
+      r = uv_fs_read(cb->loop(), &req, fd, bufs, 1, position, NULL);
     }
     uv_fs_req_cleanup(&req);
     if (r < 0) {
@@ -766,22 +775,34 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_Files__1write
     if (data) {
       jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
       OOME(env, base);
-      r = uv_fs_write(cb->loop(), req, fd, base + offset, length, position, _fs_cb);
+      uv_buf_t buf = uv_buf_init(reinterpret_cast<char*>(base + offset), static_cast<unsigned int>(length));
+      uv_buf_t bufs[1];
+      bufs[0] = buf;
+      r = uv_fs_write(cb->loop(), req, fd, bufs, 1, position, _fs_cb);
       env->ReleasePrimitiveArrayCritical(data, base, 0);
     } else {
       jbyte* base = (jbyte*) env->GetDirectBufferAddress(buffer);
-      r = uv_fs_write(cb->loop(), req, fd, base + offset, length, position, _fs_cb);
+      uv_buf_t buf = uv_buf_init(reinterpret_cast<char*>(base + offset), static_cast<unsigned int>(length));
+      uv_buf_t bufs[1];
+      bufs[0] = buf;
+      r = uv_fs_write(cb->loop(), req, fd, bufs, 1, position, _fs_cb);
     }
   } else {
     uv_fs_t req;
     if (data) {
       jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
       OOME(env, base);
-      r = uv_fs_write(cb->loop(), &req, fd, base + offset, length, position, NULL);
+      uv_buf_t buf = uv_buf_init(reinterpret_cast<char*>(base + offset), static_cast<unsigned int>(length));
+      uv_buf_t bufs[1];
+      bufs[0] = buf;
+      r = uv_fs_write(cb->loop(), &req, fd, bufs, 1, position, NULL);
       env->ReleasePrimitiveArrayCritical(data, base, 0);
     } else {
       jbyte* base = (jbyte*) env->GetDirectBufferAddress(buffer);
-      r = uv_fs_write(cb->loop(), &req, fd, base + offset, length, position, NULL);
+      uv_buf_t buf = uv_buf_init(reinterpret_cast<char*>(base + offset), static_cast<unsigned int>(length));
+      uv_buf_t bufs[1];
+      bufs[0] = buf;
+      r = uv_fs_write(cb->loop(), &req, fd, bufs, 1, position, NULL);
     }
     uv_fs_req_cleanup(&req);
     if (r < 0) {

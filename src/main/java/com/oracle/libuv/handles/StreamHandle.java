@@ -89,13 +89,6 @@ public class StreamHandle extends Handle {
         readStarted = true;
     }
 
-    public void read2Start() {
-        if (!readStarted) {
-            _read2_start(pointer);
-        }
-        readStarted = true;
-    }
-
     public void readStop() {
         _read_stop(pointer);
         readStarted = false;
@@ -152,6 +145,10 @@ public class StreamHandle extends Handle {
 
     public int closeWrite() {
         return _close_write(pointer, loop.getContext());
+    }
+
+    public int setBlocking(final boolean blocking) {
+        return _set_blocking(pointer, blocking ? 1 : 0);
     }
 
     public void close() {
@@ -242,8 +239,6 @@ public class StreamHandle extends Handle {
 
     private native void _read_start(final long ptr);
 
-    private native void _read2_start(final long ptr);
-
     private native void _read_stop(final long ptr);
 
     private native boolean _readable(final long ptr);
@@ -275,4 +270,5 @@ public class StreamHandle extends Handle {
 
     private native int _accept(final long ptr, final long client);
 
+    private native int _set_blocking(final long ptr, final int blocking);
 }
