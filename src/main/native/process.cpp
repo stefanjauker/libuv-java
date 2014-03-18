@@ -57,7 +57,6 @@ JNIEXPORT jstring JNICALL Java_com_oracle_libuv_LibUV__1exe_1path
     ThrowException(env, r, "uv_exepath");
     return NULL;
   }
-  buf[size - 1] = '\0';
   return env->NewStringUTF(buf);
 }
 
@@ -83,7 +82,6 @@ JNIEXPORT jstring JNICALL Java_com_oracle_libuv_LibUV__1cwd
     ThrowException(env, r, "uv_cwd");
     return NULL;
   }
-  buf[size - 1] = '\0';
   return env->NewStringUTF(buf);
 }
 

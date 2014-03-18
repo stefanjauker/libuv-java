@@ -60,4 +60,10 @@ public class CWDTest extends TestBase {
         Assert.assertEquals(java, LibUV.cwd());
     }
 
+    public static void main(String[] args) {
+        CWDTest test = new CWDTest();
+        test.before();
+        test.testCWD();
+        test.after();
+    }
 }
