@@ -999,12 +999,11 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_Files__1rename
     r = uv_fs_rename(cb->loop(), &req, src_path, dst_path, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      int code = errno;
       if (dst_path != NULL &&
-         (code == UV_EEXIST || code == UV_ENOTEMPTY || code == UV_EPERM)) {
-        ThrowException(env, code, "uv_fs_rename", NULL, dst_path);
+         (r == UV_EEXIST || r == UV_ENOTEMPTY || r == UV_EPERM)) {
+        ThrowException(env, r, "uv_fs_rename", NULL, dst_path);
       } else {
-        ThrowException(env, code, "uv_fs_rename", NULL, src_path);
+        ThrowException(env, r, "uv_fs_rename", NULL, src_path);
       }
     }
   }
@@ -1259,12 +1258,11 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_Files__1link
     r = uv_fs_link(cb->loop(), &req, src_path, dst_path, NULL);
     uv_fs_req_cleanup(&req);
     if (r < 0) {
-      int code = errno;
       if (dst_path != NULL &&
-         (code == UV_EEXIST || code == UV_ENOTEMPTY || code == UV_EPERM)) {
-        ThrowException(env, code, "uv_fs_link", NULL, dst_path);
+         (r == UV_EEXIST || r == UV_ENOTEMPTY || r == UV_EPERM)) {
+        ThrowException(env, r, "uv_fs_link", NULL, dst_path);
       } else {
-        ThrowException(env, code, "uv_fs_link", NULL, src_path);
+        ThrowException(env, r, "uv_fs_link", NULL, src_path);
       }
     }
   }
