@@ -36,16 +36,13 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.oracle.libuv.Constants;
 import com.oracle.libuv.cb.FileCallback;
 import com.oracle.libuv.cb.FileCloseCallback;
 import com.oracle.libuv.cb.FileOpenCallback;
 import com.oracle.libuv.cb.FileReadCallback;
 import com.oracle.libuv.cb.FileReadDirCallback;
-import com.oracle.libuv.Files;
 import com.oracle.libuv.Files.OpenedFile;
-import com.oracle.libuv.Stats;
-import com.oracle.libuv.TestBase;
+import com.oracle.libuv.cb.FileStatsCallback;
 import com.oracle.libuv.cb.FileWriteCallback;
 import com.oracle.libuv.handles.LoopHandle;
 import com.oracle.libuv.runner.TestRunner;
@@ -68,6 +65,86 @@ public class FilesTest extends TestBase {
         cleanupFiles(handle, testName + ".txt");
         cleanupFiles(handle, testName + "-new.txt");
         cleanupFiles(handle, testName + "2.txt");
+    }
+
+    @Test
+    public void testStatSyncFail() {
+        final String filename = testName + ".txt";
+        final LoopHandle loop = new LoopHandle();
+        final Files handle = new Files(loop);
+
+        try {
+            handle.stat(filename);
+            Assert.fail();
+        } catch (NativeException nx) {
+            Assert.assertEquals(nx.errnoString(), "ENOENT");
+        }
+    }
+
+    @Test
+    public void testStatSync() {
+        final String filename = testName + ".txt";
+        final LoopHandle loop = new LoopHandle();
+        final Files handle = new Files(loop);
+
+        final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
+        final Stats stats = handle.stat(filename);
+        Assert.assertNotNull(stats);
+        handle.close(fd);
+        cleanupFiles(handle, filename);
+    }
+
+    @Test
+    public void testStatAsyncFail() throws Throwable {
+        final String filename = testName + ".txt";
+        final LoopHandle loop = new LoopHandle();
+        final Files handle = new Files(loop);
+        final AtomicBoolean called = new AtomicBoolean(false);
+
+        handle.setStatCallback(new FileStatsCallback() {
+            @Override
+            public void onStats(Object context, Stats stats, Exception error) throws Exception {
+                called.set(true);
+                Assert.assertEquals(context, called);
+                Assert.assertNull(stats);
+                Assert.assertNotNull(error);
+                Assert.assertTrue(error instanceof NativeException);
+                final NativeException nx = (NativeException) error;
+                Assert.assertEquals(nx.errnoString(), "ENOENT");
+            }
+        });
+
+        final Stats stats = handle.stat(filename, called);
+        Assert.assertNull(stats);
+        loop.run();
+        Assert.assertTrue(called.get());
+        cleanupFiles(handle, filename);
+    }
+
+    @Test
+    public void testStatAsync() throws Throwable {
+        final String filename = testName + ".txt";
+        final LoopHandle loop = new LoopHandle();
+        final Files handle = new Files(loop);
+        final AtomicBoolean called = new AtomicBoolean(false);
+
+        handle.setStatCallback(new FileStatsCallback() {
+            @Override
+            public void onStats(Object context, Stats stats, Exception error) throws Exception {
+                called.set(true);
+                Assert.assertEquals(context, called);
+                Assert.assertNotNull(stats);
+                Assert.assertNull(error);
+            }
+        });
+
+        final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
+        final Stats stats = handle.stat(filename, called);
+        Assert.assertNull(stats);
+        loop.run();
+        Assert.assertTrue(called.get());
+        handle.close(fd);
+        cleanupFiles(handle, filename);
     }
 
     @Test

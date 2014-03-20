@@ -561,8 +561,9 @@ static void _fs_cb(uv_fs_t* req) {
   FileCallback* cb = request->file_callback();
   assert(cb);
 
-  if (req->result == -1) {
-    cb->fs_cb(request, req->fs_type, req->path, errno);
+  const int error = static_cast<int>(req->result);
+  if (error < 0) {
+    cb->fs_cb(request, req->fs_type, req->path, error);
   } else {
     cb->fs_cb(request, req->fs_type, req->result, req->ptr);
   }

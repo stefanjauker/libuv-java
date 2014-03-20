@@ -587,6 +587,10 @@ public class PermissionTest extends TestBase {
         final String TMPDIR = TestBase.TMPDIR + File.separator;
         final Permissions permissions = new Permissions();
         permissions.add(new LibUVPermission("libuv.handle"));
+        permissions.add(new FilePermission(TMPDIR + "testStatSyncFail.txt", "read, write, delete"));
+        permissions.add(new FilePermission(TMPDIR + "testStatSync.txt", "read, write, delete"));
+        permissions.add(new FilePermission(TMPDIR + "testStatAsyncFail.txt", "read, write, delete"));
+        permissions.add(new FilePermission(TMPDIR + "testStatAsync.txt", "read, write, delete"));
         permissions.add(new FilePermission(TMPDIR + "testGetPath.txt", "read, write, delete"));
         permissions.add(new FilePermission(TMPDIR + "testOpenWriteReadAndCloseSync.txt", "read, write, delete"));
         permissions.add(new FilePermission(TMPDIR + "testOpenWriteReadAndCloseAsync.txt", "read, write, delete"));
