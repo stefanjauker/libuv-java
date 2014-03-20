@@ -336,7 +336,7 @@ public final class Files {
         Objects.requireNonNull(file);
         Objects.requireNonNull(buffer);
         LibUVPermission.checkWriteFile(fd, file.getPath());
-        assert(offset < buffer.limit());
+        assert(offset <= buffer.limit());
         assert(offset + length <= buffer.limit());
         return buffer.hasArray() ?
                 _write(pointer, fd, buffer, buffer.array(), length, offset, position, SYNC_MODE, loop.getContext()) :
@@ -352,7 +352,7 @@ public final class Files {
         Objects.requireNonNull(file);
         Objects.requireNonNull(buffer);
         LibUVPermission.checkWriteFile(fd, file.getPath());
-        assert(offset < buffer.limit());
+        assert(offset <= buffer.limit());
         assert(offset + length <= buffer.limit());
         return buffer.hasArray() ?
                 _write(pointer, fd, buffer, buffer.array(), length, offset, position, context, loop.getContext()) :
