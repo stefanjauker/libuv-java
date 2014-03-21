@@ -64,7 +64,7 @@ void StreamCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _call_write_callback_mid = env->GetMethodID(_stream_handle_cid, "callWrite", "(ILjava/lang/Exception;Ljava/lang/Object;Ljava/lang/Object;)V");
   assert(_call_write_callback_mid);
 
-  _call_connect_callback_mid = env->GetMethodID(_stream_handle_cid, "callConnect", "(ILjava/lang/Exception;Ljava/lang/Object;)V");
+  _call_connect_callback_mid = env->GetMethodID(_stream_handle_cid, "callConnect", "(ILjava/lang/Exception;Ljava/lang/Object;Ljava/lang/Object;)V");
   assert(_call_connect_callback_mid);
 
   _call_connection_callback_mid = env->GetMethodID(_stream_handle_cid, "callConnection", "(ILjava/lang/Exception;)V");
@@ -147,7 +147,7 @@ void StreamCallbacks::on_write(int status, int error_code, jobject buffer, jobje
   if (exception) { _env->DeleteLocalRef(exception); }
 }
 
-void StreamCallbacks::on_connect(int status, int error_code, jobject context) {
+void StreamCallbacks::on_connect(int status, int error_code, jobject callback, jobject context) {
   assert(_env);
   jthrowable exception = error_code ? NewException(_env, error_code) : NULL;
   _env->CallVoidMethod(
@@ -155,6 +155,7 @@ void StreamCallbacks::on_connect(int status, int error_code, jobject context) {
       _call_connect_callback_mid,
       status,
       exception,
+      callback,
       context);
   if (exception) { _env->DeleteLocalRef(exception); }
 }
@@ -410,7 +411,6 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1write
     delete req;
     ThrowException(env, r, "uv_write");
   }
-  if (env->ExceptionOccurred()) {env->ExceptionDescribe(); env->ExceptionClear();}
   return r;
 }
 
@@ -458,7 +458,6 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1write2
     delete req;
     ThrowException(env, r, "uv_write2");
   }
-  if (env->ExceptionOccurred()) {env->ExceptionDescribe(); env->ExceptionClear();}
   return r;
 }
 

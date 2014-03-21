@@ -75,6 +75,7 @@ public class PipeHandleTest extends TestBase {
         final PipeHandle peer = new PipeHandle(loop, false);
         final PipeHandle client = new PipeHandle(loop, false);
         final Object context = new Object();
+        final Object connectContext = new Object();
 
         peer.setReadCallback(new StreamReadCallback() {
             @Override
@@ -114,9 +115,10 @@ public class PipeHandleTest extends TestBase {
 
         client.setConnectCallback(new StreamConnectCallback() {
             @Override
-            public void onConnect(int status, Exception error) throws Exception {
+            public void onConnect(int status, Exception error, Object callback) throws Exception {
                 clientLoggingCallback.log(status, error);
                 client.readStart();
+                Assert.assertEquals(callback, connectContext);
             }
         });
 
@@ -158,7 +160,7 @@ public class PipeHandleTest extends TestBase {
         server.bind(PIPE_NAME);
         server.listen(0);
 
-        client.connect(PIPE_NAME);
+        client.connect(PIPE_NAME, connectContext);
 
         while (!serverDone.get() && !clientDone.get()) {
             loop.run();

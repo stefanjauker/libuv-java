@@ -209,9 +209,9 @@ public class StreamHandle extends Handle {
         }
     }
 
-    private void callConnect(final int status, final Exception error, final Object context) {
+    private void callConnect(final int status, final Exception error, final Object callback, final Object context) {
         if (onConnect != null) {
-            loop.getCallbackHandler(context).handleStreamConnectCallback(onConnect, status, error);
+            loop.getCallbackHandler(context).handleStreamConnectCallback(onConnect, callback, status, error);
         }
     }
 

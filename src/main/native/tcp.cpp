@@ -38,7 +38,7 @@ static void _tcp_connect_cb(uv_connect_t* req, int status) {
   assert(req->handle->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(req->handle->data);
   ContextHolder* req_data = reinterpret_cast<ContextHolder*>(req->data);
-  cb->on_connect(status, status, req_data->context());
+  cb->on_connect(status, status, req_data->callback(), req_data->context());
   delete req;
   delete req_data;
 }
@@ -101,7 +101,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TCPHandle__1bind
  * Signature: (JLjava/lang/String;ZILjava/lang/Object;)I
  */
 JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TCPHandle__1connect
-  (JNIEnv *env, jobject that, jlong tcp, jstring host, jboolean ipv6, jint port, jobject context) {
+  (JNIEnv *env, jobject that, jlong tcp, jstring host, jboolean ipv6, jint port, jobject callback, jobject context) {
 
   assert(tcp);
   uv_tcp_t* handle = reinterpret_cast<uv_tcp_t*>(tcp);
@@ -118,7 +118,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TCPHandle__1connect
 
   uv_connect_t* req = new uv_connect_t();
   req->handle = reinterpret_cast<uv_stream_t*>(handle);
-  ContextHolder* req_data = new ContextHolder(env, context);
+  ContextHolder* req_data = new ContextHolder(env, NULL, context, callback);
   req->data = req_data;
   r = uv_tcp_connect(req, handle, reinterpret_cast<const sockaddr*>(&addr), _tcp_connect_cb);
   if (r) {

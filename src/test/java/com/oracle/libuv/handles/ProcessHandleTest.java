@@ -99,7 +99,7 @@ public class ProcessHandleTest extends TestBase {
 
         child.setConnectCallback(new StreamConnectCallback() {
             @Override
-            public void onConnect(int status, Exception error) throws Exception {
+            public void onConnect(int status, Exception error, Object callback) throws Exception {
                 child.write(MESSAGE, context);
                 child.close();
             }
@@ -109,7 +109,7 @@ public class ProcessHandleTest extends TestBase {
             @Override
             public void onExit(final long status, final int signal, final Exception ex) throws Exception {
                 System.out.println("status " + status + ", signal " + signal + ", ex " + ex);
-                child.connect(PIPE_NAME);
+                child.connect(PIPE_NAME, null);
                 exitCalled.set(true);
             }
         });

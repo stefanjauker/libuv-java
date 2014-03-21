@@ -124,9 +124,9 @@ public final class LoopCallbackHandler implements CallbackHandler {
     }
 
     @Override
-    public void handleStreamConnectCallback(final StreamConnectCallback cb, final int status, final Exception error) {
+    public void handleStreamConnectCallback(final StreamConnectCallback cb, final Object context, final int status, final Exception error) {
         try {
-            cb.onConnect(status, error);
+            cb.onConnect(status, error, context);
         } catch (final Exception ex) {
             exceptionHandler.handle(ex);
         }

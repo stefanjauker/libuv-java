@@ -312,7 +312,7 @@ public class PermissionTest extends TestBase {
         testSuccess(new Runnable() {
             @Override
             public void run() {
-                client.connect(PIPE_NAME);
+                client.connect(PIPE_NAME, null);
             }
         });
 
@@ -448,7 +448,7 @@ public class PermissionTest extends TestBase {
         testSuccess(new Runnable() {
             @Override
             public void run() {
-                client.connect(ADDRESS, port);
+                client.connect(ADDRESS, port, null);
             }
         });
 
@@ -532,7 +532,7 @@ public class PermissionTest extends TestBase {
         testSuccess(new Runnable() {
             @Override
             public void run() {
-                client.connect6(ADDRESS6, port);
+                client.connect6(ADDRESS6, port, null);
             }
         });
 

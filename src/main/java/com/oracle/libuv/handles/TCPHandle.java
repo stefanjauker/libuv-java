@@ -58,18 +58,18 @@ public class TCPHandle extends StreamHandle {
         return _bind(pointer, address, ipv6, port);
     }
 
-    public int connect(final String address, final int port) {
-        return connect(address, false, port);
+    public int connect(final String address, final int port, final Object callback) {
+        return connect(address, false, port, callback);
     }
 
-    public int connect6(final String address, final int port) {
-        return connect(address, true, port);
+    public int connect6(final String address, final int port, final Object callback) {
+        return connect(address, true, port, callback);
     }
 
-    private int connect(final String address, final boolean ipv6, final int port) {
+    private int connect(final String address, final boolean ipv6, final int port, final Object callback) {
         Objects.requireNonNull(address);
         LibUVPermission.checkConnect(address, port);
-        return _connect(pointer, address, ipv6, port, loop.getContext());
+        return _connect(pointer, address, ipv6, port, callback, loop.getContext());
     }
 
     @Override
@@ -125,7 +125,7 @@ public class TCPHandle extends StreamHandle {
 
     private native int _bind(final long ptr, final String address, final boolean ipv6, final int port);
 
-    private native int _connect(final long ptr, final String address, final boolean ipv6, final int port, final Object context);
+    private native int _connect(final long ptr, final String address, final boolean ipv6, final int port, final Object callback, final Object context);
 
     private native int _open(final long ptr, final int fd);
 

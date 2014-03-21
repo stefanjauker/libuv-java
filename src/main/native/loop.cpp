@@ -86,6 +86,9 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_LoopHandle__1run
   (JNIEnv *env, jobject that, jlong ptr, jint mode) {
 
   assert(ptr);
+#ifndef NDEBUG
+  if (env->ExceptionOccurred()) {env->ExceptionDescribe();}
+#endif
   return uv_run(reinterpret_cast<uv_loop_t*>(ptr), (uv_run_mode) mode);
 }
 

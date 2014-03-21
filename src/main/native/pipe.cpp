@@ -38,7 +38,7 @@ static void _pipe_connect_cb(uv_connect_t* req, int status) {
   assert(req->handle->data);
   ContextHolder* req_data = reinterpret_cast<ContextHolder*>(req->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(req->handle->data);
-  cb->on_connect(status, 0, req_data->context());
+  cb->on_connect(status, 0, req_data->callback(), req_data->context());
   delete req_data;
   delete req;
 }
@@ -104,12 +104,12 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_PipeHandle__1bind
  * Signature: (JLjava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_PipeHandle__1connect
-  (JNIEnv *env, jobject that, jlong pipe, jstring name, jobject context) {
+  (JNIEnv *env, jobject that, jlong pipe, jstring name, jobject callback, jobject context) {
 
   assert(pipe);
   uv_pipe_t* handle = reinterpret_cast<uv_pipe_t*>(pipe);
   uv_connect_t* connect = new uv_connect_t();
-  connect->data = new ContextHolder(env, context);
+  connect->data = new ContextHolder(env, NULL, context, callback);
   connect->handle = reinterpret_cast<uv_stream_t*>(handle);
   const char *pipeName = env->GetStringUTFChars(name, 0);
   uv_pipe_connect(connect, handle, pipeName, _pipe_connect_cb);

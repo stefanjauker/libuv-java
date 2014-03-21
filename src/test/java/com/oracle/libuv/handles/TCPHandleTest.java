@@ -72,6 +72,7 @@ public class TCPHandleTest extends TestBase {
 
         final Random random = new Random();
         final Object context = new Object();
+        final Object connectContext = new Object();
 
         server.setConnectionCallback(new StreamConnectionCallback() {
             @Override
@@ -150,11 +151,12 @@ public class TCPHandleTest extends TestBase {
 
         client.setConnectCallback(new StreamConnectCallback() {
             @Override
-            public void onConnect(int status, Exception error) throws Exception { // connect
+            public void onConnect(int status, Exception error, Object callback) throws Exception { // connect
                 clientLoggingCallback.log(status, error);
                 System.out.println("c: " + client.getSocketName() + " connected to " + client.getPeerName());
                 client.readStart();
                 client.write("message " + clientSendCount.getAndIncrement() + " from client", context);
+                Assert.assertEquals(callback, connectContext);
             }
         });
 
@@ -169,7 +171,7 @@ public class TCPHandleTest extends TestBase {
         server.listen(1);
 
         Thread.sleep((long) (random.nextDouble() * 100));
-        client.connect(ADDRESS, PORT);
+        client.connect(ADDRESS, PORT, connectContext);
 
         while (!serverDone.get() || !clientDone.get()) {
             loop.run();
@@ -211,6 +213,7 @@ public class TCPHandleTest extends TestBase {
 
         final Random random = new Random();
         final Object context = new Object();
+        final Object connectContext = new Object();
 
         server.setConnectionCallback(new StreamConnectionCallback() {
             @Override
@@ -289,11 +292,12 @@ public class TCPHandleTest extends TestBase {
 
         client.setConnectCallback(new StreamConnectCallback() {
             @Override
-            public void onConnect(int status, Exception error) throws Exception {
+            public void onConnect(int status, Exception error, Object callback) throws Exception {
                 clientLoggingCallback.log(status, error);
                 System.out.println("c: " + client.getSocketName() + " connected to " + client.getPeerName());
                 client.readStart();
                 client.write("message " + clientSendCount.getAndIncrement() + " from client", context);
+                Assert.assertEquals(callback, connectContext);
             }
         });
 
@@ -308,7 +312,7 @@ public class TCPHandleTest extends TestBase {
         server.listen(1);
 
         Thread.sleep((long) (random.nextDouble() * 100));
-        client.connect6(ADDRESS6, PORT6);
+        client.connect6(ADDRESS6, PORT6, connectContext);
 
         while (!serverDone.get() || !clientDone.get()) {
             loop.run();
