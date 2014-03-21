@@ -39,6 +39,7 @@ import com.oracle.libuv.cb.StreamCloseCallback;
 import com.oracle.libuv.cb.StreamConnectCallback;
 import com.oracle.libuv.cb.StreamConnectionCallback;
 import com.oracle.libuv.cb.StreamReadCallback;
+import com.oracle.libuv.cb.StreamWriteCallback;
 
 public class TCPHandleTest extends TestBase {
 
@@ -58,6 +59,8 @@ public class TCPHandleTest extends TestBase {
 
         final AtomicBoolean serverDone = new AtomicBoolean(false);
         final AtomicBoolean clientDone = new AtomicBoolean(false);
+        final AtomicBoolean peerWriteCalled = new AtomicBoolean(false);
+        final AtomicBoolean clientWriteCalled = new AtomicBoolean(false);
 
         final LoopHandle loop = new LoopHandle();
         final TCPHandle server = new TCPHandle(loop);
@@ -68,6 +71,7 @@ public class TCPHandleTest extends TestBase {
         final Logger clientLoggingCallback = new Logger("c: ");
 
         final Random random = new Random();
+        final Object context = new Object();
 
         server.setConnectionCallback(new StreamConnectionCallback() {
             @Override
@@ -76,7 +80,7 @@ public class TCPHandleTest extends TestBase {
                 server.accept(peer);
                 peer.readStart();
                 System.out.println("s: " + server.getSocketName() + " connected to " + peer.getPeerName());
-                peer.write("message " + serverSendCount.getAndIncrement() + " from server");
+                peer.write("message " + serverSendCount.getAndIncrement() + " from server", context);
                 server.close(); // not expecting any more connections
             }
         });
@@ -93,9 +97,19 @@ public class TCPHandleTest extends TestBase {
                     if (serverRecvCount.get() == TIMES) {
                         peer.close();
                     } else {
-                        peer.write("message " + serverSendCount.getAndIncrement() + " from server");
+                        peer.write("message " + serverSendCount.getAndIncrement() + " from server", context);
                     }
                 }
+            }
+        });
+
+        peer.setWriteCallback(new StreamWriteCallback() {
+            @Override
+            public void onWrite(int status, Exception error, Object callback) throws Exception {
+                peerWriteCalled.set(true);
+                Assert.assertEquals(status, 0);
+                Assert.assertNull(error);
+                Assert.assertEquals(callback, context);
             }
         });
 
@@ -118,9 +132,19 @@ public class TCPHandleTest extends TestBase {
                     if (clientRecvCount.get() == TIMES) {
                         client.close();
                     } else {
-                        client.write("message " + clientSendCount.getAndIncrement() + " from client");
+                        client.write("message " + clientSendCount.getAndIncrement() + " from client", context);
                     }
                 }
+            }
+        });
+
+        client.setWriteCallback(new StreamWriteCallback() {
+            @Override
+            public void onWrite(int status, Exception error, Object callback) throws Exception {
+                clientWriteCalled.set(true);
+                Assert.assertEquals(status, 0);
+                Assert.assertNull(error);
+                Assert.assertEquals(callback, context);
             }
         });
 
@@ -130,7 +154,7 @@ public class TCPHandleTest extends TestBase {
                 clientLoggingCallback.log(status, error);
                 System.out.println("c: " + client.getSocketName() + " connected to " + client.getPeerName());
                 client.readStart();
-                client.write("message " + clientSendCount.getAndIncrement() + " from client");
+                client.write("message " + clientSendCount.getAndIncrement() + " from client", context);
             }
         });
 
@@ -155,6 +179,9 @@ public class TCPHandleTest extends TestBase {
         Assert.assertEquals(clientSendCount.get(), TIMES);
         Assert.assertEquals(serverRecvCount.get(), TIMES);
         Assert.assertEquals(clientRecvCount.get(), TIMES);
+
+        Assert.assertTrue(clientWriteCalled.get());
+        Assert.assertTrue(peerWriteCalled.get());
     }
 
     @Test
@@ -172,6 +199,8 @@ public class TCPHandleTest extends TestBase {
 
         final AtomicBoolean serverDone = new AtomicBoolean(false);
         final AtomicBoolean clientDone = new AtomicBoolean(false);
+        final AtomicBoolean peerWriteCalled = new AtomicBoolean(false);
+        final AtomicBoolean clientWriteCalled = new AtomicBoolean(false);
 
         final TCPHandle server = new TCPHandle(loop);
         final TCPHandle peer = new TCPHandle(loop);
@@ -181,6 +210,7 @@ public class TCPHandleTest extends TestBase {
         final Logger clientLoggingCallback = new Logger("c: ");
 
         final Random random = new Random();
+        final Object context = new Object();
 
         server.setConnectionCallback(new StreamConnectionCallback() {
             @Override
@@ -189,7 +219,7 @@ public class TCPHandleTest extends TestBase {
                 server.accept(peer);
                 peer.readStart();
                 System.out.println("s: " + server.getSocketName() + " connected to " + peer.getPeerName());
-                peer.write("message " + serverSendCount.getAndIncrement() + " from server");
+                peer.write("message " + serverSendCount.getAndIncrement() + " from server", context);
                 server.close(); // not expecting any more connections
             }
         });
@@ -206,9 +236,19 @@ public class TCPHandleTest extends TestBase {
                     if (serverRecvCount.get() == TIMES) {
                         peer.close();
                     } else {
-                        peer.write("message " + serverSendCount.getAndIncrement() + " from server");
+                        peer.write("message " + serverSendCount.getAndIncrement() + " from server", context);
                     }
                 }
+            }
+        });
+
+        peer.setWriteCallback(new StreamWriteCallback() {
+            @Override
+            public void onWrite(int status, Exception error, Object callback) throws Exception {
+                peerWriteCalled.set(true);
+                Assert.assertEquals(status, 0);
+                Assert.assertNull(error);
+                Assert.assertEquals(callback, context);
             }
         });
 
@@ -231,9 +271,19 @@ public class TCPHandleTest extends TestBase {
                     if (clientRecvCount.get() == TIMES) {
                         client.close();
                     } else {
-                        client.write("message " + clientSendCount.getAndIncrement() + " from client");
+                        client.write("message " + clientSendCount.getAndIncrement() + " from client", context);
                     }
                 }
+            }
+        });
+
+        client.setWriteCallback(new StreamWriteCallback() {
+            @Override
+            public void onWrite(int status, Exception error, Object callback) throws Exception {
+                clientWriteCalled.set(true);
+                Assert.assertEquals(status, 0);
+                Assert.assertNull(error);
+                Assert.assertEquals(callback, context);
             }
         });
 
@@ -243,7 +293,7 @@ public class TCPHandleTest extends TestBase {
                 clientLoggingCallback.log(status, error);
                 System.out.println("c: " + client.getSocketName() + " connected to " + client.getPeerName());
                 client.readStart();
-                client.write("message " + clientSendCount.getAndIncrement() + " from client");
+                client.write("message " + clientSendCount.getAndIncrement() + " from client", context);
             }
         });
 
@@ -268,6 +318,9 @@ public class TCPHandleTest extends TestBase {
         Assert.assertEquals(clientSendCount.get(), TIMES);
         Assert.assertEquals(serverRecvCount.get(), TIMES);
         Assert.assertEquals(clientRecvCount.get(), TIMES);
+
+        Assert.assertTrue(clientWriteCalled.get());
+        Assert.assertTrue(peerWriteCalled.get());
     }
 
     public static void main(final String[] args) throws Throwable {

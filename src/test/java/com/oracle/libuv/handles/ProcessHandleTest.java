@@ -40,6 +40,7 @@ import com.oracle.libuv.TestBase;
 import com.oracle.libuv.cb.StreamConnectCallback;
 import com.oracle.libuv.cb.StreamConnectionCallback;
 import com.oracle.libuv.cb.StreamReadCallback;
+import com.oracle.libuv.cb.StreamWriteCallback;
 
 public class ProcessHandleTest extends TestBase {
 
@@ -58,11 +59,13 @@ public class ProcessHandleTest extends TestBase {
 
         final AtomicBoolean exitCalled = new AtomicBoolean(false);
         final AtomicBoolean closeCalled = new AtomicBoolean(false);
+        final AtomicBoolean childWriteCalled = new AtomicBoolean(false);
         final LoopHandle loop = new LoopHandle();
         final ProcessHandle process = new ProcessHandle(loop);
         final PipeHandle parent = new PipeHandle(loop, false);
         final PipeHandle peer = new PipeHandle(loop, false);
         final PipeHandle child = new PipeHandle(loop, false);
+        final Object context = new Object();
 
         peer.setReadCallback(new StreamReadCallback() {
             @Override
@@ -84,10 +87,20 @@ public class ProcessHandleTest extends TestBase {
             }
         });
 
+        child.setWriteCallback(new StreamWriteCallback() {
+            @Override
+            public void onWrite(int status, Exception error, Object callback) throws Exception {
+                childWriteCalled.set(true);
+                Assert.assertEquals(status, 0);
+                Assert.assertNull(error);
+                Assert.assertEquals(callback, context);
+            }
+        });
+
         child.setConnectCallback(new StreamConnectCallback() {
             @Override
             public void onConnect(int status, Exception error) throws Exception {
-                child.write(MESSAGE);
+                child.write(MESSAGE, context);
                 child.close();
             }
         });

@@ -94,15 +94,15 @@ public class StreamHandle extends Handle {
         readStarted = false;
     }
 
-    public int write2(final String str, final StreamHandle handle) {
-        return _write2(str, handle);
+    public int write2(final String str, final StreamHandle handle, final Object callback) {
+        return _write2(str, handle, callback);
     }
 
-    public int write2(final String str, final UDPHandle handle) {
-        return _write2(str, handle);
+    public int write2(final String str, final UDPHandle handle, final Object callback) {
+        return _write2(str, handle, callback);
     }
 
-    private int _write2(final String str, final Handle handle) {
+    private int _write2(final String str, final Handle handle, final Object callback) {
         Objects.requireNonNull(str);
         assert handle != null;
         final byte[] data;
@@ -111,10 +111,10 @@ public class StreamHandle extends Handle {
         } catch (final UnsupportedEncodingException e) {
             throw new RuntimeException(e); // "utf-8" is always supported
         }
-        return _write2(pointer, ByteBuffer.wrap(data), data, 0, data.length, handle.pointer, loop.getContext());
+        return _write2(pointer, ByteBuffer.wrap(data), data, 0, data.length, handle.pointer, callback, loop.getContext());
     }
 
-    public int write(final String str) {
+    public int write(final String str, final Object callback) {
         Objects.requireNonNull(str);
         final byte[] data;
         try {
@@ -122,25 +122,25 @@ public class StreamHandle extends Handle {
         } catch (final UnsupportedEncodingException e) {
             throw new RuntimeException(e); // "utf-8" is always supported
         }
-        return write(ByteBuffer.wrap(data), 0, data.length);
+        return write(ByteBuffer.wrap(data), 0, data.length, callback);
     }
 
-    public int write(final String str, final String encoding) throws UnsupportedEncodingException {
+    public int write(final String str, final String encoding, final Object callback) throws UnsupportedEncodingException {
         Objects.requireNonNull(str);
         final byte[] data = str.getBytes(encoding);
-        return write(ByteBuffer.wrap(data), 0, data.length);
+        return write(ByteBuffer.wrap(data), 0, data.length, callback);
     }
 
-    public int write(final ByteBuffer buffer, final int offset, final int length) {
+    public int write(final ByteBuffer buffer, final int offset, final int length, final Object callback) {
         Objects.requireNonNull(buffer);
         return buffer.hasArray() ?
-                _write(pointer, buffer, buffer.array(), offset, length, loop.getContext()) :
-                _write(pointer, buffer, null, offset, length, loop.getContext());
+                _write(pointer, buffer, buffer.array(), offset, length, callback, loop.getContext()) :
+                _write(pointer, buffer, null, offset, length, callback, loop.getContext());
     }
 
-    public int write(final ByteBuffer buffer) {
+    public int write(final ByteBuffer buffer, final Object callback) {
         Objects.requireNonNull(buffer);
-        return write(buffer, 0, buffer.capacity());
+        return write(buffer, 0, buffer.capacity(), callback);
     }
 
     public int closeWrite() {
@@ -203,9 +203,9 @@ public class StreamHandle extends Handle {
         }
     }
 
-    private void callWrite(final int status, final Exception error, final Object context) {
+    private void callWrite(final int status, final Exception error, final Object callback, final Object context) {
         if (onWrite != null) {
-            loop.getCallbackHandler(context).handleStreamWriteCallback(onWrite, status, error);
+            loop.getCallbackHandler(context).handleStreamWriteCallback(onWrite, callback, status, error);
         }
     }
 
@@ -250,6 +250,7 @@ public class StreamHandle extends Handle {
                               final byte[] data,
                               final int offset,
                               final int length,
+                              final Object callback,
                               final Object context);
 
     private native int _write2(final long ptr,
@@ -258,6 +259,7 @@ public class StreamHandle extends Handle {
                                final int offset,
                                final int length,
                                final long handlePointer,
+                               final Object callback,
                                final Object context);
 
     private native long _write_queue_size(final long ptr);

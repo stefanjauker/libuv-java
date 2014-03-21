@@ -61,7 +61,7 @@ void StreamCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _call_read_callback_mid = env->GetMethodID(_stream_handle_cid, "callRead", "(Ljava/nio/ByteBuffer;)V");
   assert(_call_read_callback_mid);
 
-  _call_write_callback_mid = env->GetMethodID(_stream_handle_cid, "callWrite", "(ILjava/lang/Exception;Ljava/lang/Object;)V");
+  _call_write_callback_mid = env->GetMethodID(_stream_handle_cid, "callWrite", "(ILjava/lang/Exception;Ljava/lang/Object;Ljava/lang/Object;)V");
   assert(_call_write_callback_mid);
 
   _call_connect_callback_mid = env->GetMethodID(_stream_handle_cid, "callConnect", "(ILjava/lang/Exception;Ljava/lang/Object;)V");
@@ -134,7 +134,7 @@ void StreamCallbacks::on_read(const uv_buf_t* buf, jsize nread) {
   delete[] buf->base;
 }
 
-void StreamCallbacks::on_write(int status, int error_code, jobject buffer, jobject context) {
+void StreamCallbacks::on_write(int status, int error_code, jobject buffer, jobject callback, jobject context) {
   assert(_env);
   jthrowable exception = error_code ? NewException(_env, error_code) : NULL;
   _env->CallVoidMethod(
@@ -142,6 +142,7 @@ void StreamCallbacks::on_write(int status, int error_code, jobject buffer, jobje
       _call_write_callback_mid,
       status,
       exception,
+      callback,
       context);
   if (exception) { _env->DeleteLocalRef(exception); }
 }
@@ -266,7 +267,7 @@ static void _write_cb(uv_write_t* req, int status) {
   assert(req->handle->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(req->handle->data);
   ContextHolder* req_data = reinterpret_cast<ContextHolder*>(req->data);
-  cb->on_write(status, status, req_data->data(), req_data->context());
+  cb->on_write(status, status, req_data->data(), req_data->callback(), req_data->context());
   delete req;
   delete req_data;
 }
@@ -377,7 +378,7 @@ JNIEXPORT jboolean JNICALL Java_com_oracle_libuv_handles_StreamHandle__1writable
  * Signature: (JLjava/nio/ByteBuffer;[BII)I
  */
 JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1write
-  (JNIEnv *env, jobject that, jlong stream, jobject buffer, jbyteArray data, jint offset, jint length, jobject context) {
+  (JNIEnv *env, jobject that, jlong stream, jobject buffer, jbyteArray data, jint offset, jint length, jobject callback, jobject context) {
 
   assert(stream);
 
@@ -387,13 +388,13 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1write
   req->handle = handle;
   ContextHolder* req_data = NULL;
   if (data) {
+    req_data = new ContextHolder(env, NULL, context, callback);
+    req->data = req_data;
     jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
     OOME(env, base);
     uv_buf_t buf;
     buf.base = reinterpret_cast<char*>(base + offset);
     buf.len = length;
-    req_data = new ContextHolder(env, context);
-    req->data = req_data;
     r = uv_write(req, handle, &buf, 1, _write_cb);
     env->ReleasePrimitiveArrayCritical(data, base, 0);
   } else {
@@ -401,7 +402,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1write
     uv_buf_t buf;
     buf.base = reinterpret_cast<char*>(base + offset);
     buf.len = length;
-    req->data = new ContextHolder(env, buffer, context);
+    req->data = new ContextHolder(env, buffer, context, callback);
     r = uv_write(req, handle, &buf, 1, _write_cb);
   }
   if (r) {
@@ -409,6 +410,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1write
     delete req;
     ThrowException(env, r, "uv_write");
   }
+  if (env->ExceptionOccurred()) {env->ExceptionDescribe(); env->ExceptionClear();}
   return r;
 }
 
@@ -418,7 +420,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1write
  * Signature: (JLjava/nio/ByteBuffer;[BIIJ)I
  */
 JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1write2
-  (JNIEnv *env, jobject that, jlong stream, jobject buffer, jbyteArray data, jint offset, jint length, jlong send_stream, jobject context) {
+  (JNIEnv *env, jobject that, jlong stream, jobject buffer, jbyteArray data, jint offset, jint length, jlong send_stream, jobject callback, jobject context) {
 
   assert(stream);
   assert(send_stream);
@@ -429,13 +431,13 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1write2
   ContextHolder* req_data = NULL;
   req->handle = handle;
   if (data) {
+    req_data = new ContextHolder(env, NULL, context, callback);
+    req->data = req_data;
     jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
     OOME(env, base);
     uv_buf_t buf;
     buf.base = reinterpret_cast<char*>(base + offset);
     buf.len = length - offset;
-    req_data = new ContextHolder(env, context);
-    req->data = req_data;
     uv_stream_t* send_handle = reinterpret_cast<uv_stream_t*>(send_stream);
     r = uv_write2(req, handle, &buf, 1, send_handle, _write_cb);
     env->ReleasePrimitiveArrayCritical(data, base, 0);
@@ -446,7 +448,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1write2
     buf.base = reinterpret_cast<char*>(base + offset);
     buf.len = length - offset;
     assert(stream);
-    req_data = new ContextHolder(env, buffer, context);
+    req_data = new ContextHolder(env, buffer, context, callback);
     req->data = req_data;
     uv_stream_t* send_handle = reinterpret_cast<uv_stream_t*>(send_stream);
     r = uv_write2(req, handle, &buf, 1, send_handle, _write_cb);
@@ -456,6 +458,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1write2
     delete req;
     ThrowException(env, r, "uv_write2");
   }
+  if (env->ExceptionOccurred()) {env->ExceptionDescribe(); env->ExceptionClear();}
   return r;
 }
 

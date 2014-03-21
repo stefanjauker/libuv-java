@@ -29,23 +29,35 @@
 
 #include "context.h"
 
- ContextHolder::ContextHolder(JNIEnv* env, jobject data, jobject context) {
+ContextHolder::ContextHolder(JNIEnv* env, jobject data, jobject context, jobject callback) {
+  _env = env;
   _data = data ? (jobject) env->NewGlobalRef(data) : NULL;
-  _env = env;
   _context = context ? (jobject) env->NewGlobalRef(context) : NULL;
- }
+  _callback = callback ? (jobject) env->NewGlobalRef(callback) : NULL;
+}
 
- ContextHolder::ContextHolder(JNIEnv* env, jobject context) {
+ContextHolder::ContextHolder(JNIEnv* env, jobject data, jobject context) {
+  _env = env;
+  _data = data ? (jobject) env->NewGlobalRef(data) : NULL;
+  _context = context ? (jobject) env->NewGlobalRef(context) : NULL;
+  _callback = NULL;
+}
+
+ContextHolder::ContextHolder(JNIEnv* env, jobject context) {
+  _env = env;
   _data = NULL;
-  _env = env;
   _context = context ? (jobject) env->NewGlobalRef(context) : NULL;
- }
+  _callback = NULL;
+}
 
- ContextHolder::~ContextHolder() {
+ContextHolder::~ContextHolder() {
   if (_context) {
-   _env->DeleteGlobalRef(_context);
+    _env->DeleteGlobalRef(_context);
+  }
+  if (_callback) {
+    _env->DeleteGlobalRef(_callback);
   }
   if (_data) {
-   _env->DeleteGlobalRef(_data);
+    _env->DeleteGlobalRef(_data);
   }
- }
+}

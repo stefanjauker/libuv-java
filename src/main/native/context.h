@@ -33,12 +33,16 @@
 class ContextHolder {
   private:
     jobject _context;
+    jobject _callback;
     jobject _data;
     JNIEnv* _env;
 
   public:
     inline jobject context() { return _context; }
+    inline jobject callback() { return _callback; }
     inline jobject data() { return _data; }
+
+    ContextHolder(JNIEnv* env, jobject data, jobject context, jobject callback);
     ContextHolder(JNIEnv* env, jobject data, jobject context);
     ContextHolder(JNIEnv* env, jobject context);
     ~ContextHolder();

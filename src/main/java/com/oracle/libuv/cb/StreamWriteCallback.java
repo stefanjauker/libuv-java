@@ -27,6 +27,6 @@ package com.oracle.libuv.cb;
 
 public interface StreamWriteCallback {
 
-    public void onWrite(int status, Exception error) throws Exception;
+    public void onWrite(int status, Exception error, Object callback) throws Exception;
 
 }

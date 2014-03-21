@@ -37,7 +37,7 @@ public interface CallbackHandler {
     public void handleSignalCallback(SignalCallback cb, int signum);
     public void handleStreamReadCallback(StreamReadCallback cb, ByteBuffer data);
     public void handleStreamRead2Callback(StreamRead2Callback cb, ByteBuffer data, long handle, int type);
-    public void handleStreamWriteCallback(StreamWriteCallback cb, int status, Exception error);
+    public void handleStreamWriteCallback(StreamWriteCallback cb, Object context, int status, Exception error);
     public void handleFileCallback(FileCallback cb, Object context, Exception error);
     public void handleFileCloseCallback(FileCloseCallback cb, Object context, int fd, Exception error);
     public void handleFileOpenCallback(FileOpenCallback cb, Object context, int fd, Exception error);

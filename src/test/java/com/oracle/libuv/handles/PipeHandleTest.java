@@ -40,6 +40,7 @@ import com.oracle.libuv.cb.StreamCloseCallback;
 import com.oracle.libuv.cb.StreamConnectCallback;
 import com.oracle.libuv.cb.StreamConnectionCallback;
 import com.oracle.libuv.cb.StreamReadCallback;
+import com.oracle.libuv.cb.StreamWriteCallback;
 
 public class PipeHandleTest extends TestBase {
 
@@ -64,6 +65,7 @@ public class PipeHandleTest extends TestBase {
 
         final AtomicBoolean serverDone = new AtomicBoolean(false);
         final AtomicBoolean clientDone = new AtomicBoolean(false);
+        final AtomicBoolean clientWriteCalled = new AtomicBoolean(false);
 
         final Logger serverLoggingCallback = new Logger("S: ");
         final Logger clientLoggingCallback = new Logger("C: ");
@@ -72,6 +74,7 @@ public class PipeHandleTest extends TestBase {
         final PipeHandle server = new PipeHandle(loop, false);
         final PipeHandle peer = new PipeHandle(loop, false);
         final PipeHandle client = new PipeHandle(loop, false);
+        final Object context = new Object();
 
         peer.setReadCallback(new StreamReadCallback() {
             @Override
@@ -83,7 +86,7 @@ public class PipeHandleTest extends TestBase {
                     final Object[] args = {data};
                     serverLoggingCallback.log(args);
                     if (serverSendCount.get() < TIMES) {
-                        peer.write("PING " + serverSendCount.incrementAndGet());
+                        peer.write("PING " + serverSendCount.incrementAndGet(), context);
                     } else {
                         peer.close();
                     }
@@ -104,7 +107,7 @@ public class PipeHandleTest extends TestBase {
                 serverLoggingCallback.log(status, error);
                 server.accept(peer);
                 peer.readStart();
-                peer.write("INIT " + serverSendCount.incrementAndGet());
+                peer.write("INIT " + serverSendCount.incrementAndGet(), context);
                 server.close(); // not expecting any more connections
             }
         });
@@ -127,11 +130,21 @@ public class PipeHandleTest extends TestBase {
                     final Object[] args = {data};
                     clientLoggingCallback.log(args);
                     if (clientSendCount.incrementAndGet() < TIMES) {
-                        client.write("PONG " + clientSendCount.get());
+                        client.write("PONG " + clientSendCount.get(), context);
                     } else {
                         client.close();
                     }
                 }
+            }
+        });
+
+        client.setWriteCallback(new StreamWriteCallback() {
+            @Override
+            public void onWrite(int status, Exception error, Object callback) throws Exception {
+                clientWriteCalled.set(true);
+                Assert.assertEquals(status, 0);
+                Assert.assertNull(error);
+                Assert.assertEquals(callback, context);
             }
         });
 
@@ -158,6 +171,7 @@ public class PipeHandleTest extends TestBase {
         Assert.assertEquals(clientSendCount.get(), TIMES);
         Assert.assertEquals(serverRecvCount.get(), TIMES);
         Assert.assertEquals(clientRecvCount.get(), TIMES);
+        Assert.assertTrue(clientWriteCalled.get());
     }
 
     public static void main(final String[] args) throws Throwable {

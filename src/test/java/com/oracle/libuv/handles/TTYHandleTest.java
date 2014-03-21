@@ -106,13 +106,14 @@ public class TTYHandleTest extends TestBase {
         }
         tty.setWriteCallback(new StreamWriteCallback() {
             @Override
-            public void onWrite(int status, Exception error) throws Exception {
+            public void onWrite(int status, Exception error, Object context) throws Exception {
                 System.out.println(status);
                 Assert.assertEquals(status, 0);
                 Assert.assertNotNull(error);
+                Assert.assertNull(context);
             }
         });
-        tty.write("written to " + name + "\n");
+        tty.write("written to " + name + "\n", null);
         loop.run();
     }
 
