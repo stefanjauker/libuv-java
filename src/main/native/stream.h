@@ -64,7 +64,7 @@ public:
   void on_read(const uv_buf_t* buf, jsize nread);
   void on_read2(const uv_buf_t* buf, jsize nread, jlong ptr, uv_handle_type pending);
   void on_write(int status, int error_code, jobject buffer, jobject callback, jobject context);
-  void on_shutdown(int status, int error_code, jobject context);
+  void on_shutdown(int status, int error_code, jobject callback, jobject context);
   void on_connect(int status, int error_code, jobject callback, jobject context);
   void on_connection(int status, int error_code);
   void on_close();

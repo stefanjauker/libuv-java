@@ -73,7 +73,7 @@ void StreamCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _call_close_callback_mid = env->GetMethodID(_stream_handle_cid, "callClose", "()V");
   assert(_call_close_callback_mid);
 
-  _call_shutdown_callback_mid = env->GetMethodID(_stream_handle_cid, "callShutdown", "(ILjava/lang/Exception;Ljava/lang/Object;)V");
+  _call_shutdown_callback_mid = env->GetMethodID(_stream_handle_cid, "callShutdown", "(ILjava/lang/Exception;Ljava/lang/Object;Ljava/lang/Object;)V");
   assert(_call_shutdown_callback_mid);
 
   static_initialize_address(env);
@@ -171,7 +171,7 @@ void StreamCallbacks::on_connection(int status, int error_code) {
   if (exception) { _env->DeleteLocalRef(exception); }
 }
 
-void StreamCallbacks::on_shutdown(int status, int error_code, jobject context) {
+void StreamCallbacks::on_shutdown(int status, int error_code, jobject callback, jobject context) {
   assert(_env);
   jthrowable exception = error_code ? NewException(_env, error_code) : NULL;
   _env->CallVoidMethod(
@@ -179,6 +179,7 @@ void StreamCallbacks::on_shutdown(int status, int error_code, jobject context) {
       _call_shutdown_callback_mid,
       status,
       exception,
+      callback,
       context);
   if (exception) { _env->DeleteLocalRef(exception); }
 }
@@ -249,7 +250,7 @@ static void _shutdown_cb(uv_shutdown_t* req, int status) {
   assert(req->handle->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(req->handle->data);
   ContextHolder* req_data = reinterpret_cast<ContextHolder*>(req->data);
-  cb->on_shutdown(status, status, req_data->context());
+  cb->on_shutdown(status, status, req_data->callback(), req_data->context());
   delete req_data;
   delete req;
 }
@@ -476,23 +477,23 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_StreamHandle__1write_1queu
 
 /*
  * Class:     com_oracle_libuv_handles_StreamHandle
- * Method:    _close_write
+ * Method:    _shutdown
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1close_1write
-  (JNIEnv *env, jobject that, jlong stream, jobject context) {
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1shutdown
+  (JNIEnv *env, jobject that, jlong stream, jobject callback, jobject context) {
 
   assert(stream);
   uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(stream);
   uv_shutdown_t* req = new uv_shutdown_t();
-  ContextHolder* req_data = new ContextHolder(env, context);
+  ContextHolder* req_data = new ContextHolder(env, NULL, context, callback);
   req->data = req_data;
   req->handle = handle;
   int r = uv_shutdown(req, handle, _shutdown_cb);
   if (r) {
     delete req_data;
     delete req;
-    ThrowException(env, r, "uv_close_write");
+    ThrowException(env, r, "uv_shutdown");
   }
   return r;
 }

@@ -151,9 +151,9 @@ public final class LoopCallbackHandler implements CallbackHandler {
     }
 
     @Override
-    public void handleStreamShutdownCallback(final StreamShutdownCallback cb, final int status, final Exception error) {
+    public void handleStreamShutdownCallback(final StreamShutdownCallback cb, final Object context, final int status, final Exception error) {
         try {
-            cb.onShutdown(status, error);
+            cb.onShutdown(status, error, context);
         } catch (final Exception ex) {
             exceptionHandler.handle(ex);
         }

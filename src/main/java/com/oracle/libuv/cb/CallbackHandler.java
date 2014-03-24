@@ -44,7 +44,7 @@ public interface CallbackHandler {
     public void handleStreamConnectCallback(StreamConnectCallback cb, Object context, int status, Exception error);
     public void handleStreamConnectionCallback(StreamConnectionCallback cb, int status, Exception error);
     public void handleStreamCloseCallback(StreamCloseCallback cb);
-    public void handleStreamShutdownCallback(StreamShutdownCallback cb, int status, Exception error);
+    public void handleStreamShutdownCallback(StreamShutdownCallback cb, Object context, int status, Exception error);
     public void handleFileReadCallback(FileReadCallback cb, Object context, int bytesRead, ByteBuffer data, Exception error);
     public void handleFileReadDirCallback(FileReadDirCallback cb, Object context, String[] names, Exception error);
     public void handleFileReadLinkCallback(FileReadLinkCallback cb, Object context, String name, Exception error);

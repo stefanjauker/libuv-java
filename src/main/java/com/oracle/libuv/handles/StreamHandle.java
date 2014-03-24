@@ -143,8 +143,8 @@ public class StreamHandle extends Handle {
         return write(buffer, 0, buffer.capacity(), callback);
     }
 
-    public int closeWrite() {
-        return _close_write(pointer, loop.getContext());
+    public int shutdown(final Object callback) {
+        return _shutdown(pointer, callback, loop.getContext());
     }
 
     public int setBlocking(final boolean blocking) {
@@ -227,9 +227,9 @@ public class StreamHandle extends Handle {
         }
     }
 
-    private void callShutdown(final int status, final Exception error, final Object context) {
+    private void callShutdown(final int status, final Exception error, final Object callback, final Object context) {
         if (onShutdown != null) {
-            loop.getCallbackHandler(context).handleStreamShutdownCallback(onShutdown, status, error);
+            loop.getCallbackHandler(context).handleStreamShutdownCallback(onShutdown, callback, status, error);
         }
     }
 
@@ -266,7 +266,7 @@ public class StreamHandle extends Handle {
 
     private native void _close(final long ptr);
 
-    private native int _close_write(final long ptr, final Object context);
+    private native int _shutdown(final long ptr, final Object callback, final Object context);
 
     private native int _listen(final long ptr, final int backlog);
 
