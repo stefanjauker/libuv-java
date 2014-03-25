@@ -29,6 +29,6 @@ import java.nio.ByteBuffer;
 
 public interface StreamReadCallback {
 
-    public void onRead(ByteBuffer data) throws Exception;
+    public void onRead(int status, Exception error, ByteBuffer data) throws Exception;
 
 }

@@ -38,7 +38,7 @@ static void _tcp_connect_cb(uv_connect_t* req, int status) {
   assert(req->handle->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(req->handle->data);
   ContextHolder* req_data = reinterpret_cast<ContextHolder*>(req->data);
-  cb->on_connect(status, status, req_data->callback(), req_data->context());
+  cb->on_connect(status, req_data->callback(), req_data->context());
   delete req;
   delete req_data;
 }

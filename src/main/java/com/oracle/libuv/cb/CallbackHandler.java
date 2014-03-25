@@ -35,8 +35,8 @@ public interface CallbackHandler {
     public void handleCheckCallback(CheckCallback cb, int status);
     public void handleIdleCallback(IdleCallback cb, int status);
     public void handleSignalCallback(SignalCallback cb, int signum);
-    public void handleStreamReadCallback(StreamReadCallback cb, ByteBuffer data);
-    public void handleStreamRead2Callback(StreamRead2Callback cb, ByteBuffer data, long handle, int type);
+    public void handleStreamReadCallback(StreamReadCallback cb, int status, Exception error, ByteBuffer data);
+    public void handleStreamRead2Callback(StreamRead2Callback cb, int status, Exception error, ByteBuffer data, long handle, int type);
     public void handleStreamWriteCallback(StreamWriteCallback cb, Object context, int status, Exception error);
     public void handleFileCallback(FileCallback cb, Object context, Exception error);
     public void handleFileCloseCallback(FileCloseCallback cb, Object context, int fd, Exception error);

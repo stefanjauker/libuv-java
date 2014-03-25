@@ -38,7 +38,7 @@ static void _pipe_connect_cb(uv_connect_t* req, int status) {
   assert(req->handle->data);
   ContextHolder* req_data = reinterpret_cast<ContextHolder*>(req->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(req->handle->data);
-  cb->on_connect(status, 0, req_data->callback(), req_data->context());
+  cb->on_connect(status, req_data->callback(), req_data->context());
   delete req_data;
   delete req;
 }

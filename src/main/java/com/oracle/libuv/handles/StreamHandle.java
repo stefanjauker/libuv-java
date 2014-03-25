@@ -191,15 +191,15 @@ public class StreamHandle extends Handle {
         super.finalize();
     }
 
-    private void callRead(final ByteBuffer data) {
+    private void callRead(final int status, final Exception error, final ByteBuffer data) {
         if (onRead != null) {
-            loop.getCallbackHandler().handleStreamReadCallback(onRead, data);
+            loop.getCallbackHandler().handleStreamReadCallback(onRead, status, error, data);
         }
     }
 
-    private void callRead2(final ByteBuffer data, long handle, int type) {
+    private void callRead2(int status, Exception error, final ByteBuffer data, final long handle, final int type) {
         if (onRead2 != null) {
-            loop.getCallbackHandler().handleStreamRead2Callback(onRead2, data, handle, type);
+            loop.getCallbackHandler().handleStreamRead2Callback(onRead2, status, error, data, handle, type);
         }
     }
 

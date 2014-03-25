@@ -79,7 +79,7 @@ public class PipeHandleTest extends TestBase {
 
         peer.setReadCallback(new StreamReadCallback() {
             @Override
-            public void onRead(final ByteBuffer data) throws Exception {
+            public void onRead(final int status, final Exception error, final ByteBuffer data) throws Exception {
                 serverRecvCount.incrementAndGet();
                 if (data == null) {
                     peer.close();
@@ -124,7 +124,7 @@ public class PipeHandleTest extends TestBase {
 
         client.setReadCallback(new StreamReadCallback() {
             @Override
-            public void onRead(final ByteBuffer data) throws Exception {
+            public void onRead(final int status, final Exception error, final ByteBuffer data) throws Exception {
                 clientRecvCount.incrementAndGet();
                 if (data == null) {
                     client.close();

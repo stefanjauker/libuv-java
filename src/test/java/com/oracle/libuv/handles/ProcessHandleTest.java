@@ -69,7 +69,7 @@ public class ProcessHandleTest extends TestBase {
 
         peer.setReadCallback(new StreamReadCallback() {
             @Override
-            public void onRead(final ByteBuffer data) throws Exception {
+            public void onRead(final int status, final Exception error, final ByteBuffer data) throws Exception {
                 final byte[] bytes = data.array();
                 final String s = new String(bytes, "utf-8");
                 Assert.assertEquals(s, MESSAGE);

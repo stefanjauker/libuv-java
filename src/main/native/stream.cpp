@@ -42,6 +42,7 @@ jclass StreamCallbacks::_stream_handle_cid = NULL;
 
 jmethodID StreamCallbacks::_address_init_mid = NULL;
 jmethodID StreamCallbacks::_call_read_callback_mid = NULL;
+jmethodID StreamCallbacks::_call_read2_callback_mid = NULL;
 jmethodID StreamCallbacks::_call_write_callback_mid = NULL;
 jmethodID StreamCallbacks::_call_connect_callback_mid = NULL;
 jmethodID StreamCallbacks::_call_connection_callback_mid = NULL;
@@ -58,8 +59,11 @@ void StreamCallbacks::static_initialize(JNIEnv* env, jclass cls) {
   _stream_handle_cid = (jclass) env->NewGlobalRef(cls);
   assert(_stream_handle_cid);
 
-  _call_read_callback_mid = env->GetMethodID(_stream_handle_cid, "callRead", "(Ljava/nio/ByteBuffer;)V");
+  _call_read_callback_mid = env->GetMethodID(_stream_handle_cid, "callRead", "(ILjava/lang/Exception;Ljava/nio/ByteBuffer;)V");
   assert(_call_read_callback_mid);
+
+  _call_read2_callback_mid = env->GetMethodID(_stream_handle_cid, "callRead2", "(ILjava/lang/Exception;Ljava/nio/ByteBuffer;JI)V");
+  assert(_call_read2_callback_mid);
 
   _call_write_callback_mid = env->GetMethodID(_stream_handle_cid, "callWrite", "(ILjava/lang/Exception;Ljava/lang/Object;Ljava/lang/Object;)V");
   assert(_call_write_callback_mid);
@@ -115,12 +119,17 @@ void StreamCallbacks::throw_exception(int code, const char* syscall) {
 
 void StreamCallbacks::on_read(const uv_buf_t* buf, jsize nread) {
   assert(_env);
+  jthrowable exception = nread < 0 ? NewException(_env, nread) : NULL;
   if (nread < 0) {
     _env->CallVoidMethod(
         _instance,
         _call_read_callback_mid,
+        nread,
+        exception,
         NULL);
   } else if (nread > 0) {
+    assert(buf);
+    assert(buf->base);
     jbyte* data = new jbyte[nread];
     memcpy(data, buf->base, nread);
     jobject arg = _env->NewDirectByteBuffer(data, nread);
@@ -128,15 +137,50 @@ void StreamCallbacks::on_read(const uv_buf_t* buf, jsize nread) {
     _env->CallVoidMethod(
         _instance,
         _call_read_callback_mid,
+        nread,
+        exception,
         arg);
     _env->DeleteLocalRef(arg);
   }
   delete[] buf->base;
+  if (exception) { _env->DeleteLocalRef(exception); }
 }
 
-void StreamCallbacks::on_write(int status, int error_code, jobject buffer, jobject callback, jobject context) {
+void StreamCallbacks::on_read2(const uv_buf_t* buf, jsize nread, jlong ptr, uv_handle_type pending) {
   assert(_env);
-  jthrowable exception = error_code ? NewException(_env, error_code) : NULL;
+  assert(ptr);
+  jthrowable exception = nread < 0 ? NewException(_env, nread) : NULL;
+  if (nread < 0) {
+    _env->CallVoidMethod(
+        _instance,
+        _call_read2_callback_mid,
+        nread,
+        exception,
+        NULL,
+        ptr,
+        pending);
+  } else if (nread > 0) {
+    jbyte* data = new jbyte[nread];
+    memcpy(data, buf->base, nread);
+    jobject array = _env->NewDirectByteBuffer(data, nread);
+    OOM(_env, array);
+    _env->CallVoidMethod(
+        _instance,
+        _call_read2_callback_mid,
+        nread,
+        exception,
+        array,
+        ptr,
+        pending);
+    _env->DeleteLocalRef(array);
+  }
+  delete[] buf->base;
+  if (exception) { _env->DeleteLocalRef(exception); }
+}
+
+void StreamCallbacks::on_write(int status, jobject buffer, jobject callback, jobject context) {
+  assert(_env);
+  jthrowable exception = status < 0 ? NewException(_env, status) : NULL;
   _env->CallVoidMethod(
       _instance,
       _call_write_callback_mid,
@@ -147,9 +191,9 @@ void StreamCallbacks::on_write(int status, int error_code, jobject buffer, jobje
   if (exception) { _env->DeleteLocalRef(exception); }
 }
 
-void StreamCallbacks::on_connect(int status, int error_code, jobject callback, jobject context) {
+void StreamCallbacks::on_connect(int status, jobject callback, jobject context) {
   assert(_env);
-  jthrowable exception = error_code ? NewException(_env, error_code) : NULL;
+  jthrowable exception = status < 0 ? NewException(_env, status) : NULL;
   _env->CallVoidMethod(
       _instance,
       _call_connect_callback_mid,
@@ -160,9 +204,9 @@ void StreamCallbacks::on_connect(int status, int error_code, jobject callback, j
   if (exception) { _env->DeleteLocalRef(exception); }
 }
 
-void StreamCallbacks::on_connection(int status, int error_code) {
+void StreamCallbacks::on_connection(int status) {
   assert(_env);
-  jthrowable exception = error_code ? NewException(_env, error_code) : NULL;
+  jthrowable exception = status < 0 ? NewException(_env, status) : NULL;
   _env->CallVoidMethod(
       _instance,
       _call_connection_callback_mid,
@@ -171,9 +215,9 @@ void StreamCallbacks::on_connection(int status, int error_code) {
   if (exception) { _env->DeleteLocalRef(exception); }
 }
 
-void StreamCallbacks::on_shutdown(int status, int error_code, jobject callback, jobject context) {
+void StreamCallbacks::on_shutdown(int status, jobject callback, jobject context) {
   assert(_env);
-  jthrowable exception = error_code ? NewException(_env, error_code) : NULL;
+  jthrowable exception = status < 0 ? NewException(_env, status) : NULL;
   _env->CallVoidMethod(
       _instance,
       _call_shutdown_callback_mid,
@@ -237,10 +281,79 @@ static void _alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
 }
 
 static void _read_cb(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
+  assert(stream);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(stream->data);
   assert(cb);
   jsize size = static_cast<jsize>(nread);
-  cb->on_read(buf, size);
+
+  if (size < 0)  {
+    cb->on_read(buf, size); // eof
+    return;
+  }
+
+  if (size == 0) {
+    if (buf->base != NULL) {
+      delete[] buf->base;
+    }
+    return;
+  }
+
+  uv_handle_type pending = UV_UNKNOWN_HANDLE;
+  if (is_named_pipe_ipc(stream) &&
+      uv_pipe_pending_count(reinterpret_cast<uv_pipe_t*>(stream)) > 0) {
+    pending = uv_pipe_pending_type(reinterpret_cast<uv_pipe_t*>(stream));
+  }
+
+  int r = 0;
+  if (pending == UV_TCP) {
+    uv_tcp_t* tcp = new uv_tcp_t();
+    r = uv_tcp_init(stream->loop, tcp);
+    if (r) {
+      cb->throw_exception(r, "read_cb.uv_tcp_init");
+      return;
+    }
+    tcp->data = new StreamCallbacks();
+    r = uv_accept(stream, reinterpret_cast<uv_stream_t*>(tcp));
+    if (r) {
+      cb->throw_exception(r, "read_cb.uv_accept(tcp)");
+      return;
+    }
+    fprintf(stderr, "onread2 tcp %d\n", size);
+    cb->on_read2(buf, size, reinterpret_cast<jlong>(tcp), pending);
+  } else if (pending == UV_NAMED_PIPE) {
+    uv_pipe_t* p = new uv_pipe_t();
+    r = uv_pipe_init(stream->loop, p, 1);
+    if (r) {
+      cb->throw_exception(r, "read_cb.uv_pipe_init");
+      return;
+    }
+    p->data = new StreamCallbacks();
+    r = uv_accept(stream, reinterpret_cast<uv_stream_t*>(p));
+    if (r) {
+      cb->throw_exception(r, "read_cb.uv_accept(pipe)");
+      return;
+    }
+    fprintf(stderr, "onread2 named pipe %d\n", size);
+    cb->on_read2(buf, size, reinterpret_cast<jlong>(p), pending);
+  } else if (pending == UV_UDP) {
+    uv_udp_t* udp = new uv_udp_t();
+    r = uv_udp_init(stream->loop, udp);
+    if (r) {
+      cb->throw_exception(r, "read_cb.uv_udp_init");
+      return;
+    }
+    udp->data = new UDPCallbacks();
+    r = uv_accept(stream, reinterpret_cast<uv_stream_t*>(udp));
+    if (r) {
+      cb->throw_exception(r, "read_cb.uv_accept(udp)");
+      return;
+    }
+    fprintf(stderr, "onread2 udp %d\n", size);
+    cb->on_read2(buf, size, reinterpret_cast<jlong>(udp), pending);
+  } else {
+    assert(pending == UV_UNKNOWN_HANDLE);
+    cb->on_read(buf, size);
+  }
 }
 
 static void _shutdown_cb(uv_shutdown_t* req, int status) {
@@ -250,7 +363,7 @@ static void _shutdown_cb(uv_shutdown_t* req, int status) {
   assert(req->handle->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(req->handle->data);
   ContextHolder* req_data = reinterpret_cast<ContextHolder*>(req->data);
-  cb->on_shutdown(status, status, req_data->callback(), req_data->context());
+  cb->on_shutdown(status, req_data->callback(), req_data->context());
   delete req_data;
   delete req;
 }
@@ -269,7 +382,7 @@ static void _write_cb(uv_write_t* req, int status) {
   assert(req->handle->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(req->handle->data);
   ContextHolder* req_data = reinterpret_cast<ContextHolder*>(req->data);
-  cb->on_write(status, status, req_data->data(), req_data->callback(), req_data->context());
+  cb->on_write(status, req_data->data(), req_data->callback(), req_data->context());
   delete req;
   delete req_data;
 }
@@ -278,7 +391,7 @@ static void _connection_cb(uv_stream_t* stream, int status) {
   assert(stream);
   assert(stream->data);
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(stream->data);
-  cb->on_connection(status, status);
+  cb->on_connection(status);
 }
 
 /*

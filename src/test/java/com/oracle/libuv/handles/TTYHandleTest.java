@@ -127,7 +127,7 @@ public class TTYHandleTest extends TestBase {
         final String prompt = "\ntype something (^D to exit) > ";
         tty.setReadCallback(new StreamReadCallback() {
             @Override
-            public void onRead(final ByteBuffer data) throws Exception {
+            public void onRead(final int status, final Exception error, final ByteBuffer data) throws Exception {
                 if (data != null) {
                     System.out.print(new String(data.array()));
                     System.out.print(prompt);

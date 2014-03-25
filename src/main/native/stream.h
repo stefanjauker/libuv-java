@@ -63,14 +63,28 @@ public:
 
   void on_read(const uv_buf_t* buf, jsize nread);
   void on_read2(const uv_buf_t* buf, jsize nread, jlong ptr, uv_handle_type pending);
-  void on_write(int status, int error_code, jobject buffer, jobject callback, jobject context);
-  void on_shutdown(int status, int error_code, jobject callback, jobject context);
-  void on_connect(int status, int error_code, jobject callback, jobject context);
-  void on_connection(int status, int error_code);
+  void on_write(int status, jobject buffer, jobject callback, jobject context);
+  void on_shutdown(int status, jobject callback, jobject context);
+  void on_connect(int status, jobject callback, jobject context);
+  void on_connection(int status);
   void on_close();
 
   inline void on_oom(const char* buf) { OOM(_env, buf); }
 
 };
+
+inline bool is_named_pipe(const uv_stream_t* stream) {
+  assert(stream);
+  return stream->type == UV_NAMED_PIPE;
+}
+
+inline bool is_named_pipe_ipc(const uv_stream_t* stream) {
+  return is_named_pipe(stream) && reinterpret_cast<const uv_pipe_t*>(stream)->ipc != 0;
+}
+
+inline bool is_tcp(const uv_stream_t* stream) {
+  assert(stream);
+  return stream->type == UV_TCP;
+}
 
 #endif // _libuv_java_stream_h_
