@@ -56,6 +56,7 @@ public class UDPHandleTest extends TestBase {
         final LoopHandle loop = new LoopHandle();
         final UDPHandle server = new UDPHandle(loop);
         final UDPHandle client = new UDPHandle(loop);
+        final Object context = new Object();
 
         server.setRecvCallback(new UDPRecvCallback() {
             @Override
@@ -70,12 +71,13 @@ public class UDPHandleTest extends TestBase {
 
         client.setSendCallback(new UDPSendCallback() {
             @Override
-            public void onSend(int status, Exception error) throws Exception {
+            public void onSend(int status, Exception error, Object callback) throws Exception {
                 if (clientSendCount.incrementAndGet() < TIMES) {
                 } else {
                     client.close();
                     clientDone.set(true);
                 }
+                Assert.assertEquals(callback, context);
             }
         });
 
@@ -83,7 +85,7 @@ public class UDPHandleTest extends TestBase {
         server.recvStart();
 
         for (int i=0; i < TIMES; i++) {
-            client.send("PING." + i, PORT, HOST);
+            client.send("PING." + i, PORT, HOST, context);
         }
 
         final long start = System.currentTimeMillis();
@@ -112,6 +114,7 @@ public class UDPHandleTest extends TestBase {
 
         final UDPHandle server = new UDPHandle(loop);
         final UDPHandle client = new UDPHandle(loop);
+        final Object context = new Object();
 
         server.setRecvCallback(new UDPRecvCallback() {
             @Override
@@ -127,12 +130,13 @@ public class UDPHandleTest extends TestBase {
 
         client.setSendCallback(new UDPSendCallback() {
             @Override
-            public void onSend(int status, Exception error) throws Exception {
+            public void onSend(int status, Exception error, Object callback) throws Exception {
                 if (clientSendCount.incrementAndGet() < TIMES) {
                 } else {
                     client.close();
                     clientDone.set(true);
                 }
+                Assert.assertEquals(callback, context);
             }
         });
 
@@ -140,7 +144,7 @@ public class UDPHandleTest extends TestBase {
         server.recvStart();
 
         for (int i=0; i < TIMES; i++) {
-            client.send6("PING." + i, PORT6, HOST6);
+            client.send6("PING." + i, PORT6, HOST6, context);
         }
 
         final long start = System.currentTimeMillis();
@@ -166,7 +170,7 @@ public class UDPHandleTest extends TestBase {
         try {
             socket = new UDPHandle(loop);
             socket.recvStart();
-            socket.send6("", PORT6, HOST6);
+            socket.send6("", PORT6, HOST6, null);
         } catch(final com.oracle.libuv.NativeException e) {
             if ("EAFNOSUPPORT".equals(e.errnoString())) {
                 return false;

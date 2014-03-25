@@ -58,6 +58,6 @@ public interface CallbackHandler {
     public void handleProcessExitCallback(ProcessExitCallback cb, long status, int signal, Exception error);
     public void handleTimerCallback(TimerCallback cb, int status);
     public void handleUDPRecvCallback(UDPRecvCallback cb, int nread, ByteBuffer data, Address address);
-    public void handleUDPSendCallback(UDPSendCallback cb, int status, Exception error);
+    public void handleUDPSendCallback(UDPSendCallback cb, Object context, int status, Exception error);
     public void handleUDPCloseCallback(UDPCloseCallback cb);
 }

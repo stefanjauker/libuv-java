@@ -469,7 +469,7 @@ public class PermissionTest extends TestBase {
         testSuccess(new Runnable() {
             @Override
             public void run() {
-                udpclient.send("toto", port2, ADDRESS);
+                udpclient.send("toto", port2, ADDRESS, null);
             }
         });
 
@@ -554,7 +554,7 @@ public class PermissionTest extends TestBase {
         testSuccess(new Runnable() {
             @Override
             public void run() {
-                udpclient.send6("toto", port2, ADDRESS6);
+                udpclient.send6("toto", port2, ADDRESS6, null);
             }
         });
 

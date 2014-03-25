@@ -50,7 +50,7 @@ public:
   void initialize(JNIEnv *env, jobject instance);
 
   void on_recv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags);
-  void on_send(int status, int error_code, jobject buffer, jobject domain);
+  void on_send(int status, jobject buffer, jobject callback, jobject context);
   void on_close();
 
   inline void on_oom(const char* buf) { OOM(_env, buf); }

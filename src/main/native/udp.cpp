@@ -62,7 +62,7 @@ void UDPCallbacks::static_initialize(JNIEnv* env, jclass cls) {
 
   _recv_callback_mid = env->GetMethodID(_udp_handle_cid, "callRecv", "(ILjava/nio/ByteBuffer;Lcom/oracle/libuv/Address;)V");
   assert(_recv_callback_mid);
-  _send_callback_mid = env->GetMethodID(_udp_handle_cid, "callSend", "(ILjava/lang/Exception;Ljava/lang/Object;)V");
+  _send_callback_mid = env->GetMethodID(_udp_handle_cid, "callSend", "(ILjava/lang/Exception;Ljava/lang/Object;Ljava/lang/Object;)V");
   assert(_send_callback_mid);
   _close_callback_mid = env->GetMethodID(_udp_handle_cid, "callClose", "()V");
   assert(_close_callback_mid);
@@ -108,16 +108,18 @@ void UDPCallbacks::on_recv(ssize_t nread, const uv_buf_t* buf, const struct sock
   delete[] buf->base;
 }
 
-void UDPCallbacks::on_send(int status, int error_code, jobject buffer, jobject context) {
+void UDPCallbacks::on_send(int status, jobject buffer, jobject callback, jobject context) {
   assert(_env);
 
-  jthrowable exception = error_code ? NewException(_env, error_code) : NULL;
+  jthrowable exception = status ? NewException(_env, status) : NULL;
   _env->CallVoidMethod(
       _instance,
       _send_callback_mid,
       status,
       exception,
+      callback,
       context);
+  if (exception) { _env->DeleteLocalRef(exception); }
 }
 
 void UDPCallbacks::on_close() {
@@ -149,7 +151,7 @@ static void _send_cb(uv_udp_send_t* req, int status) {
   assert(req->handle->data);
   UDPCallbacks* cb = reinterpret_cast<UDPCallbacks*>(req->handle->data);
   ContextHolder* req_data = reinterpret_cast<ContextHolder*>(req->data);
-  cb->on_send(status, status, req_data->data(), req_data->context());
+  cb->on_send(status, req_data->data(), req_data->callback(), req_data->context());
   delete req_data;
   delete req;
 }
@@ -258,7 +260,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1bind
  * Signature: (JLjava/nio/ByteBuffer;[BIIILjava/lang/String;ZLjava/lang/Object;)I
  */
 JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1send
-  (JNIEnv *env, jobject that, jlong udp, jobject buffer, jbyteArray data, jint offset, jint length, jint port, jstring host, jboolean ipv6, jobject context) {
+  (JNIEnv *env, jobject that, jlong udp, jobject buffer, jbyteArray data, jint offset, jint length, jint port, jstring host, jboolean ipv6, jobject callback, jobject context) {
 
   assert(udp);
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
@@ -277,22 +279,22 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1send
   req->handle = handle;
   ContextHolder* req_data = NULL;
   if (data) {
+    req_data = new ContextHolder(env, NULL, context, callback);
+    req->data = req_data;
     jbyte* base = (jbyte*) env->GetPrimitiveArrayCritical(data, NULL);
     OOME(env, base);
     uv_buf_t buf;
     buf.base = reinterpret_cast<char*>(base + offset);
     buf.len = length;
-    req_data = new ContextHolder(env, context);
-    req->data = req_data;
     r = uv_udp_send(req, handle, &buf, 1, reinterpret_cast<const sockaddr*>(&addr), _send_cb);
     env->ReleasePrimitiveArrayCritical(data, base, 0);
   } else {
+    req_data = new ContextHolder(env, buffer, context, callback);
+    req->data = req_data;
     jbyte* base = (jbyte*) env->GetDirectBufferAddress(buffer);
     uv_buf_t buf;
     buf.base = reinterpret_cast<char*>(base + offset);
     buf.len = length;
-    req_data = new ContextHolder(env, buffer, context);
-    req->data = req_data;
     r = uv_udp_send(req, handle, &buf, 1, reinterpret_cast<const sockaddr*>(&addr), _send_cb);
   }
   if (r) {

@@ -304,9 +304,9 @@ public final class LoopCallbackHandler implements CallbackHandler {
     }
 
     @Override
-    public void handleUDPSendCallback(final UDPSendCallback cb, final int status, final Exception error) {
+    public void handleUDPSendCallback(final UDPSendCallback cb, final Object context, final int status, final Exception error) {
         try {
-            cb.onSend(status, error);
+            cb.onSend(status, error, context);
         } catch (final Exception ex) {
             exceptionHandler.handle(ex);
         }

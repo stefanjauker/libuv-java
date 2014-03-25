@@ -110,20 +110,23 @@ public final class UDPHandle extends Handle {
 
     public int send(final String str,
                     final int port,
-                    final String host) {
-        return send(str, port, host, false);
+                    final String host,
+                    final Object callback) {
+        return send(str, port, host, false, callback);
     }
 
     public int send6(final String str,
                      final int port,
-                     final String host) {
-        return send(str, port, host, true);
+                     final String host,
+                     final Object callback) {
+        return send(str, port, host, true, callback);
     }
 
     private int send(final String str,
                      final int port,
                      final String host,
-                     final boolean ipv6) {
+                     final boolean ipv6,
+                     final Object callback) {
         Objects.requireNonNull(str);
         Objects.requireNonNull(host);
         final byte[] data;
@@ -132,73 +135,81 @@ public final class UDPHandle extends Handle {
         } catch (final UnsupportedEncodingException e) {
             throw new RuntimeException(e); // "utf-8" is always supported
         }
-        return send(ByteBuffer.wrap(data), 0, data.length, port, host, ipv6);
+        return send(ByteBuffer.wrap(data), 0, data.length, port, host, ipv6, callback);
     }
 
     public int send(final String str,
                     final String encoding,
                     final int port,
-                    final String host) throws UnsupportedEncodingException {
-        return send(str, encoding, port, host, false);
+                    final String host,
+                    final Object callback) throws UnsupportedEncodingException {
+        return send(str, encoding, port, host, false, callback);
     }
 
     public int send6(final String str,
                      final String encoding,
                      final int port,
-                     final String host) throws UnsupportedEncodingException {
-        return send(str, encoding, port, host, true);
+                     final String host,
+                     final Object callback) throws UnsupportedEncodingException {
+        return send(str, encoding, port, host, true, callback);
     }
 
     private int send(final String str,
                      final String encoding,
                      final int port,
                      final String host,
-                     final boolean ipv6) throws UnsupportedEncodingException {
+                     final boolean ipv6,
+                     final Object callback) throws UnsupportedEncodingException {
         Objects.requireNonNull(str);
         Objects.requireNonNull(encoding);
         Objects.requireNonNull(host);
         final byte[] data = str.getBytes(encoding);
-        return send(ByteBuffer.wrap(data), 0, data.length, port, host, ipv6);
+        return send(ByteBuffer.wrap(data), 0, data.length, port, host, ipv6, callback);
     }
 
     public int send(final ByteBuffer buffer,
                     final int port,
-                    final String host) {
-        return send(buffer, port, host, false);
+                    final String host,
+                    final Object callback) {
+        return send(buffer, port, host, false, callback);
     }
 
     public int send6(final ByteBuffer buffer,
                      final int port,
-                     final String host) {
-        return send(buffer, port, host, true);
+                     final String host,
+                     final Object callback) {
+        return send(buffer, port, host, true, callback);
     }
 
     private int send(final ByteBuffer buffer,
                      final int port,
                      final String host,
-                     final boolean ipv6) {
+                     final boolean ipv6,
+                     final Object callback) {
         Objects.requireNonNull(buffer);
         Objects.requireNonNull(host);
         LibUVPermission.checkUDPSend(host, port);
         return buffer.hasArray() ?
-                _send(pointer, buffer, buffer.array(), 0, buffer.capacity(), port, host, ipv6, loop.getContext()) :
-                _send(pointer, buffer, null, 0, buffer.capacity(), port, host, ipv6, loop.getContext());
+                _send(pointer, buffer, buffer.array(), 0, buffer.capacity(), port, host, ipv6, callback, loop.getContext()) :
+                _send(pointer, buffer, null, 0, buffer.capacity(), port, host, ipv6, callback, loop.getContext());
     }
 
     public int send(final ByteBuffer buffer,
                     final int offset,
                     final int length,
                     final int port,
-                    final String host) {
-        return send(buffer, offset, length, port, host, false);
+                    final String host,
+                    final Object callback) {
+        return send(buffer, offset, length, port, host, false, callback);
     }
 
     public int send6(final ByteBuffer buffer,
                      final int offset,
                      final int length,
                      final int port,
-                     final String host) {
-        return send(buffer, offset, length, port, host, true);
+                     final String host,
+                     final Object callback) {
+        return send(buffer, offset, length, port, host, true, callback);
     }
 
     private int send(final ByteBuffer buffer,
@@ -206,13 +217,14 @@ public final class UDPHandle extends Handle {
                      final int length,
                      final int port,
                      final String host,
-                     final boolean ipv6) {
+                     final boolean ipv6,
+                     final Object callback) {
         Objects.requireNonNull(buffer);
         Objects.requireNonNull(host);
         LibUVPermission.checkUDPSend(host, port);
         return buffer.hasArray() ?
-                _send(pointer, buffer, buffer.array(), offset, length, port, host, ipv6, loop.getContext()) :
-                _send(pointer, buffer, null, offset, length, port, host, ipv6, loop.getContext());
+                _send(pointer, buffer, buffer.array(), offset, length, port, host, ipv6, callback, loop.getContext()) :
+                _send(pointer, buffer, null, offset, length, port, host, ipv6, callback, loop.getContext());
     }
 
     public int recvStart() {
@@ -257,9 +269,9 @@ public final class UDPHandle extends Handle {
         }
     }
 
-    private void callSend(final int status, final Exception error, final Object context) {
+    private void callSend(final int status, final Exception error, final Object callback, final Object context) {
         if (onSend != null) {
-            loop.getCallbackHandler(context).handleUDPSendCallback(onSend, status, error);
+            loop.getCallbackHandler(context).handleUDPSendCallback(onSend, callback, status, error);
         }
     }
 
@@ -290,6 +302,7 @@ public final class UDPHandle extends Handle {
                              final int port,
                              final String host,
                              final boolean ipv6,
+                             final Object callback,
                              final Object context);
 
     private native int _recv_start(final long ptr);
