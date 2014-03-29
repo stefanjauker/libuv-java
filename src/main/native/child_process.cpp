@@ -344,9 +344,5 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_ProcessHandle__1kill
 
   assert(ptr);
   uv_process_t* handle = reinterpret_cast<uv_process_t*>(ptr);
-  int r = uv_process_kill(handle, signal);
-  if (r) {
-    ThrowException(env, r, "uv_process_kill", "error killing process");
-  }
-  return r;
+  return uv_process_kill(handle, signal);
 }

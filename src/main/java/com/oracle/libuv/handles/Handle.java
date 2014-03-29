@@ -51,7 +51,7 @@ public abstract class Handle {
     }
 
     public boolean isClosing() {
-        return _closing(pointer);
+        return _closing(pointer) == 0;
     }
 
     @Override
@@ -73,6 +73,6 @@ public abstract class Handle {
 
     private native void _unref(final long ptr);
 
-    private native boolean _closing(final long ptr);
+    private native int _closing(final long ptr);
 
 }

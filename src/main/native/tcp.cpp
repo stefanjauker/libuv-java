@@ -88,9 +88,6 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TCPHandle__1bind
 
   int flags = 0;
   r = uv_tcp_bind(handle, reinterpret_cast<const sockaddr*>(&addr), flags);
-  if (r) {
-    ThrowException(env, r, "uv_tcp_bind", h);
-  }
   env->ReleaseStringUTFChars(host, h);
   return r;
 }
@@ -124,7 +121,6 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TCPHandle__1connect
   if (r) {
     delete req_data;
     delete req;
-    ThrowException(env, r, "uv_tcp_connect", h);
   }
   env->ReleaseStringUTFChars(host, h);
   return r;
@@ -140,11 +136,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TCPHandle__1open
 
   assert(tcp);
   uv_tcp_t* handle = reinterpret_cast<uv_tcp_t*>(tcp);
-  int r = uv_tcp_open(handle, fd);
-  if (r) {
-    ThrowException(env, r, "uv_tcp_open");
-  }
-  return r;
+  return uv_tcp_open(handle, fd);
 }
 
 /*
@@ -205,12 +197,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TCPHandle__1no_1delay
 
   assert(tcp);
   uv_tcp_t* handle = reinterpret_cast<uv_tcp_t*>(tcp);
-
-  int r = uv_tcp_nodelay(handle, enable);
-  if (r) {
-    ThrowException(env, r, "uv_tcp_nodelay");
-  }
-  return r;
+  return uv_tcp_nodelay(handle, enable);
 }
 
 /*
@@ -223,12 +210,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TCPHandle__1keep_1alive
 
   assert(tcp);
   uv_tcp_t* handle = reinterpret_cast<uv_tcp_t*>(tcp);
-
-  int r = uv_tcp_keepalive(handle, enable, delay);
-  if (r) {
-    ThrowException(env, r, "uv_tcp_keepalive");
-  }
-  return r;
+  return uv_tcp_keepalive(handle, enable, delay);
 }
 
 /*
@@ -241,11 +223,5 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TCPHandle__1simultaneous_1a
 
   assert(tcp);
   uv_tcp_t* handle = reinterpret_cast<uv_tcp_t*>(tcp);
-
-  int r = uv_tcp_simultaneous_accepts(handle, enable);
-  if (r) {
-    // TODO: Node.js as of v0.10.23 ignores the error.
-    // ThrowException(env, r, "uv_tcp_simultaneous_accepts");
-  }
-  return r;
+  return uv_tcp_simultaneous_accepts(handle, enable);
 }

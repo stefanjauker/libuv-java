@@ -177,11 +177,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_FileEventHandle__1init
 
   uv_loop_t* loop = reinterpret_cast<uv_loop_t*>(loop_ptr);
   uv_fs_event_t* handle = reinterpret_cast<uv_fs_event_t*>(fs_event_ptr);
-  int r = uv_fs_event_init(loop, handle);
-  if (r) {
-    ThrowException(env, r, "uv_fs_event_init");
-  }
-  return r;
+  return uv_fs_event_init(loop, handle);
 }
 
 /*
@@ -201,9 +197,6 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_FileEventHandle__1start
     uv_unref(reinterpret_cast<uv_handle_t*>(handle));
   }
   int r = uv_fs_event_start(handle, on_event_cb, cpath, persistent);
-  if (r) {
-    ThrowException(env, r, "uv_fs_event_start");
-  }
   env->ReleaseStringUTFChars(path, cpath);
   return r;
 }
@@ -219,11 +212,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_FileEventHandle__1stop
   assert(fs_event_ptr);
 
   uv_fs_event_t* handle = reinterpret_cast<uv_fs_event_t*>(fs_event_ptr);
-  int r = uv_fs_event_stop(handle);
-  if (r) {
-    ThrowException(env, r, "uv_fs_event_stop");
-  }
-  return r;
+  return uv_fs_event_stop(handle);
 }
 
 /*

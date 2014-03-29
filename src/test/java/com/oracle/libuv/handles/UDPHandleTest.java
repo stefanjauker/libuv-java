@@ -120,7 +120,7 @@ public class UDPHandleTest extends TestBase {
             @Override
             public void onRecv(int nread, ByteBuffer data, Address address) throws Exception {
                 if (serverRecvCount.incrementAndGet() < TIMES) {
-                    System.out.printf("server6.onRecv nread: %d, data: %s, addr: %s\n", nread, new String(data.array()), address);
+                    System.out.printf("server6.onRecv nread: %d, addr: %s\n", nread, address);
                 } else {
                     server.close();
                     serverDone.set(true);

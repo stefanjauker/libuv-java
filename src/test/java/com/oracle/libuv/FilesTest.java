@@ -72,13 +72,10 @@ public class FilesTest extends TestBase {
         final String filename = testName + ".txt";
         final LoopHandle loop = new LoopHandle();
         final Files handle = new Files(loop);
+        final Stats stats = new Stats();
 
-        try {
-            handle.stat(filename);
-            Assert.fail();
-        } catch (NativeException nx) {
-            Assert.assertEquals(nx.errnoString(), "ENOENT");
-        }
+        final int r = handle.stat(filename, stats);
+        assert_EBADF_or_ENOENT(r);
     }
 
     @Test
@@ -86,10 +83,12 @@ public class FilesTest extends TestBase {
         final String filename = testName + ".txt";
         final LoopHandle loop = new LoopHandle();
         final Files handle = new Files(loop);
+        final Stats stats = new Stats();
 
         final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
-        final Stats stats = handle.stat(filename);
-        Assert.assertNotNull(stats);
+        final int r = handle.stat(filename, stats);
+        System.out.println(stats);
+        Assert.assertEquals(r, 0);
         handle.close(fd);
         cleanupFiles(handle, filename);
     }
@@ -100,6 +99,7 @@ public class FilesTest extends TestBase {
         final LoopHandle loop = new LoopHandle();
         final Files handle = new Files(loop);
         final AtomicBoolean called = new AtomicBoolean(false);
+        final Stats stats = new Stats();
 
         handle.setStatCallback(new FileStatsCallback() {
             @Override
@@ -111,11 +111,12 @@ public class FilesTest extends TestBase {
                 Assert.assertTrue(error instanceof NativeException);
                 final NativeException nx = (NativeException) error;
                 Assert.assertEquals(nx.errnoString(), "ENOENT");
+                assert_EBADF_or_ENOENT(nx.errno());
             }
         });
 
-        final Stats stats = handle.stat(filename, called);
-        Assert.assertNull(stats);
+        final int r = handle.stat(filename, stats, called);
+        Assert.assertEquals(r, 0);
         loop.run();
         Assert.assertTrue(called.get());
         cleanupFiles(handle, filename);
@@ -127,6 +128,7 @@ public class FilesTest extends TestBase {
         final LoopHandle loop = new LoopHandle();
         final Files handle = new Files(loop);
         final AtomicBoolean called = new AtomicBoolean(false);
+        final Stats stats = new Stats();
 
         handle.setStatCallback(new FileStatsCallback() {
             @Override
@@ -135,12 +137,13 @@ public class FilesTest extends TestBase {
                 Assert.assertEquals(context, called);
                 Assert.assertNotNull(stats);
                 Assert.assertNull(error);
+                System.out.println(stats);
             }
         });
 
         final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
-        final Stats stats = handle.stat(filename, called);
-        Assert.assertNull(stats);
+        final int r = handle.stat(filename, stats, called);
+        Assert.assertEquals(r, 0);
         loop.run();
         Assert.assertTrue(called.get());
         handle.close(fd);
@@ -406,7 +409,9 @@ public class FilesTest extends TestBase {
 
         final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
         handle.ftruncate(fd, 1000);
-        final Stats stats = handle.fstat(fd);
+        final Stats stats = new Stats();
+        final int r = handle.fstat(fd, stats);
+        Assert.assertEquals(r, 0);
         Assert.assertEquals(stats.getSize(), 1000);
         cleanupFiles(handle, filename);
     }
@@ -425,7 +430,9 @@ public class FilesTest extends TestBase {
                 Assert.assertEquals(context, FilesTest.this);
                 ftruncateCallbackCalled.set(true);
                 checkException(error);
-                final Stats stats = handle.fstat(fd.get());
+                final Stats stats = new Stats();
+                final int r = handle.fstat(fd.get(), stats);
+                Assert.assertEquals(r, 0);
                 Assert.assertEquals(stats.getSize(), 1000);
                 cleanupFiles(handle, filename);
             }
@@ -449,7 +456,9 @@ public class FilesTest extends TestBase {
         handle.write(fd, b, 0, b.limit(), 0);
         handle.close(fd);
         handle.link(filename, filename2);
-        final Stats stats = handle.stat(filename2);
+        final Stats stats = new Stats();
+        final int r = handle.stat(filename2, stats);
+        Assert.assertEquals(r, 0);
         Assert.assertEquals(stats.getSize(), b.limit());
         cleanupFiles(handle, filename, filename2);;
     }
@@ -468,7 +477,9 @@ public class FilesTest extends TestBase {
             public void onDone(final Object context, final Exception error) throws Exception {
                 Assert.assertEquals(context, FilesTest.this);
                 linkCallbackCalled.set(true);
-                final Stats stats = handle.stat(filename2);
+                final Stats stats = new Stats();
+                final int r = handle.stat(filename2, stats);
+                Assert.assertEquals(r, 0);
                 Assert.assertEquals(stats.getSize(), b.limit());
                 cleanupFiles(handle, filename, filename2);
             }
@@ -486,10 +497,11 @@ public class FilesTest extends TestBase {
         for (int i = 0; i < files.length; i++) {
             try {
                 final String test = files[i];
-                final Stats stat = handle.stat(test);
-                if ((stat.getMode() & Constants.S_IFMT) == Constants.S_IFDIR) {
+                final Stats stat = new Stats();
+                final int r = handle.stat(test, stat);
+                if (r == 0 && ((int) stat.getMode() & Constants.S_IFMT) == Constants.S_IFDIR) {
                     handle.rmdir(test);
-                } else if ((stat.getMode() & Constants.S_IFMT) == Constants.S_IFREG) {
+                } else if (r == 0 && ((int) stat.getMode() & Constants.S_IFMT) == Constants.S_IFREG) {
                     handle.unlink(test);
                 }
             } catch (final Exception e) {
@@ -501,6 +513,12 @@ public class FilesTest extends TestBase {
         if (error != null) {
             throw new RuntimeException(error);
         }
+    }
+
+    private void assert_EBADF_or_ENOENT(int r) {
+        Assert.assertTrue(
+                r == (IS_WINDOWS ? -4083 : -9) || // EBADF
+                r == (IS_WINDOWS ? -4058 : -2));  // ENOENT
     }
 
     public static void main(String[] args) throws Exception {

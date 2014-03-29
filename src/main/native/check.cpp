@@ -134,6 +134,7 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_CheckHandle__1new
   int r = uv_check_init(lp, check);
   if (r) {
     ThrowException(env, r, "uv_check_init");
+    return (jlong) NULL;
   } else {
     check->data = new CheckCallbacks();
   }
@@ -176,11 +177,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_CheckHandle__1start
 
   assert(check);
   uv_check_t* handle = reinterpret_cast<uv_check_t*>(check);
-  int r = uv_check_start(handle, _check_cb);
-  if (r) {
-    ThrowException(env, r, "uv_check_start");
-  }
-  return r;
+  return uv_check_start(handle, _check_cb);
 }
 
 /*
@@ -193,11 +190,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_CheckHandle__1stop
 
   assert(check);
   uv_check_t* handle = reinterpret_cast<uv_check_t*>(check);
-  int r = uv_check_stop(handle);
-  if (r) {
-    ThrowException(env, r, "uv_check_stop");
-  }
-  return r;
+  return uv_check_stop(handle);
 }
 
 /*

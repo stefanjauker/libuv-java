@@ -82,11 +82,13 @@ public class StreamHandle extends Handle {
         onShutdown = callback;
     }
 
-    public void readStart() {
+    public int readStart() {
+        int r = 0;
         if (!readStarted) {
-            _read_start(pointer);
+            r = _read_start(pointer);
         }
         readStarted = true;
+        return r;
     }
 
     public void readStop() {
@@ -167,11 +169,11 @@ public class StreamHandle extends Handle {
     }
 
     public boolean isReadable() {
-        return _readable(pointer);
+        return _readable(pointer) == 0;
     }
 
     public boolean isWritable() {
-        return _writable(pointer);
+        return _writable(pointer) == 0;
     }
 
     public long writeQueueSize() {
@@ -237,13 +239,13 @@ public class StreamHandle extends Handle {
 
     private native void _initialize(final long ptr);
 
-    private native void _read_start(final long ptr);
+    private native int _read_start(final long ptr);
 
-    private native void _read_stop(final long ptr);
+    private native int _read_stop(final long ptr);
 
-    private native boolean _readable(final long ptr);
+    private native int _readable(final long ptr);
 
-    private native boolean _writable(final long ptr);
+    private native int _writable(final long ptr);
 
     private native int _write(final long ptr,
                               final ByteBuffer buffer,

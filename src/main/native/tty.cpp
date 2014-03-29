@@ -93,11 +93,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TTYHandle__1set_1mode
 
   assert(tty);
   uv_tty_t* handle = reinterpret_cast<uv_tty_t*>(tty);
-  int r = uv_tty_set_mode(handle, mode);
-  if (r) {
-    ThrowException(env, r, "uv_tty_set_mode");
-  }
-  return r;
+  return uv_tty_set_mode(handle, mode);
 }
 
 /*

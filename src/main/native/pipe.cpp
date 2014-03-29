@@ -57,8 +57,10 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_PipeHandle__1new
   int r = uv_pipe_init(lp, pipe, ipc == JNI_FALSE ? 0 : 1);
   if (r) {
     ThrowException(env, r, "uv_pipe_init");
+    return (jlong) NULL;
+  } else {
+    pipe->data = new StreamCallbacks();
   }
-  pipe->data = new StreamCallbacks();
   return reinterpret_cast<jlong>(pipe);
 }
 
@@ -72,11 +74,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_PipeHandle__1open
 
   assert(pipe);
   uv_pipe_t* handle = reinterpret_cast<uv_pipe_t*>(pipe);
-  int r = uv_pipe_open(handle, fd);
-  if (r) {
-    ThrowException(env, r, "uv_pipe_open");
-  }
-  return r;
+  return uv_pipe_open(handle, fd);
 }
 
 /*
@@ -91,9 +89,6 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_PipeHandle__1bind
   uv_pipe_t* handle = reinterpret_cast<uv_pipe_t*>(pipe);
   const char* n = env->GetStringUTFChars(name, 0);
   int r = uv_pipe_bind(handle, n);
-  if (r) {
-    ThrowException(env, r, "uv_pipe_bind", n);
-  }
   env->ReleaseStringUTFChars(name, n);
   return r;
  }

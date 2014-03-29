@@ -112,7 +112,7 @@ StreamCallbacks::~StreamCallbacks() {
   _env->DeleteGlobalRef(_instance);
 }
 
-void StreamCallbacks::throw_exception(int code, const char* syscall) {
+inline void StreamCallbacks::throw_exception(int code, const char* syscall) {
   assert(_env);
   ThrowException(_env, code, syscall);
 }
@@ -423,68 +423,53 @@ JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_StreamHandle__1initialize
 /*
  * Class:     com_oracle_libuv_handles_StreamHandle
  * Method:    _read_start
- * Signature: (J)V
+ * Signature: (J)I
  */
-JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_StreamHandle__1read_1start
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1read_1start
   (JNIEnv *env, jobject that, jlong stream) {
 
   assert(stream);
   uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(stream);
-
-  int r = uv_read_start(handle, _alloc_cb, _read_cb);
-  if (r) {
-    ThrowException(env, r, "uv_read_start");
-  }
+  return uv_read_start(handle, _alloc_cb, _read_cb);
 }
 
 /*
  * Class:     com_oracle_libuv_handles_StreamHandle
  * Method:    _read_stop
- * Signature: (J)V
+ * Signature: (J)I
  */
-JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_StreamHandle__1read_1stop
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1read_1stop
   (JNIEnv *env, jobject that, jlong stream) {
 
   assert(stream);
   uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(stream);
-  int r = uv_read_stop(handle);
-  if (r) {
-    ThrowException(env, r, "uv_read_stop");
-  }
+  return uv_read_stop(handle);
 }
 
 /*
  * Class:     com_oracle_libuv_handles_StreamHandle
  * Method:    _readable
- * Signature: (J)Z
+ * Signature: (J)I
  */
-JNIEXPORT jboolean JNICALL Java_com_oracle_libuv_handles_StreamHandle__1readable
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1readable
   (JNIEnv *env, jobject that, jlong stream) {
 
   assert(stream);
   uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(stream);
-  int r = uv_is_readable(handle);
-  if (r) {
-    ThrowException(env, r, "uv_is_readable");
-  }
-  return r == 0 ? JNI_TRUE : JNI_FALSE;
+  return uv_is_readable(handle);
 }
 
 /*
  * Class:     com_oracle_libuv_handles_StreamHandle
  * Method:    _writable
- * Signature: (J)Z
+ * Signature: (J)I
  */
-JNIEXPORT jboolean JNICALL Java_com_oracle_libuv_handles_StreamHandle__1writable
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1writable
   (JNIEnv *env, jobject that, jlong stream) {
 
   assert(stream);
   uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(stream);
-  int r = uv_is_writable(handle);
-  if (r) {
-    ThrowException(env, r, "uv_is_writable");
-  }
-  return r == 0 ? JNI_TRUE : JNI_FALSE;
+  return uv_is_writable(handle);
 }
 
 /*
@@ -523,7 +508,6 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1write
   if (r) {
     delete req_data;
     delete req;
-    ThrowException(env, r, "uv_write");
   }
   return r;
 }
@@ -570,7 +554,6 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1write2
   if (r) {
     delete req_data;
     delete req;
-    ThrowException(env, r, "uv_write2");
   }
   return r;
 }
@@ -606,7 +589,6 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1shutdown
   if (r) {
     delete req_data;
     delete req;
-    ThrowException(env, r, "uv_shutdown");
   }
   return r;
 }
@@ -621,11 +603,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1set_1blockin
 
   assert(stream);
   uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(stream);
-  int r = uv_stream_set_blocking(handle, static_cast<int>(blocking));
-  if (r) {
-    ThrowException(env, r, "uv_set_blocking");
-  }
-  return r;
+  return uv_stream_set_blocking(handle, static_cast<int>(blocking));
 }
 
 /*
@@ -651,11 +629,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1listen
 
   assert(ptr);
   uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(ptr);
-  int r = uv_listen(handle, backlog, _connection_cb);
-  if (r) {
-    ThrowException(env, r, "uv_listen");
-  }
-  return r;
+  return uv_listen(handle, backlog, _connection_cb);
 }
 
 /*
@@ -670,9 +644,5 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_StreamHandle__1accept
   assert(clientPtr);
   uv_stream_t* handle = reinterpret_cast<uv_stream_t*>(ptr);
   uv_stream_t* client = reinterpret_cast<uv_stream_t*>(clientPtr);
-  int r = uv_accept(handle, client);
-  if (r) {
-    ThrowException(env, r, "uv_accept");
-  }
-  return r;
+  return uv_accept(handle, client);
 }

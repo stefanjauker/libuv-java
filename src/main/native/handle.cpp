@@ -94,17 +94,13 @@ JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_Handle__1unref
 /*
  * Class:     com_oracle_libuv_handles_Handle
  * Method:    _closing
- * Signature: (J)Z
+ * Signature: (J)I
  */
-JNIEXPORT jboolean JNICALL Java_com_oracle_libuv_handles_Handle__1closing
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_Handle__1closing
   (JNIEnv *env, jobject that, jlong ptr) {
 
   assert(ptr);
   uv_handle_t* handle = reinterpret_cast<uv_handle_t*>(ptr);
-  int r = uv_is_closing(handle);
-  if (r) {
-    ThrowException(env, r, "uv_is_closing");
-  }
-  return r == 0 ? JNI_TRUE : JNI_FALSE;
+  return uv_is_closing(handle);
 }
 

@@ -170,6 +170,7 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_UDPHandle__1new
   int r = uv_udp_init(lp, udp);
   if (r) {
     ThrowException(env, r, "uv_udp_init");
+    return (jlong) NULL;
   } else {
     udp->data = new UDPCallbacks();
   }
@@ -240,16 +241,12 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1bind
     uv_ip6_addr(h, port, reinterpret_cast<sockaddr_in6*>(&addr)) :
     uv_ip4_addr(h, port, reinterpret_cast<sockaddr_in*>(&addr));
   if (r) {
-    ThrowException(env, r, ipv6 ? "uv_ip6_addr" : "uv_ip4_addr", h);
     env->ReleaseStringUTFChars(host, h);
     return r;
   }
 
   unsigned flags = 0;
   r = uv_udp_bind(handle, reinterpret_cast<const sockaddr*>(&addr), flags);
-  if (r) {
-    ThrowException(env, r, "uv_udp_bind", h);
-  }
   env->ReleaseStringUTFChars(host, h);
   return r;
 }
@@ -270,7 +267,6 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1send
     uv_ip6_addr(h, port, reinterpret_cast<sockaddr_in6*>(&addr)) :
     uv_ip4_addr(h, port, reinterpret_cast<sockaddr_in*>(&addr));
   if (r) {
-    ThrowException(env, r, ipv6 ? "uv_ip6_addr" : "uv_ip4_addr", h);
     env->ReleaseStringUTFChars(host, h);
     return r;
   }
@@ -300,7 +296,6 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1send
   if (r) {
     delete req_data;
     delete req;
-    ThrowException(env, r, "uv_udp_send", h);
   }
   env->ReleaseStringUTFChars(host, h);
   return r;
@@ -316,12 +311,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1recv_1start
 
   assert(udp);
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
-  int r = uv_udp_recv_start(handle, _alloc_cb, _recv_cb);
-  // UV_EALREADY means that the socket is already bound but that's okay
-  if (r && errno != UV_EALREADY) {
-    ThrowException(env, r, "uv_udp_recv_start");
-  }
-  return r;
+  return uv_udp_recv_start(handle, _alloc_cb, _recv_cb);
 }
 
 /*
@@ -334,11 +324,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1recv_1stop
 
   assert(udp);
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
-  int r = uv_udp_recv_stop(handle);
-  if (r) {
-    ThrowException(env, r, "uv_udp_recv_stop");
-  }
-  return r;
+  return uv_udp_recv_stop(handle);
 }
 
 /*
@@ -351,11 +337,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1set_1ttl
 
   assert(udp);
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
-  int r = uv_udp_set_ttl(handle, ttl);
-  if (r) {
-    ThrowException(env, r, "uv_udp_set_ttl");
-  }
-  return r;
+  return uv_udp_set_ttl(handle, ttl);
 }
 
 /*
@@ -373,9 +355,6 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1set_1membership
   int r = uv_udp_set_membership(handle, maddr, iaddr, static_cast<uv_membership>(membership));
   env->ReleaseStringUTFChars(multicastAddress, maddr);
   env->ReleaseStringUTFChars(interfaceAddress, iaddr);
-  if (r) {
-    ThrowException(env, r, "uv_udp_set_membership");
-  }
   return r;
 }
 
@@ -389,11 +368,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1set_1multicast_
 
   assert(udp);
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
-  int r = uv_udp_set_multicast_loop(handle, on);
-  if (r) {
-    ThrowException(env, r, "uv_udp_set_multicast_loop");
-  }
-  return r;
+  return uv_udp_set_multicast_loop(handle, on);
 }
 
 /*
@@ -406,11 +381,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1set_1multicast_
 
   assert(udp);
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
-  int r = uv_udp_set_multicast_ttl(handle, ttl);
-  if (r) {
-    ThrowException(env, r, "uv_udp_set_multicast_ttl");
-  }
-  return r;
+  return uv_udp_set_multicast_ttl(handle, ttl);
 }
 
 /*
@@ -423,11 +394,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_UDPHandle__1set_1broadcast
 
   assert(udp);
   uv_udp_t* handle = reinterpret_cast<uv_udp_t*>(udp);
-  int r = uv_udp_set_broadcast(handle, on);
-  if (r) {
-    ThrowException(env, r, "uv_udp_set_broadcast");
-  }
-  return r;
+  return uv_udp_set_broadcast(handle, on);
 }
 
 /*

@@ -134,6 +134,7 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_TimerHandle__1new
   int r = uv_timer_init(lp, timer);
   if (r) {
     ThrowException(env, r, "uv_timer_init");
+    return (jlong) NULL;
   } else {
     timer->data = new TimerCallbacks();
   }
@@ -176,11 +177,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TimerHandle__1start
 
   assert(timer);
   uv_timer_t* handle = reinterpret_cast<uv_timer_t*>(timer);
-  int r = uv_timer_start(handle, _timer_cb, static_cast<uint64_t>(timeout), static_cast<uint64_t>(repeat));
-  if (r) {
-    ThrowException(env, r, "uv_timer_start");
-  }
-  return r;
+  return uv_timer_start(handle, _timer_cb, static_cast<uint64_t>(timeout), static_cast<uint64_t>(repeat));
 }
 
 /*
@@ -193,11 +190,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TimerHandle__1again
 
   assert(timer);
   uv_timer_t* handle = reinterpret_cast<uv_timer_t*>(timer);
-  int r = uv_timer_again(handle);
-  if (r) {
-    ThrowException(env, r, "uv_timer_again");
-  }
-  return r;
+  return uv_timer_again(handle);
 }
 
 /*
@@ -236,11 +229,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_TimerHandle__1stop
 
   assert(timer);
   uv_timer_t* handle = reinterpret_cast<uv_timer_t*>(timer);
-  int r = uv_timer_stop(handle);
-  if (r) {
-    ThrowException(env, r, "uv_timer_stop");
-  }
-  return r;
+  return uv_timer_stop(handle);
 }
 
 /*

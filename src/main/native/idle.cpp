@@ -134,6 +134,7 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_IdleHandle__1new
   int r = uv_idle_init(lp, idle);
   if (r) {
     ThrowException(env, r, "uv_idle_init");
+    return (jlong) NULL;
   } else {
     idle->data = new IdleCallbacks();
   }
@@ -176,11 +177,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_IdleHandle__1start
 
   assert(idle);
   uv_idle_t* handle = reinterpret_cast<uv_idle_t*>(idle);
-  int r = uv_idle_start(handle, _idle_cb);
-  if (r) {
-    ThrowException(env, r, "uv_idle_start");
-  }
-  return r;
+  return uv_idle_start(handle, _idle_cb);
 }
 
 /*
@@ -193,11 +190,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_IdleHandle__1stop
 
   assert(idle);
   uv_idle_t* handle = reinterpret_cast<uv_idle_t*>(idle);
-  int r = uv_idle_stop(handle);
-  if (r) {
-    ThrowException(env, r, "uv_idle_stop");
-  }
-  return r;
+  return uv_idle_stop(handle);
 }
 
 /*

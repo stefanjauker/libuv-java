@@ -637,24 +637,25 @@ public class PermissionTest extends TestBase {
         final int fd = handle.open(fileName, Constants.O_RDONLY, Constants.S_IRWXU);
 
         handle.read(fd, ByteBuffer.allocateDirect(5), 0, 0, 0);
-        final Stats s = handle.fstat(fd);
-        if (s == null) {
-            throw new Exception("Stats is null");
+        final Stats s = new Stats();
+        final int rs = handle.fstat(fd, s);
+        if (rs < 0) {
+            throw new Exception("fstat of " + fileName + " failed: " + rs);
         }
 
         try {
-            handle.fdatasync(fd);
+            int r = handle.fdatasync(fd);
             if (OS.startsWith("Windows")) {
-                throw new Exception("fdatasync should have failed");
+                Assert.assertTrue(r < 0, "fdatasync should have failed: " + r);
             }
         } catch (final NativeException ex) {
             // XXX OK.
         }
 
         try {
-            handle.fsync(fd);
+            int r = handle.fsync(fd);
             if (OS.startsWith("Windows")) {
-                throw new Exception("fsync should have failed");
+                Assert.assertTrue(r < 0, "fsync should have failed: " + r);
             }
         } catch (final NativeException ex) {
             // XXX OK.
@@ -669,7 +670,7 @@ public class PermissionTest extends TestBase {
 
         try {
             handle.ftruncate(fd, 1);
-            throw new Exception("Write should have failed");
+            throw new Exception("ftruncate should have failed");
         } catch (final AccessControlException ex) {
             // XXX OK.
         }
@@ -888,14 +889,16 @@ public class PermissionTest extends TestBase {
         testFailure(new Runnable() {
             @Override
             public void run() {
-                handle.lstat(fileName);
+                Stats stats = new Stats();
+                handle.lstat(fileName, stats);
             }
         });
 
         testFailure(new Runnable() {
             @Override
             public void run() {
-                handle.lstat(fileName, 1);
+                Stats stats = new Stats();
+                handle.lstat(fileName, stats, 1);
             }
         });
 
@@ -958,14 +961,16 @@ public class PermissionTest extends TestBase {
         testFailure(new Runnable() {
             @Override
             public void run() {
-                handle.stat(fileName);
+                Stats stats = new Stats();
+                handle.stat(fileName, stats);
             }
         });
 
         testFailure(new Runnable() {
             @Override
             public void run() {
-                handle.stat(fileName, 1);
+                Stats stats = new Stats();
+                handle.stat(fileName, stats, 1);
             }
         });
 

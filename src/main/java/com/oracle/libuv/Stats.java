@@ -25,38 +25,31 @@
 
 package com.oracle.libuv;
 
-public class Stats {
+public final class Stats {
 
-    private int dev;
-    private int ino;
-    private int mode;
-    private int nlink;
-    private int uid;
-    private int gid;
-    private int rdev;
-    private long size;
-    private int blksize;
-    private long blocks;
-    private long atime;
-    private long mtime;
-    private long ctime;
+    private long dev = 0;
+    private long ino = 0;
+    private long mode = 0;
+    private long nlink = 0;
+    private long uid = 0;
+    private long gid = 0;
+    private long rdev = 0;
+    private long size = 0;
+    private long blksize = 0;
+    private long blocks = 0;
+    private double atime = 0;
+    private double mtime = 0;
+    private double ctime = 0;
+    private double birthtime = 0;
 
     public Stats() {
     }
-
-    public Stats(final int dev, final int ino, final int mode,
-                 final int nlink, final int uid, final int gid,
-                 final int rdev, final long size, final int blksize,
-                 final long blocks, final long atime, final long mtime,
-                 final long ctime) {
-        set(dev, ino, mode, nlink, uid, gid, rdev, size, blksize, blocks, atime, mtime, ctime);
-    }
-
-    public void set(final int dev, final int ino, final int mode,
-                    final int nlink, final int uid, final int gid,
-                    final int rdev, final long size, final int blksize,
-                    final long blocks, final long atime, final long mtime,
-                    final long ctime) {
+    
+    public void set(final long dev, final long ino, final long mode,
+                    final long nlink, final long uid, final long gid,
+                    final long rdev, final long size, final long blksize,
+                    final long blocks, final double atime, final double mtime,
+                    final double ctime, final double birthtime) {
         this.dev = dev;
         this.ino = ino;
         this.mode = mode;
@@ -70,33 +63,34 @@ public class Stats {
         this.atime = atime;
         this.mtime = mtime;
         this.ctime = ctime;
+        this.birthtime = birthtime;
     }
 
-    public int getDev() {
+    public long getDev() {
         return dev;
     }
 
-    public int getIno() {
+    public long getIno() {
         return ino;
     }
 
-    public int getMode() {
+    public long getMode() {
         return mode;
     }
 
-    public int getNlink() {
+    public long getNlink() {
         return nlink;
     }
 
-    public int getUid() {
+    public long getUid() {
         return uid;
     }
 
-    public int getGid() {
+    public long getGid() {
         return gid;
     }
 
-    public int getRdev() {
+    public long getRdev() {
         return rdev;
     }
 
@@ -104,7 +98,7 @@ public class Stats {
         return size;
     }
 
-    public int getBlksize() {
+    public long getBlksize() {
         return blksize;
     }
 
@@ -112,16 +106,20 @@ public class Stats {
         return blocks;
     }
 
-    public long getAtime() {
+    public double getAtime() {
         return atime;
     }
 
-    public long getMtime() {
+    public double getMtime() {
         return mtime;
     }
 
-    public long getCtime() {
+    public double getCtime() {
         return ctime;
+    }
+    
+    public double getBirthtime() {
+        return birthtime;
     }
 
     @Override
@@ -136,8 +134,10 @@ public class Stats {
                 " size: " + size +
                 " blksize: " + blksize +
                 " blocks: " + blocks +
-                " atime: " + getAtime() +
-                " mtime: " + getMtime() +
-                " ctime: " + getCtime() + " }";
+                " atime: " + atime +
+                " mtime: " + mtime +
+                " ctime: " + ctime +
+                " birthtime: " + birthtime +
+                " }";
     }
 }

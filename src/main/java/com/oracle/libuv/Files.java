@@ -395,34 +395,35 @@ public final class Files {
         return _readdir(pointer, path, flags, context, loop.getContext());
     }
 
-    public Stats stat(final String path) {
+    public int stat(final String path, final Stats stats) {
         Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
-        return _stat(pointer, path, SYNC_MODE, loop.getContext());
+        return _stat(pointer, path, stats, SYNC_MODE, loop.getContext());
     }
 
-    public Stats stat(final String path, final Object context) {
+    public int stat(final String path, final Stats stats, final Object context) {
         Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
-        return _stat(pointer, path, context, loop.getContext());
+        return _stat(pointer, path, stats, context, loop.getContext());
     }
 
-    public Stats fstat(final int fd) {
+    public int fstat(final int fd, final Stats stats) {
         final OpenedFile file = getOpenedFileAssertNonNull(fd, "fstatSync");
         Objects.requireNonNull(file);
         LibUVPermission.checkReadFile(fd, file.getPath());
-        return _fstat(pointer, fd, SYNC_MODE, loop.getContext());
+        return _fstat(pointer, fd, stats, SYNC_MODE, loop.getContext());
     }
 
-    public Stats fstat(final int fd, final Object context) {
+    public int fstat(final int fd, final Stats stats, final Object context) {
         final OpenedFile file = getOpenedFile(fd);
         if (file == null) {
-            callStats(UV_FS_FSTAT, context, null, newEBADF("fstat", fd), loop.getContext());
-            return null;
+            final NativeException nx = newEBADF("fstat", fd);
+            callStats(UV_FS_FSTAT, context, stats, nx, loop.getContext());
+            return nx.errno();
         }
         Objects.requireNonNull(file);
         LibUVPermission.checkReadFile(fd, file.getPath());
-        return _fstat(pointer, fd, context, loop.getContext());
+        return _fstat(pointer, fd, stats, context, loop.getContext());
     }
 
     public int rename(final String path, final String newPath) {
@@ -551,16 +552,16 @@ public final class Files {
         return _futime(pointer, fd, atime, mtime, context, loop.getContext());
     }
 
-    public Stats lstat(final String path) {
+    public int lstat(final String path, final Stats stats) {
         Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
-        return _lstat(pointer, path, SYNC_MODE, loop.getContext());
+        return _lstat(pointer, path, stats, SYNC_MODE, loop.getContext());
     }
 
-    public Stats lstat(final String path, final Object context) {
+    public int lstat(final String path, final Stats stats, final Object context) {
         Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
-        return _lstat(pointer, path, context, loop.getContext());
+        return _lstat(pointer, path, stats, context, loop.getContext());
     }
 
     public int link(final String path, final String newPath) {
@@ -666,7 +667,9 @@ public final class Files {
     }
 
     private NativeException newEBADF(final String method, final int fd) {
-        return new NativeException(9, "EBADF", "Bad file number: " + fd, method, null, null);
+        final boolean IS_WINDOWS = System.getProperty("os.name").startsWith("Windows");
+        // TODO: get these error codes from native such as in Constants.java
+        return new NativeException(IS_WINDOWS ? -4083 : -9, "EBADF", "Bad file number: " + fd, method, null, null);
     }
 
     private void callback(final int type, final Object callback, final Exception error,final Object context) {
@@ -851,9 +854,9 @@ public final class Files {
 
     private native String[] _readdir(final long ptr, final String path, final int flags, final Object callback, final Object context);
 
-    private native Stats _stat(final long ptr, final String path, final Object callback, final Object context);
+    private native int _stat(final long ptr, final String path, final Stats stats, final Object callback, final Object context);
 
-    private native Stats _fstat(final long ptr, final int fd, final Object callback, final Object context);
+    private native int _fstat(final long ptr, final int fd, final Stats stats, final Object callback, final Object context);
 
     private native int _rename(final long ptr, final String path, final String newPath, final Object callback, final Object context);
 
@@ -871,7 +874,7 @@ public final class Files {
 
     private native int _futime(final long ptr, final int fd, final double atime, final double mtime, final Object callback, final Object context);
 
-    private native Stats _lstat(final long ptr, final String path, final Object callback, final Object context);
+    private native int _lstat(final long ptr, final String path, final Stats stats, final Object callback, final Object context);
 
     private native int _link(final long ptr, final String path, final String newPath, final Object callback, final Object context);
 

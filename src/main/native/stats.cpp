@@ -47,57 +47,30 @@ void Stats::static_initialize(JNIEnv* env) {
   }
 
   if (!_stats_init_mid) {
-    _stats_init_mid = env->GetMethodID(_stats_cid, "<init>", "(IIIIIIIJIJJJJ)V");
+    _stats_init_mid = env->GetMethodID(_stats_cid, "<init>", "()V");
     assert(_stats_init_mid);
   }
 
   if (!_stats_set_mid) {
-    _stats_set_mid = env->GetMethodID(_stats_cid, "set", "(IIIIIIIJIJJJJ)V");
+    _stats_set_mid = env->GetMethodID(_stats_cid, "set", "(JJJJJJJJJJDDDD)V");
     assert(_stats_set_mid);
   }
 }
 
-inline static long to_millis(const uv_timespec_t& t) {
-    return (t.tv_nsec / 1000000) + (t.tv_sec * 1000);
+inline static double to_millis(const uv_timespec_t& t) {
+    return static_cast<double>(t.tv_nsec) / 1000000.0 + (static_cast<double>(t.tv_sec) * 1000.0);
 }
 
 jobject Stats::create(JNIEnv* env, const uv_stat_t* ptr) {
-  if (ptr) {
-    int blksize = 0;
-    jlong blocks = 0;
-#ifdef __POSIX__
-    blksize = ptr->st_blksize;
-    blocks = ptr->st_blocks;
-#endif
-
-    return env->NewObject(
-        _stats_cid,
-        _stats_init_mid,
-        ptr->st_dev,
-        ptr->st_ino,
-        ptr->st_mode,
-        ptr->st_nlink,
-        ptr->st_uid,
-        ptr->st_gid,
-        ptr->st_rdev,
-        ptr->st_size,
-        blksize,
-        blocks,
-        to_millis(ptr->st_atim),
-        to_millis(ptr->st_mtim),
-        to_millis(ptr->st_ctim));
-  }
-  return NULL;
+    if (!ptr) return NULL;
+    jobject stats = env->NewObject(_stats_cid, _stats_init_mid);
+    update(env, stats, ptr);
+    env->DeleteLocalRef(stats);
+    return stats;
 }
 
 void Stats::update(JNIEnv* env, jobject stats, const uv_stat_t* ptr) {
-  if (ptr) {
-    int blksize = 0;
-    jlong blocks = 0;
-#ifdef __POSIX__
-    blksize = ptr->st_blksize;
-    blocks = ptr->st_blocks;
-#endif
+    if (!ptr) return;
 
     env->CallVoidMethod(
         stats,
@@ -110,10 +83,10 @@ void Stats::update(JNIEnv* env, jobject stats, const uv_stat_t* ptr) {
         ptr->st_gid,
         ptr->st_rdev,
         ptr->st_size,
-        blksize,
-        blocks,
+        ptr->st_blksize,
+        ptr->st_blocks,
         to_millis(ptr->st_atim),
         to_millis(ptr->st_mtim),
-        to_millis(ptr->st_ctim));
-  }
+        to_millis(ptr->st_ctim),
+        to_millis(ptr->st_birthtim));
 }

@@ -117,6 +117,7 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_AsyncHandle__1new
   int r = uv_async_init(lp, async, _send_cb);
   if (r) {
     ThrowException(env, r, "uv_async_init");
+    return (jlong) NULL;
   } else {
     async->data = new AsyncCallbacks();
   }
@@ -159,11 +160,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_AsyncHandle__1send
 
   assert(async);
   uv_async_t* handle = reinterpret_cast<uv_async_t*>(async);
-  int r = uv_async_send(handle);
-  if (r) {
-    ThrowException(env, r, "uv_async_send");
-  }
-  return r;
+  return uv_async_send(handle);
 }
 
 /*

@@ -155,6 +155,7 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_FilePollHandle__1new
   int r = uv_fs_poll_init(lp, fs_poll);
   if (r) {
     ThrowException(env, r, "uv_fs_poll_init");
+    return (jlong) NULL;
   } else {
     fs_poll->data = new FilePollCallbacks();
   }
@@ -208,9 +209,6 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_FilePollHandle__1start
   }
 
   int r = uv_fs_poll_start(handle, _poll_cb, cpath, interval);
-  if (r) {
-    ThrowException(env, r, "uv_fs_poll_start");
-  }
   env->ReleaseStringUTFChars(path, cpath);
   return r;
 }
@@ -225,11 +223,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_FilePollHandle__1stop
 
   assert(fs_poll_ptr);
   uv_fs_poll_t* fs_poll = reinterpret_cast<uv_fs_poll_t*>(fs_poll_ptr);
-  int r = uv_fs_poll_stop(fs_poll);
-  if (r) {
-    ThrowException(env, r, "uv_fs_poll_stop");
-  }
-  return r;
+  return uv_fs_poll_stop(fs_poll);
 }
 
 /*

@@ -141,11 +141,7 @@ JNIEXPORT void JNICALL Java_com_oracle_libuv_LibUV__1setTitle
 JNIEXPORT jint JNICALL Java_com_oracle_libuv_LibUV__1kill
   (JNIEnv *env, jclass cls, jint pid, jint signal) {
 
-  int r = uv_kill(pid, signal);
-  if (r) {
-    ThrowException(env, r, "uv_kill");
-  }
-  return r;
+  return uv_kill(pid, signal);
 }
 
 /*
