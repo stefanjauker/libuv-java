@@ -1253,28 +1253,33 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_Files__1symlink
 /*
  * Class:     com_oracle_libuv_Files
  * Method:    _readlink
- * Signature: (JLjava/lang/String;I)Ljava/lang/String;
+ * Signature: (JLjava/lang/String;[Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)I
  */
-JNIEXPORT jstring JNICALL Java_com_oracle_libuv_Files__1readlink
-  (JNIEnv *env, jobject that, jlong ptr, jstring path, jobject callback, jobject context) {
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_Files__1readlink
+  (JNIEnv *env, jobject that, jlong ptr, jstring path, jobjectArray values, jobject callback, jobject context) {
 
   assert(ptr);
   FileCallback* cb = reinterpret_cast<FileCallback*>(ptr);
   const char* cpath = env->GetStringUTFChars(path, 0);
-  jstring link = NULL;
 
+  int r;
   if (callback) {
+    assert(!values);
     uv_fs_t* req = new uv_fs_t();
     req->data = new FileRequest(cb, callback, 0, path, context);
-    uv_fs_readlink(cb->loop(), req, cpath, _fs_cb);
+    r = uv_fs_readlink(cb->loop(), req, cpath, _fs_cb);
   } else {
+    assert(values);
+    assert(env->GetArrayLength(values) > 0);
     uv_fs_t req;
-    int r = uv_fs_readlink(cb->loop(), &req, cpath, NULL);
-    link = env->NewStringUTF(static_cast<char*>(req.ptr));
+    r = uv_fs_readlink(cb->loop(), &req, cpath, NULL);
+    jstring link = env->NewStringUTF(static_cast<char*>(req.ptr));
+    env->SetObjectArrayElement(values, 0, link);
+    env->DeleteLocalRef(link);
     uv_fs_req_cleanup(&req);
   }
   env->ReleaseStringUTFChars(path, cpath);
-  return link;
+  return r;
 }
 
 /*

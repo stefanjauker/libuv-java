@@ -592,16 +592,20 @@ public final class Files {
         return _symlink(pointer, path, newPath, flags, context, loop.getContext());
     }
 
-    public String readlink(final String path) {
+    public int readlink(final String path, final String[] values) {
         Objects.requireNonNull(path);
+        Objects.requireNonNull(values);
+        if (values.length < 1) {
+            throw new IllegalArgumentException("no space in values array to return link value");
+        }
         LibUVPermission.checkReadFile(path);
-        return _readlink(pointer, path, SYNC_MODE, loop.getContext());
+        return _readlink(pointer, path, values, SYNC_MODE, loop.getContext());
     }
 
-    public String readlink(final String path, final Object context) {
+    public int readlink(final String path, final Object context) {
         Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
-        return _readlink(pointer, path, context, loop.getContext());
+        return _readlink(pointer, path, null, context, loop.getContext());
     }
 
     public int fchmod(final int fd, final int mode) {
@@ -880,7 +884,7 @@ public final class Files {
 
     private native int _symlink(final long ptr, final String path, final String newPath, final int flags, final Object callback, final Object context);
 
-    private native String _readlink(final long ptr, final String path, final Object callback, final Object context);
+    private native int _readlink(final long ptr, final String path, final String[] values, final Object callback, final Object context);
 
     private native int _fchmod(final long ptr, final int fd, final int mode, final Object callback, final Object context);
 

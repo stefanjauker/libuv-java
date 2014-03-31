@@ -919,7 +919,8 @@ public class PermissionTest extends TestBase {
         testFailure(new Runnable() {
             @Override
             public void run() {
-                handle.readlink(fileName);
+                String[] values = {null};
+                handle.readlink(fileName, values);
             }
         });
 
