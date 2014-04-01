@@ -96,6 +96,14 @@ public class StreamHandle extends Handle {
         readStarted = false;
     }
 
+    public int write2(final String str, final StreamHandle handle) {
+        return _write2(str, handle, null);
+    }
+
+    public int write2(final String str, final UDPHandle handle) {
+        return _write2(str, handle, null);
+    }
+
     public int write2(final String str, final StreamHandle handle, final Object callback) {
         return _write2(str, handle, callback);
     }
@@ -116,6 +124,10 @@ public class StreamHandle extends Handle {
         return _write2(pointer, ByteBuffer.wrap(data), data, 0, data.length, handle.pointer, callback, loop.getContext());
     }
 
+    public int write(final String str) {
+        return write(str, (Object) null);
+    }
+
     public int write(final String str, final Object callback) {
         Objects.requireNonNull(str);
         final byte[] data;
@@ -127,10 +139,18 @@ public class StreamHandle extends Handle {
         return write(ByteBuffer.wrap(data), 0, data.length, callback);
     }
 
+    public int write(final String str, final String encoding) throws UnsupportedEncodingException {
+        return write(str, encoding, null);
+    }
+
     public int write(final String str, final String encoding, final Object callback) throws UnsupportedEncodingException {
         Objects.requireNonNull(str);
         final byte[] data = str.getBytes(encoding);
         return write(ByteBuffer.wrap(data), 0, data.length, callback);
+    }
+
+    public int write(final ByteBuffer buffer, final int offset, final int length) {
+        return write(buffer, offset, length, null);
     }
 
     public int write(final ByteBuffer buffer, final int offset, final int length, final Object callback) {
@@ -143,6 +163,10 @@ public class StreamHandle extends Handle {
     public int write(final ByteBuffer buffer, final Object callback) {
         Objects.requireNonNull(buffer);
         return write(buffer, 0, buffer.capacity(), callback);
+    }
+
+    public int write(final ByteBuffer buffer) {
+        return write(buffer, null);
     }
 
     public int shutdown(final Object callback) {
