@@ -383,16 +383,20 @@ public final class Files {
         return _rmdir(pointer, path, context, loop.getContext());
     }
 
-    public String[] readdir(final String path, final int flags) {
+    public int readdir(final String path, final int flags, final Object[][] values) {
         Objects.requireNonNull(path);
+        Objects.requireNonNull(values);
+        if (values.length < 1) {
+            throw new IllegalArgumentException("no space in values array to return dir contents");
+        }
         LibUVPermission.checkReadFile(path);
-        return _readdir(pointer, path, flags, SYNC_MODE, loop.getContext());
+        return _readdir(pointer, path, flags, values, SYNC_MODE, loop.getContext());
     }
 
-    public String[] readdir(final String path, final int flags, final Object context) {
+    public int readdir(final String path, final int flags, final Object context) {
         Objects.requireNonNull(path);
         LibUVPermission.checkReadFile(path);
-        return _readdir(pointer, path, flags, context, loop.getContext());
+        return _readdir(pointer, path, flags, null, context, loop.getContext());
     }
 
     public int stat(final String path, final Stats stats) {
@@ -856,7 +860,7 @@ public final class Files {
 
     private native int _rmdir(final long ptr, final String path, final Object callback, final Object context);
 
-    private native String[] _readdir(final long ptr, final String path, final int flags, final Object callback, final Object context);
+    private native int _readdir(final long ptr, final String path, final int flags, final Object[][] values, final Object callback, final Object context);
 
     private native int _stat(final long ptr, final String path, final Stats stats, final Object callback, final Object context);
 

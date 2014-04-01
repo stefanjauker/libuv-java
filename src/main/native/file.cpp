@@ -865,23 +865,27 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_Files__1rmdir
 /*
  * Class:     com_oracle_libuv_Files
  * Method:    _readdir
- * Signature: (JLjava/lang/String;II)[Ljava/lang/String;
+ * Signature: (JLjava/lang/String;I[[Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)I
  */
-JNIEXPORT jobjectArray JNICALL Java_com_oracle_libuv_Files__1readdir
-  (JNIEnv *env, jobject that, jlong ptr, jstring path, jint flags, jobject callback, jobject context) {
+JNIEXPORT jint JNICALL Java_com_oracle_libuv_Files__1readdir
+  (JNIEnv *env, jobject that, jlong ptr, jstring path, jint flags, jobjectArray values, jobject callback, jobject context) {
 
   assert(ptr);
   FileCallback* cb = reinterpret_cast<FileCallback*>(ptr);
   const char* cpath = env->GetStringUTFChars(path, 0);
   jobjectArray names = NULL;
 
+  int r;
   if (callback) {
+    assert(!values);
     uv_fs_t* req = new uv_fs_t();
     req->data = new FileRequest(cb, callback, 0, path, context);
-    uv_fs_readdir(cb->loop(), req, cpath, flags, _fs_cb);
+    r = uv_fs_readdir(cb->loop(), req, cpath, flags, _fs_cb);
   } else {
+    assert(values);
+    assert(env->GetArrayLength(values) > 0);
     uv_fs_t req;
-    int r = uv_fs_readdir(cb->loop(), &req, cpath, flags, NULL);
+    r = uv_fs_readdir(cb->loop(), &req, cpath, flags, NULL);
     if (r >= 0) {
         char *namebuf = static_cast<char*>(req.ptr);
         int nnames = static_cast<int>(req.result);
@@ -901,13 +905,13 @@ JNIEXPORT jobjectArray JNICALL Java_com_oracle_libuv_Files__1readdir
           namebuf += strlen(namebuf) + 1;
 #endif
         }
-    } else {
-        ThrowException(env, r, "uv_fs_readdir", NULL, cpath);
     }
+    env->SetObjectArrayElement(values, 0, names);
+    env->DeleteLocalRef(names);
     uv_fs_req_cleanup(&req);
   }
   env->ReleaseStringUTFChars(path, cpath);
-  return names;
+  return r;
 }
 
 /*

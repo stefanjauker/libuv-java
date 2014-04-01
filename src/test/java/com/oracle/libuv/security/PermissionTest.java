@@ -847,7 +847,8 @@ public class PermissionTest extends TestBase {
         testFailure(new Runnable() {
             @Override
             public void run() {
-                handle.readdir(fileName, Constants.O_RDWR);
+                final String[][] values = {null};
+                handle.readdir(fileName, Constants.O_RDWR, values);
             }
         });
 

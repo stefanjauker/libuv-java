@@ -334,7 +334,11 @@ public class FilesTest extends TestBase {
         final LoopHandle loop = new LoopHandle();
         final Files handle = new Files(loop);
         final String filename = "src";
-        final String[] names = handle.readdir(filename, Constants.O_RDONLY);
+        final String[][] values = {null};
+        final int status = handle.readdir(filename, Constants.O_RDONLY, values);
+        Assert.assertTrue(status >= 0);
+        final String[] names = values[0];
+        Assert.assertNotNull(names);
         Assert.assertEquals(names.length, 2);
     }
 
@@ -350,12 +354,13 @@ public class FilesTest extends TestBase {
             public void onReadDir(Object context, String[] names, Exception error) throws Exception {
                 Assert.assertEquals(context, FilesTest.this);
                 readdirCallbackCalled.set(true);
+                Assert.assertNotNull(names);
                 Assert.assertEquals(names.length, 2);
             }
         });
 
-        final String[] names = handle.readdir(filename, Constants.O_RDONLY, FilesTest.this);
-        Assert.assertEquals(names, null);
+        int status = handle.readdir(filename, Constants.O_RDONLY, FilesTest.this);
+        Assert.assertEquals(status, 0);
         loop.run();
         Assert.assertTrue(readdirCallbackCalled.get());
     }
