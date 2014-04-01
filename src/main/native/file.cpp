@@ -890,11 +890,11 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_Files__1readdir
         char *namebuf = static_cast<char*>(req.ptr);
         int nnames = static_cast<int>(req.result);
         names = env->NewObjectArray(nnames, FileCallback::_string_cid, 0);
-        OOMN(env, names);
+        OOME(env, names);
 
         for (int i = 0; i < nnames; i++) {
           jstring name = env->NewStringUTF(namebuf);
-          OOMN(env, name);
+          OOME(env, name);
           env->SetObjectArrayElement(names, i, name);
           env->DeleteLocalRef(name);
 #ifndef NDEBUG
