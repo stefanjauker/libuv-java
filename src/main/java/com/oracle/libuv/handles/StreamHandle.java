@@ -37,7 +37,7 @@ import com.oracle.libuv.cb.StreamReadCallback;
 import com.oracle.libuv.cb.StreamShutdownCallback;
 import com.oracle.libuv.cb.StreamWriteCallback;
 
-public class StreamHandle extends Handle {
+class StreamHandle extends Handle {
 
     protected boolean closed;
     private boolean readStarted;

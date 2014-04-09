@@ -46,9 +46,9 @@ public final class TTYHandle extends StreamHandle {
         }
     }
 
-    public TTYHandle(final LoopHandle loop,
-                     final int fd,
-                     final boolean readable) {
+    protected TTYHandle(final LoopHandle loop,
+                        final int fd,
+                        final boolean readable) {
         super(_new(loop.pointer(), fd, readable), loop);
         this.fd = fd;
     }

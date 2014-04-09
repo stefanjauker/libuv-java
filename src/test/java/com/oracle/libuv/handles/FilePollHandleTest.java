@@ -56,7 +56,8 @@ public class FilePollHandleTest extends TestBase {
         final AtomicBoolean gotStop = new AtomicBoolean(false);
         final AtomicInteger times = new AtomicInteger(0);
 
-        final LoopHandle loop = new LoopHandle();
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
         final FilePollHandle pollHandle = new FilePollHandle(loop);
 

@@ -68,10 +68,11 @@ public class PipeHandleTest extends TestBase {
         final Logger serverLoggingCallback = new Logger("S: ");
         final Logger clientLoggingCallback = new Logger("C: ");
 
-        final LoopHandle loop = new LoopHandle();
-        final PipeHandle server = new PipeHandle(loop, false);
-        final PipeHandle peer = new PipeHandle(loop, false);
-        final PipeHandle client = new PipeHandle(loop, false);
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
+        final PipeHandle server = handleFactory.newPipeHandle(false);
+        final PipeHandle peer = handleFactory.newPipeHandle(false);
+        final PipeHandle client = handleFactory.newPipeHandle(false);
 
         peer.setReadCallback(new StreamReadCallback() {
             @Override

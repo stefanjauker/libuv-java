@@ -42,8 +42,9 @@ public class CheckHandleTest extends TestBase {
         final AtomicBoolean gotClose = new AtomicBoolean(false);
         final AtomicInteger times = new AtomicInteger(0);
 
-        final LoopHandle loop = new LoopHandle();
-        final CheckHandle checkHandle = new CheckHandle(loop);
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
+        final CheckHandle checkHandle = handleFactory.newCheckHandle();
 
         checkHandle.setCloseCallback(new CheckCallback() {
             @Override

@@ -44,8 +44,9 @@ public class AsyncHandleTest extends TestBase {
         final AtomicBoolean gotCallback = new AtomicBoolean(false);
         final AtomicInteger times = new AtomicInteger(0);
 
-        final LoopHandle loop = new LoopHandle();
-        final AsyncHandle asyncHandle = new AsyncHandle(loop);
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
+        final AsyncHandle asyncHandle = handleFactory.newAsyncHandle();
         final ScheduledExecutorService timer = new ScheduledThreadPoolExecutor(1);
 
         asyncHandle.setAsyncCallback(new AsyncCallback() {

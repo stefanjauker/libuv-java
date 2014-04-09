@@ -46,7 +46,7 @@ public final class IdleHandle extends Handle {
         onClose = callback;
     }
 
-    public IdleHandle(final LoopHandle loop) {
+    protected IdleHandle(final LoopHandle loop) {
         super(_new(loop.pointer()), loop);
         _initialize(pointer);
     }

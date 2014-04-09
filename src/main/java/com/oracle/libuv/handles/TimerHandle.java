@@ -46,7 +46,7 @@ public final class TimerHandle extends Handle {
         onClose = callback;
     }
 
-    public TimerHandle(final LoopHandle loop) {
+    protected TimerHandle(final LoopHandle loop) {
         super(_new(loop.pointer()), loop);
         _initialize(pointer);
     }

@@ -36,21 +36,21 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.oracle.libuv.Constants;
 import com.oracle.libuv.cb.FileCallback;
 import com.oracle.libuv.cb.FileCloseCallback;
 import com.oracle.libuv.cb.FileOpenCallback;
 import com.oracle.libuv.cb.FileReadCallback;
 import com.oracle.libuv.cb.FileReadDirCallback;
-import com.oracle.libuv.Files;
 import com.oracle.libuv.Files.OpenedFile;
-import com.oracle.libuv.Stats;
-import com.oracle.libuv.TestBase;
 import com.oracle.libuv.cb.FileWriteCallback;
+import com.oracle.libuv.handles.DefaultHandleFactory;
+import com.oracle.libuv.handles.HandleFactory;
 import com.oracle.libuv.handles.LoopHandle;
 import com.oracle.libuv.runner.TestRunner;
 
 public class FilesTest extends TestBase {
+
+    private final HandleFactory handleFactory = new DefaultHandleFactory();
 
     private String testName;
 
@@ -61,7 +61,7 @@ public class FilesTest extends TestBase {
 
     @AfterMethod
     public void endSession(final Method method) {
-        final LoopHandle loop = new LoopHandle();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
 
         cleanupFiles(handle, testName);
@@ -73,7 +73,7 @@ public class FilesTest extends TestBase {
     @Test
     public void testGetPath() {
         final String filename = testName + ".txt";
-        final LoopHandle loop = new LoopHandle();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
 
         final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
@@ -86,7 +86,7 @@ public class FilesTest extends TestBase {
     public void testOpenWriteReadAndCloseSync() {
         final String filename = testName + ".txt";
         final ByteBuffer b = ByteBuffer.wrap("some data".getBytes());
-        final LoopHandle loop = new LoopHandle();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
 
         final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
@@ -104,7 +104,7 @@ public class FilesTest extends TestBase {
     public void testOpenWriteReadAndCloseAsync() throws Throwable {
         final String filename = testName + ".txt";
         final String data = "some data";
-        final LoopHandle loop = new LoopHandle();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
         final ByteBuffer writeBuffer = ByteBuffer.wrap(data.getBytes());
         final ByteBuffer readBuffer = ByteBuffer.allocateDirect(writeBuffer.capacity());
@@ -171,7 +171,7 @@ public class FilesTest extends TestBase {
     @Test
     public void testUnlinkSync() {
         final String filename = testName + ".txt";
-        final LoopHandle loop = new LoopHandle();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
 
         @SuppressWarnings("unused")
@@ -183,7 +183,7 @@ public class FilesTest extends TestBase {
     @Test
     public void testUnlinkAsync() throws Throwable {
         final String filename = testName + ".txt";
-        final LoopHandle loop = new LoopHandle();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
         final AtomicBoolean unlinkCallbackCalled = new AtomicBoolean(false);
 
@@ -205,7 +205,7 @@ public class FilesTest extends TestBase {
     @Test
     public void testMkdirRmdirSync() {
         final String dirname = testName;
-        final LoopHandle loop = new LoopHandle();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
 
         int status = handle.mkdir(dirname, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
@@ -217,7 +217,7 @@ public class FilesTest extends TestBase {
     @Test
     public void testMkdirRmdirAsync() throws Throwable {
         final String dirname = testName;
-        final LoopHandle loop = new LoopHandle();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
         final AtomicBoolean mkdirCallbackCalled = new AtomicBoolean(false);
         final AtomicBoolean rmdirCallbackCalled = new AtomicBoolean(false);
@@ -251,7 +251,7 @@ public class FilesTest extends TestBase {
 
     @Test
     public void testReaddirSync() {
-        final LoopHandle loop = new LoopHandle();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
         final String filename = "src";
         final String[] names = handle.readdir(filename, Constants.O_RDONLY);
@@ -260,7 +260,7 @@ public class FilesTest extends TestBase {
 
     @Test
     public void testReaddirAsync() throws Throwable {
-        final LoopHandle loop = new LoopHandle();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
         final String filename = "src";
         final AtomicBoolean readdirCallbackCalled = new AtomicBoolean(false);
@@ -284,7 +284,7 @@ public class FilesTest extends TestBase {
     public void testRenameSync() {
         final String filename = testName + ".txt";
         final String newName = testName + "-new" + ".txt";
-        final LoopHandle loop = new LoopHandle();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
 
         final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
@@ -299,7 +299,7 @@ public class FilesTest extends TestBase {
     public void testRenameAsync() throws Throwable {
         final String filename = testName + ".txt";
         final String newName = testName + "-new" + ".txt";
-        final LoopHandle loop = new LoopHandle();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
         final AtomicBoolean renameCallbackCalled = new AtomicBoolean(false);
 
@@ -324,7 +324,7 @@ public class FilesTest extends TestBase {
     @Test
     public void testFtruncateSync() {
         final String filename = testName + ".txt";
-        final LoopHandle loop = new LoopHandle();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
 
         final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
@@ -337,7 +337,7 @@ public class FilesTest extends TestBase {
     @Test
     public void testFtruncateAsync() throws Throwable {
         final String filename = testName + ".txt";
-        final LoopHandle loop = new LoopHandle();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
         final AtomicInteger fd = new AtomicInteger();
         final AtomicBoolean ftruncateCallbackCalled = new AtomicBoolean(false);
@@ -364,7 +364,7 @@ public class FilesTest extends TestBase {
     public void testLinkSync() {
         final String filename = testName + ".txt";
         final String filename2 = testName + "2.txt";
-        final LoopHandle loop = new LoopHandle();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
 
         final int fd = handle.open(filename, Constants.O_RDWR | Constants.O_CREAT, Constants.S_IRWXU | Constants.S_IRWXG | Constants.S_IRWXO);
@@ -381,7 +381,7 @@ public class FilesTest extends TestBase {
     public void testLinkAsync() throws Throwable {
         final String filename = testName + ".txt";
         final String filename2 = testName + "2.txt";
-        final LoopHandle loop = new LoopHandle();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
         final AtomicBoolean linkCallbackCalled = new AtomicBoolean();
         final ByteBuffer b = ByteBuffer.wrap("some data".getBytes());

@@ -58,11 +58,12 @@ public class ProcessHandleTest extends TestBase {
 
         final AtomicBoolean exitCalled = new AtomicBoolean(false);
         final AtomicBoolean closeCalled = new AtomicBoolean(false);
-        final LoopHandle loop = new LoopHandle();
-        final ProcessHandle process = new ProcessHandle(loop);
-        final PipeHandle parent = new PipeHandle(loop, false);
-        final PipeHandle peer = new PipeHandle(loop, false);
-        final PipeHandle child = new PipeHandle(loop, false);
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
+        final ProcessHandle process = handleFactory.newProcessHandle();
+        final PipeHandle parent = handleFactory.newPipeHandle(false);
+        final PipeHandle peer = handleFactory.newPipeHandle(false);
+        final PipeHandle child = handleFactory.newPipeHandle(false);
 
         peer.setReadCallback(new StreamReadCallback() {
             @Override

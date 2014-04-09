@@ -62,7 +62,7 @@ public final class ProcessHandle extends Handle {
     private ProcessCloseCallback onClose = null;
     private ProcessExitCallback onExit = null;
 
-    public ProcessHandle(final LoopHandle loop) {
+    protected ProcessHandle(final LoopHandle loop) {
         super(_new(loop.pointer()), loop);
         this.closed = false;
         _initialize(pointer);

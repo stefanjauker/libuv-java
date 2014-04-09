@@ -69,9 +69,9 @@ public final class LoopHandle {
         LibUVPermission.checkNewLoop(createdLoopCount);
     }
 
-    public LoopHandle(final CallbackExceptionHandler exceptionHandler,
-            final CallbackHandlerFactory callbackHandler,
-            final ContextProvider contextProvider) {
+    protected LoopHandle(final CallbackExceptionHandler exceptionHandler,
+                         final CallbackHandlerFactory callbackHandler,
+                         final ContextProvider contextProvider) {
         newLoop();
         this.pointer = _new();
         assert pointer != 0;
@@ -81,7 +81,7 @@ public final class LoopHandle {
         this.contextProvider = contextProvider;
     }
 
-    public LoopHandle() {
+    protected LoopHandle() {
         newLoop();
         this.pointer = _new();
         assert pointer != 0;

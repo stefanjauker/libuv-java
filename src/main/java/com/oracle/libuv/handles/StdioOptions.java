@@ -25,7 +25,7 @@
 
 package com.oracle.libuv.handles;
 
-public class StdioOptions {
+public final class StdioOptions {
 
     public enum StdioType {
         IGNORE(0x00),

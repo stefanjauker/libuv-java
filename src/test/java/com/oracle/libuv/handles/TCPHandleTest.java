@@ -59,10 +59,11 @@ public class TCPHandleTest extends TestBase {
         final AtomicBoolean serverDone = new AtomicBoolean(false);
         final AtomicBoolean clientDone = new AtomicBoolean(false);
 
-        final LoopHandle loop = new LoopHandle();
-        final TCPHandle server = new TCPHandle(loop);
-        final TCPHandle peer = new TCPHandle(loop);
-        final TCPHandle client = new TCPHandle(loop);
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
+        final TCPHandle server = handleFactory.newTCPHandle();
+        final TCPHandle peer = handleFactory.newTCPHandle();
+        final TCPHandle client = handleFactory.newTCPHandle();
 
         final Logger serverLoggingCallback = new Logger("s: ");
         final Logger clientLoggingCallback = new Logger("c: ");

@@ -39,18 +39,19 @@ public class LoopHandleTest extends TestBase {
 
     @Test
     public void testList() throws Throwable {
-        final LoopHandle loop = new LoopHandle();
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final String[] handles = loop.list();
         Assert.assertNotNull(handles);
         Assert.assertEquals(handles.length, 0);
 
-        final AsyncHandle async = new AsyncHandle(loop);
-        final CheckHandle check = new CheckHandle(loop);
-        final IdleHandle idle = new IdleHandle(loop);
-        final SignalHandle signal = new SignalHandle(loop);
-        final PipeHandle pipe = new PipeHandle(loop, false);
-        final TCPHandle tcp = new TCPHandle(loop);
-        final UDPHandle udp = new UDPHandle(loop);
+        final AsyncHandle async= handleFactory.newAsyncHandle();
+        final CheckHandle check= handleFactory.newCheckHandle();
+        final IdleHandle idle= handleFactory.newIdleHandle();
+        final SignalHandle signal= handleFactory.newSignalHandle();
+        final PipeHandle pipe= handleFactory.newPipeHandle(false);
+        final TCPHandle tcp= handleFactory.newTCPHandle();
+        final UDPHandle udp= handleFactory.newUDPHandle();
 
         System.out.println(async);
         System.out.println(check);

@@ -37,10 +37,10 @@ import com.oracle.libuv.cb.StreamWriteCallback;
 
 public class TTYHandleTest extends TestBase {
 
-    private TTYHandle newTTY(final LoopHandle loop, final int fd, final boolean readable) {
+    private TTYHandle newTTY(final HandleFactory factory, final int fd, final boolean readable) {
         final TTYHandle tty;
         try {
-            tty = new TTYHandle(loop, fd, readable);
+            tty = factory.newTTYHandle(fd, readable);
         } catch (final NativeException nx) {
             if ("EBADF".equals(nx.errnoString())) {
                 // running under a test runner or ant
@@ -63,8 +63,8 @@ public class TTYHandleTest extends TestBase {
     }
 
     private void testStdOutErrWindowSize(final String name, final int fd) {
-        final LoopHandle loop = new LoopHandle();
-        final TTYHandle tty = newTTY(loop, fd, false);
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final TTYHandle tty = newTTY(handleFactory, fd, false);
         if (tty == null) {
             return;
         }
@@ -73,8 +73,8 @@ public class TTYHandleTest extends TestBase {
 
     @Test
     public void testStdinWindowSize() {
-        final LoopHandle loop = new LoopHandle();
-        final TTYHandle tty = newTTY(loop, 0, true);
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final TTYHandle tty = newTTY(handleFactory, 0, true);
         if (tty == null) {
             return;
         }
@@ -99,8 +99,9 @@ public class TTYHandleTest extends TestBase {
     }
 
     private void testWrite(final String name, final int fd) throws Throwable {
-        final LoopHandle loop = new LoopHandle();
-        final TTYHandle tty = newTTY(loop, fd, false);
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
+        final TTYHandle tty = newTTY(handleFactory, fd, false);
         if (tty == null) {
             return;
         }
@@ -118,8 +119,9 @@ public class TTYHandleTest extends TestBase {
 
     @Test
     public void testRead() throws Throwable {
-        final LoopHandle loop = new LoopHandle();
-        final TTYHandle tty = newTTY(loop, 0, true);
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
+        final TTYHandle tty = newTTY(handleFactory, 0, true);
         if (tty == null) {
             return;
         }

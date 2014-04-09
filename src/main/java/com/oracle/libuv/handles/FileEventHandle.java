@@ -62,7 +62,7 @@ public final class FileEventHandle extends Handle {
         onClose = callback;
     }
 
-    public FileEventHandle(final LoopHandle loop) {
+    protected FileEventHandle(final LoopHandle loop) {
         super(_new(), loop);
         _initialize(pointer);
     }

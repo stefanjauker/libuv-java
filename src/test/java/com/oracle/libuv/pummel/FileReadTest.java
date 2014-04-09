@@ -29,6 +29,8 @@ import com.oracle.libuv.Constants;
 import com.oracle.libuv.Files;
 import com.oracle.libuv.TestBase;
 import com.oracle.libuv.cb.FileReadCallback;
+import com.oracle.libuv.handles.DefaultHandleFactory;
+import com.oracle.libuv.handles.HandleFactory;
 import com.oracle.libuv.handles.LoopHandle;
 
 import java.io.File;
@@ -41,7 +43,8 @@ public class FileReadTest extends TestBase {
 
     private int count = 0;
     private final String filename = (TestBase.TMPDIR.endsWith(File.separator) ? TestBase.TMPDIR : TestBase.TMPDIR + File.separator) + "FileReadTest.txt";
-    private final LoopHandle loop;
+    private final HandleFactory handleFactory = new DefaultHandleFactory();
+    private final LoopHandle loop = handleFactory.getLoopHandle();
     private final Files files;
     private long startTime;
 
@@ -61,7 +64,6 @@ public class FileReadTest extends TestBase {
     }
 
     public FileReadTest() {
-        loop = new LoopHandle();
         files = new Files(loop);
 
         files.setReadCallback(new FileReadCallback() {

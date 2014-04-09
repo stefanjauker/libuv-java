@@ -46,7 +46,7 @@ public final class CheckHandle extends Handle {
         onClose = callback;
     }
 
-    public CheckHandle(final LoopHandle loop) {
+    protected CheckHandle(final LoopHandle loop) {
         super(_new(loop.pointer()), loop);
         _initialize(pointer);
     }

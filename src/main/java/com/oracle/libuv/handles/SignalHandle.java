@@ -43,7 +43,7 @@ public final class SignalHandle extends Handle {
         onSignal = callback;
     }
 
-    public SignalHandle(final LoopHandle loop) {
+    protected SignalHandle(final LoopHandle loop) {
         super(_new(loop.pointer()), loop);
         _initialize(pointer);
     }

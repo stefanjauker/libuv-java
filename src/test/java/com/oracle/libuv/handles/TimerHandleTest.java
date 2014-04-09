@@ -43,8 +43,9 @@ public class TimerHandleTest extends TestBase {
         final AtomicBoolean gotCallback = new AtomicBoolean(false);
         final AtomicBoolean gotClose = new AtomicBoolean(false);
 
-        final LoopHandle loop = new LoopHandle();
-        final TimerHandle timer = new TimerHandle(loop);
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
+        final TimerHandle timer = handleFactory.newTimerHandle();
 
         timer.setCloseCallback(new TimerCallback() {
             @Override

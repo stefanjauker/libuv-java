@@ -53,9 +53,10 @@ public class UDPHandleTest extends TestBase {
         final AtomicBoolean serverDone = new AtomicBoolean(false);
         final AtomicBoolean clientDone = new AtomicBoolean(false);
 
-        final LoopHandle loop = new LoopHandle();
-        final UDPHandle server = new UDPHandle(loop);
-        final UDPHandle client = new UDPHandle(loop);
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
+        final UDPHandle server = handleFactory.newUDPHandle();
+        final UDPHandle client = handleFactory.newUDPHandle();
 
         server.setRecvCallback(new UDPRecvCallback() {
             @Override
@@ -100,7 +101,8 @@ public class UDPHandleTest extends TestBase {
 
     @Test
     public void testConnection6() throws Throwable {
-        final LoopHandle loop = new LoopHandle();
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         if (!isIPv6Enabled(loop)) {
             return;
         }
@@ -110,8 +112,8 @@ public class UDPHandleTest extends TestBase {
         final AtomicBoolean serverDone = new AtomicBoolean(false);
         final AtomicBoolean clientDone = new AtomicBoolean(false);
 
-        final UDPHandle server = new UDPHandle(loop);
-        final UDPHandle client = new UDPHandle(loop);
+        final UDPHandle server = handleFactory.newUDPHandle();
+        final UDPHandle client = handleFactory.newUDPHandle();
 
         server.setRecvCallback(new UDPRecvCallback() {
             @Override

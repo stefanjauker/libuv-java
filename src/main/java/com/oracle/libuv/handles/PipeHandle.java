@@ -31,18 +31,15 @@ import com.oracle.libuv.LibUVPermission;
 
 public class PipeHandle extends StreamHandle {
 
-    private final boolean ipc;
-
-    public PipeHandle(final LoopHandle loop,
-                      final boolean ipc) {
+    protected PipeHandle(final LoopHandle loop,
+                         final boolean ipc) {
         super(_new(loop.pointer(), ipc), loop);
-        this.ipc = ipc;
     }
 
-    public PipeHandle(final LoopHandle loop, final long pointer,
-                      final boolean ipc) {
+    protected PipeHandle(final LoopHandle loop,
+                         final long pointer,
+                         final boolean ipc) {
         super(pointer, loop);
-        this.ipc = ipc;
     }
 
     public int open(final int fd) {

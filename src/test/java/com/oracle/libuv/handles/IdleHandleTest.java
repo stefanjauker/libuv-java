@@ -42,8 +42,9 @@ public class IdleHandleTest extends TestBase {
         final AtomicBoolean gotClose = new AtomicBoolean(false);
         final AtomicInteger times = new AtomicInteger(0);
 
-        final LoopHandle loop = new LoopHandle();
-        final IdleHandle idleHandle = new IdleHandle(loop);
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
+        final IdleHandle idleHandle = handleFactory.newIdleHandle();
 
         idleHandle.setCloseCallback(new IdleCallback() {
             @Override

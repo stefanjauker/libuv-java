@@ -56,15 +56,7 @@ import com.oracle.libuv.LibUVPermission;
 import com.oracle.libuv.NativeException;
 import com.oracle.libuv.Stats;
 import com.oracle.libuv.TestBase;
-import com.oracle.libuv.handles.LoopHandle;
-import com.oracle.libuv.handles.PipeHandle;
-import com.oracle.libuv.handles.ProcessHandle;
-import com.oracle.libuv.handles.SignalHandle;
-import com.oracle.libuv.handles.StdioOptions;
-import com.oracle.libuv.handles.TCPHandle;
-import com.oracle.libuv.handles.TTYHandle;
-import com.oracle.libuv.handles.UDPHandle;
-import com.oracle.libuv.handles.UDPHandleTest;
+import com.oracle.libuv.handles.*;
 import com.oracle.libuv.runner.TestRunner;
 
 /**
@@ -205,63 +197,65 @@ public class PermissionTest extends TestBase {
 
     @Test
     public void testHandlesNoAuth() {
-        final LoopHandle lh = new LoopHandle();
+        final HandleFactory handleFactory = new DefaultHandleFactory();
+
+        final LoopHandle loop = handleFactory.getLoopHandle();
 
         init(new Permissions());
 
         testFailure(new Runnable() {
             @Override
             public void run() {
-                new LoopHandle();
+                handleFactory.newLoopHandle();
             }
         });
 
         testFailure(new Runnable() {
             @Override
             public void run() {
-                new PipeHandle(lh, false);
+                handleFactory.newPipeHandle(false);
             }
         });
 
         testFailure(new Runnable() {
             @Override
             public void run() {
-                new ProcessHandle(lh);
+                handleFactory.newProcessHandle();
             }
         });
 
         testFailure(new Runnable() {
             @Override
             public void run() {
-                new UDPHandle(lh);
+                handleFactory.newUDPHandle();
             }
         });
 
         testFailure(new Runnable() {
             @Override
             public void run() {
-                new TCPHandle(lh);
+                handleFactory.newTCPHandle();
             }
         });
 
         testFailure(new Runnable() {
             @Override
             public void run() {
-                new Files(lh);
+                new Files(loop);
             }
         });
 
         testFailure(new Runnable() {
             @Override
             public void run() {
-                new TTYHandle(lh, 0, true);
+                handleFactory.newTTYHandle(0, true);
             }
         });
 
         testFailure(new Runnable() {
             @Override
             public void run() {
-                new SignalHandle(lh);
+                handleFactory.newSignalHandle();
             }
         });
 
@@ -291,11 +285,12 @@ public class PermissionTest extends TestBase {
 
         init(permissions);
 
-        final LoopHandle lh = new LoopHandle();
-        final PipeHandle client = new PipeHandle(lh, false);
-        final PipeHandle server = new PipeHandle(lh, false);
-        final PipeHandle peer = new PipeHandle(lh, false);
-        final PipeHandle server2 = new PipeHandle(lh, false);
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
+        final PipeHandle client = handleFactory.newPipeHandle(false);
+        final PipeHandle server = handleFactory.newPipeHandle(false);
+        final PipeHandle peer = handleFactory.newPipeHandle(false);
+        final PipeHandle server2 = handleFactory.newPipeHandle(false);
 
         testSuccess(new Runnable() {
             @Override
@@ -332,7 +327,7 @@ public class PermissionTest extends TestBase {
         });
 
         while (serverRecvCount.get() == 0) {
-            lh.runNoWait();
+            loop.runNoWait();
         }
 
         try {
@@ -362,8 +357,8 @@ public class PermissionTest extends TestBase {
 
         init(permissions);
 
-        final LoopHandle lh = new LoopHandle();
-        final ProcessHandle process = new ProcessHandle(lh);
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final ProcessHandle process = handleFactory.newProcessHandle();
 
         final String[] args = new String[2];
         args[0] = "java";
@@ -414,10 +409,11 @@ public class PermissionTest extends TestBase {
 
         init(permissions);
 
-        final LoopHandle lh = new LoopHandle();
-        final TCPHandle server = new TCPHandle(lh);
-        final TCPHandle client = new TCPHandle(lh);
-        final TCPHandle peer = new TCPHandle(lh);
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
+        final TCPHandle server = handleFactory.newTCPHandle();
+        final TCPHandle client = handleFactory.newTCPHandle();
+        final TCPHandle peer = handleFactory.newTCPHandle();
 
         server.setConnectionCallback(new StreamConnectionCallback() {
             @Override
@@ -453,12 +449,12 @@ public class PermissionTest extends TestBase {
         });
 
         while (!serverDone.get()) {
-            lh.runNoWait();
+            loop.runNoWait();
             Thread.sleep(100);
         }
 
-        final UDPHandle udpserver = new UDPHandle(lh);
-        final UDPHandle udpclient = new UDPHandle(lh);
+        final UDPHandle udpserver = handleFactory.newUDPHandle();
+        final UDPHandle udpclient = handleFactory.newUDPHandle();
 
         testSuccess(new Runnable() {
             @Override
@@ -478,8 +474,9 @@ public class PermissionTest extends TestBase {
 
     @Test
     public void testConnection6Auth() throws Throwable {
-        final LoopHandle lh = new LoopHandle();
-        if (!UDPHandleTest.isIPv6Enabled(lh)) {
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
+        if (!UDPHandleTest.isIPv6Enabled(loop)) {
             return;
         }
 
@@ -496,9 +493,9 @@ public class PermissionTest extends TestBase {
 
         init(permissions);
 
-        final TCPHandle server = new TCPHandle(lh);
-        final TCPHandle client = new TCPHandle(lh);
-        final TCPHandle peer = new TCPHandle(lh);
+        final TCPHandle server = handleFactory.newTCPHandle();
+        final TCPHandle client = handleFactory.newTCPHandle();
+        final TCPHandle peer = handleFactory.newTCPHandle();
 
         server.setConnectionCallback(new StreamConnectionCallback() {
             @Override
@@ -537,12 +534,12 @@ public class PermissionTest extends TestBase {
         });
 
         while (!serverDone.get()) {
-            lh.runNoWait();
+            loop.runNoWait();
             Thread.sleep(100);
         }
 
-        final UDPHandle udpserver = new UDPHandle(lh);
-        final UDPHandle udpclient = new UDPHandle(lh);
+        final UDPHandle udpserver = handleFactory.newUDPHandle();
+        final UDPHandle udpclient = handleFactory.newUDPHandle();
 
         testSuccess(new Runnable() {
             @Override
@@ -569,8 +566,8 @@ public class PermissionTest extends TestBase {
 
         init(permissions);
 
-        final LoopHandle lh = new LoopHandle();
-        final SignalHandle sh = new SignalHandle(lh);
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final SignalHandle sh = handleFactory.newSignalHandle();
 
         testSuccess(new Runnable() {
             @Override
@@ -628,7 +625,8 @@ public class PermissionTest extends TestBase {
         f.createNewFile();
 
         init(permissions);
-        final LoopHandle loop = new LoopHandle();
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
         final int fd = handle.open(fileName, Constants.O_RDONLY, Constants.S_IRWXU);
 
@@ -710,7 +708,8 @@ public class PermissionTest extends TestBase {
         final File f = new File(fileName);
         f.createNewFile();
         // Emulate codebase with the rights to open in R/W
-        final LoopHandle loop = new LoopHandle();
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
         final int fd = handle.open(fileName, Constants.O_RDWR, Constants.S_IRWXU);
 
@@ -752,7 +751,8 @@ public class PermissionTest extends TestBase {
         final Permissions permissions = new Permissions();
         permissions.add(new LibUVPermission("libuv.handle"));
         init(permissions);
-        final LoopHandle loop = new LoopHandle();
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
         final String fileName = "testFileNoAuth.txt";
         testFailure(new Runnable() {

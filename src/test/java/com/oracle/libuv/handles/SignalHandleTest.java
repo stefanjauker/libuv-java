@@ -36,8 +36,9 @@ public class SignalHandleTest extends TestBase {
             System.err.println("Sorry this test does not work on windows");
             return;
         }
-        final LoopHandle loop = new LoopHandle();
-        final SignalHandle handle = new SignalHandle(loop);
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
+        final SignalHandle handle = handleFactory.newSignalHandle();
         handle.setSignalCallback(new SignalCallback() {
             @Override
             public void onSignal(final int signum) throws Exception {

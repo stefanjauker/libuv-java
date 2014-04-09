@@ -54,7 +54,8 @@ public class FileEventHandleTest extends TestBase {
         final AtomicBoolean gotClose = new AtomicBoolean(false);
         final AtomicInteger times = new AtomicInteger(0);
 
-        final LoopHandle loop = new LoopHandle();
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
         final FileEventHandle eventHandle = new FileEventHandle(loop);
 
@@ -104,7 +105,8 @@ public class FileEventHandleTest extends TestBase {
         final AtomicBoolean gotClose = new AtomicBoolean(false);
         final AtomicInteger times = new AtomicInteger(0);
 
-        final LoopHandle loop = new LoopHandle();
+        final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
+        final LoopHandle loop = handleFactory.getLoopHandle();
         final Files handle = new Files(loop);
         final FileEventHandle eventHandle = new FileEventHandle(loop);
 
