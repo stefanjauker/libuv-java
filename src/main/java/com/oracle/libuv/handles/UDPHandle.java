@@ -35,7 +35,7 @@ import com.oracle.libuv.cb.UDPCloseCallback;
 import com.oracle.libuv.cb.UDPRecvCallback;
 import com.oracle.libuv.cb.UDPSendCallback;
 
-public final class UDPHandle extends Handle {
+public class UDPHandle extends Handle {
 
     private boolean closed;
 

@@ -58,7 +58,7 @@ public class FilePollHandleTest extends TestBase {
 
         final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
         final LoopHandle loop = handleFactory.getLoopHandle();
-        final Files handle = new Files(loop);
+        final Files handle = handleFactory.newFiles();
         final FilePollHandle pollHandle = new FilePollHandle(loop);
 
         handle.setOpenCallback(new FileOpenCallback() {

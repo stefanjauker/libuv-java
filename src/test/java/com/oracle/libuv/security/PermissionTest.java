@@ -199,8 +199,6 @@ public class PermissionTest extends TestBase {
     public void testHandlesNoAuth() {
         final HandleFactory handleFactory = new DefaultHandleFactory();
 
-        final LoopHandle loop = handleFactory.getLoopHandle();
-
         init(new Permissions());
 
         testFailure(new Runnable() {
@@ -241,7 +239,7 @@ public class PermissionTest extends TestBase {
         testFailure(new Runnable() {
             @Override
             public void run() {
-                new Files(loop);
+                handleFactory.newFiles();
             }
         });
 
@@ -626,8 +624,7 @@ public class PermissionTest extends TestBase {
 
         init(permissions);
         final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
-        final LoopHandle loop = handleFactory.getLoopHandle();
-        final Files handle = new Files(loop);
+        final Files handle = handleFactory.newFiles();
         final int fd = handle.open(fileName, Constants.O_RDONLY, Constants.S_IRWXU);
 
         handle.read(fd, ByteBuffer.allocateDirect(5), 0, 0, 0);
@@ -685,7 +682,7 @@ public class PermissionTest extends TestBase {
         testFailure(new Runnable() {
             @Override
             public void run() {
-                handle.fchown(fd, 01, 01);
+                handle.fchown(fd, 1, 1);
             }
         });
 
@@ -709,8 +706,7 @@ public class PermissionTest extends TestBase {
         f.createNewFile();
         // Emulate codebase with the rights to open in R/W
         final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
-        final LoopHandle loop = handleFactory.getLoopHandle();
-        final Files handle = new Files(loop);
+        final Files handle = handleFactory.newFiles();
         final int fd = handle.open(fileName, Constants.O_RDWR, Constants.S_IRWXU);
 
         // Allowed without security
@@ -752,8 +748,7 @@ public class PermissionTest extends TestBase {
         permissions.add(new LibUVPermission("libuv.handle"));
         init(permissions);
         final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
-        final LoopHandle loop = handleFactory.getLoopHandle();
-        final Files handle = new Files(loop);
+        final Files handle = handleFactory.newFiles();
         final String fileName = "testFileNoAuth.txt";
         testFailure(new Runnable() {
             @Override

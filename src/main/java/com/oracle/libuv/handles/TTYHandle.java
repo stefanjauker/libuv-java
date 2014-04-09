@@ -25,7 +25,7 @@
 
 package com.oracle.libuv.handles;
 
-public final class TTYHandle extends StreamHandle {
+public class TTYHandle extends StreamHandle {
 
     private final int fd;
 

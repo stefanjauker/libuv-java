@@ -56,7 +56,7 @@ public class FileEventHandleTest extends TestBase {
 
         final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
         final LoopHandle loop = handleFactory.getLoopHandle();
-        final Files handle = new Files(loop);
+        final Files handle = handleFactory.newFiles();
         final FileEventHandle eventHandle = new FileEventHandle(loop);
 
         eventHandle.setCloseCallback(new FileEventCallback() {
@@ -107,7 +107,7 @@ public class FileEventHandleTest extends TestBase {
 
         final DefaultHandleFactory handleFactory = new DefaultHandleFactory();
         final LoopHandle loop = handleFactory.getLoopHandle();
-        final Files handle = new Files(loop);
+        final Files handle = handleFactory.newFiles();
         final FileEventHandle eventHandle = new FileEventHandle(loop);
 
         eventHandle.setCloseCallback(new FileEventCallback() {

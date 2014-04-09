@@ -31,7 +31,7 @@ import com.oracle.libuv.Stats;
 import com.oracle.libuv.cb.FilePollCallback;
 import com.oracle.libuv.cb.FilePollStopCallback;
 
-public final class FilePollHandle extends Handle {
+public class FilePollHandle extends Handle {
 
     private boolean closed;
 

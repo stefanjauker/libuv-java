@@ -27,7 +27,7 @@ package com.oracle.libuv.handles;
 
 import com.oracle.libuv.cb.IdleCallback;
 
-public final class IdleHandle extends Handle {
+public class IdleHandle extends Handle {
 
     private boolean closed;
 

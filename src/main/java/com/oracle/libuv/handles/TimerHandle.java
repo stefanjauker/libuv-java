@@ -27,7 +27,7 @@ package com.oracle.libuv.handles;
 
 import com.oracle.libuv.cb.TimerCallback;
 
-public final class TimerHandle extends Handle {
+public class TimerHandle extends Handle {
 
     private boolean closed;
 

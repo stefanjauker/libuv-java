@@ -41,7 +41,7 @@ import com.oracle.libuv.cb.FileUTimeCallback;
 import com.oracle.libuv.cb.FileWriteCallback;
 import com.oracle.libuv.handles.LoopHandle;
 
-public final class Files {
+public class Files {
 
     static {
         _static_initialize();
@@ -123,7 +123,7 @@ public final class Files {
         String getPath() { return path; }
     }
 
-    public Files(final LoopHandle loop) {
+    protected Files(final LoopHandle loop) {
         LibUVPermission.checkHandle();
         this.pointer = _new();
         assert pointer != 0;

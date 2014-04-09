@@ -25,6 +25,7 @@
 
 package com.oracle.libuv.handles;
 
+import com.oracle.libuv.Files;
 import com.oracle.libuv.cb.CallbackExceptionHandler;
 import com.oracle.libuv.cb.CallbackHandlerFactory;
 import com.oracle.libuv.cb.ContextProvider;
@@ -70,5 +71,7 @@ public interface HandleFactory {
     FileEventHandle newFileEventHandle();
 
     FilePollHandle newFilePollHandle();
+
+    Files newFiles();
 
 }

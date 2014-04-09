@@ -27,7 +27,7 @@ package com.oracle.libuv.handles;
 
 import com.oracle.libuv.cb.CheckCallback;
 
-public final class CheckHandle extends Handle {
+public class CheckHandle extends Handle {
 
     private boolean closed;
 

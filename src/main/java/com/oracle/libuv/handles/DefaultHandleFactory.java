@@ -25,6 +25,7 @@
 
 package com.oracle.libuv.handles;
 
+import com.oracle.libuv.Files;
 import com.oracle.libuv.cb.CallbackExceptionHandler;
 import com.oracle.libuv.cb.CallbackHandlerFactory;
 import com.oracle.libuv.cb.ContextProvider;
@@ -135,6 +136,17 @@ public class DefaultHandleFactory implements HandleFactory {
     @Override
     public FilePollHandle newFilePollHandle() {
         return new FilePollHandle(loop);
+    }
+
+    @Override
+    public Files newFiles() {
+        return new FilesWrapper(loop);
+    }
+
+    private static class FilesWrapper extends Files {
+        FilesWrapper(final LoopHandle loop) {
+            super(loop);
+        }
     }
 
 }

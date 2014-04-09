@@ -34,7 +34,7 @@ import com.oracle.libuv.LibUVPermission;
 import com.oracle.libuv.cb.ProcessCloseCallback;
 import com.oracle.libuv.cb.ProcessExitCallback;
 
-public final class ProcessHandle extends Handle {
+public class ProcessHandle extends Handle {
 
     public enum ProcessFlags {
 

@@ -29,7 +29,7 @@ import java.util.Objects;
 
 import com.oracle.libuv.cb.FileEventCallback;
 
-public final class FileEventHandle extends Handle {
+public class FileEventHandle extends Handle {
 
     // must be equal to values in uv.h
     private enum EventType {

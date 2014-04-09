@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.oracle.libuv.cb.AsyncCallback;
 
-public final class AsyncHandle extends Handle {
+public class AsyncHandle extends Handle {
 
     private final AtomicBoolean closed = new AtomicBoolean(false);
 

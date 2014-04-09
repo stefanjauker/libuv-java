@@ -33,7 +33,7 @@ import com.oracle.libuv.cb.ContextProvider;
 import com.oracle.libuv.cb.CallbackHandler;
 import com.oracle.libuv.cb.CallbackHandlerFactory;
 
-public final class LoopHandle {
+public class LoopHandle {
 
     static {
         NativeException.static_initialize();

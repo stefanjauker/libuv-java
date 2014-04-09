@@ -31,7 +31,7 @@ import com.oracle.libuv.Constants;
 import com.oracle.libuv.LibUVPermission;
 import com.oracle.libuv.cb.SignalCallback;
 
-public final class SignalHandle extends Handle {
+public class SignalHandle extends Handle {
 
     private SignalCallback onSignal = null;
 

@@ -64,7 +64,7 @@ public class FileReadTest extends TestBase {
     }
 
     public FileReadTest() {
-        files = new Files(loop);
+        files = handleFactory.newFiles();
 
         files.setReadCallback(new FileReadCallback() {
             @Override
