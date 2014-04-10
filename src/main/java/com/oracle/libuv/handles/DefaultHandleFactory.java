@@ -35,13 +35,13 @@ public class DefaultHandleFactory implements HandleFactory {
     private final LoopHandle loop;
 
     public DefaultHandleFactory() {
-        this.loop = newLoopHandle();
+        this.loop = new LoopHandle();
     }
 
     public DefaultHandleFactory(final CallbackExceptionHandler exceptionHandler,
                                 final CallbackHandlerFactory callbackHandler,
                                 final ContextProvider contextProvider) {
-        this.loop = newLoopHandle(exceptionHandler, callbackHandler, contextProvider);
+        this.loop = new LoopHandle(exceptionHandler, callbackHandler, contextProvider);
     }
 
     @Override
@@ -50,15 +50,15 @@ public class DefaultHandleFactory implements HandleFactory {
     }
 
     @Override
-    public LoopHandle newLoopHandle() {
-        return new LoopHandle();
+    public HandleFactory newFactory() {
+        return new DefaultHandleFactory();
     }
 
     @Override
-    public LoopHandle newLoopHandle(final CallbackExceptionHandler exceptionHandler,
+    public HandleFactory newFactory(final CallbackExceptionHandler exceptionHandler,
                                     final CallbackHandlerFactory callbackHandler,
                                     final ContextProvider contextProvider) {
-        return new LoopHandle(exceptionHandler, callbackHandler, contextProvider);
+        return new DefaultHandleFactory(exceptionHandler, callbackHandler, contextProvider);
     }
 
     @Override

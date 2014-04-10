@@ -34,9 +34,9 @@ public interface HandleFactory {
 
     LoopHandle getLoopHandle();
 
-    LoopHandle newLoopHandle();
+    HandleFactory newFactory();
 
-    LoopHandle newLoopHandle(CallbackExceptionHandler exceptionHandler,
+    HandleFactory newFactory(CallbackExceptionHandler exceptionHandler,
                              CallbackHandlerFactory callbackHandler,
                              ContextProvider contextProvider);
 

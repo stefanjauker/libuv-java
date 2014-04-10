@@ -204,7 +204,7 @@ public class PermissionTest extends TestBase {
         testFailure(new Runnable() {
             @Override
             public void run() {
-                handleFactory.newLoopHandle();
+                handleFactory.newFactory();
             }
         });
 
