@@ -34,6 +34,7 @@ import com.oracle.libuv.cb.SignalCallback;
 public class SignalHandle extends Handle {
 
     private SignalCallback onSignal = null;
+    private boolean closed;
 
     static {
         _static_initialize();
@@ -60,6 +61,13 @@ public class SignalHandle extends Handle {
 
     public void stop() {
         _stop(pointer);
+    }
+
+    public void close() {
+        if (!closed) {
+            stop();
+        }
+        closed = true;
     }
 
     @Override

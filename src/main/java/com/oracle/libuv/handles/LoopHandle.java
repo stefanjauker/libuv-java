@@ -25,6 +25,8 @@
 
 package com.oracle.libuv.handles;
 
+import java.io.Closeable;
+
 import com.oracle.libuv.LibUVPermission;
 import com.oracle.libuv.NativeException;
 
@@ -33,7 +35,7 @@ import com.oracle.libuv.cb.ContextProvider;
 import com.oracle.libuv.cb.CallbackHandler;
 import com.oracle.libuv.cb.CallbackHandlerFactory;
 
-public class LoopHandle {
+public class LoopHandle implements Closeable {
 
     static {
         NativeException.static_initialize();
@@ -48,6 +50,7 @@ public class LoopHandle {
     protected final ContextProvider contextProvider;
     private final long pointer;
     private Throwable pendingException;
+    private boolean closed;
 
     private enum RunMode {
 
@@ -79,6 +82,7 @@ public class LoopHandle {
         this.exceptionHandler = exceptionHandler;
         this.callbackHandlerFactory = callbackHandler;
         this.contextProvider = contextProvider;
+        closed = false;
     }
 
     protected LoopHandle() {
@@ -142,6 +146,15 @@ public class LoopHandle {
         _stop(pointer);
     }
 
+    @Override
+    public void close() {
+        if (!closed) {
+            closed = true;
+            closeAll();
+            stop();
+        }
+    }
+
     public void destroy() {
         _destroy(pointer);
     }
@@ -160,6 +173,13 @@ public class LoopHandle {
 
     public long pointer() {
         return pointer;
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        close();
+        destroy();
+        super.finalize();
     }
 
     private void throwPendingException() throws Throwable {

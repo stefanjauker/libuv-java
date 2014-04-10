@@ -25,11 +25,12 @@
 
 package com.oracle.libuv.handles;
 
+import java.io.Closeable;
 import java.util.Objects;
 
 import com.oracle.libuv.LibUVPermission;
 
-public abstract class Handle {
+public abstract class Handle implements Closeable {
 
     protected final long pointer;
     protected final LoopHandle loop;
