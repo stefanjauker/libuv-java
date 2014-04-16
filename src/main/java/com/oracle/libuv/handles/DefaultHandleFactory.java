@@ -88,6 +88,16 @@ public class DefaultHandleFactory implements HandleFactory {
     }
 
     @Override
+    public PollHandle newPollHandle(final int fd) {
+        return new PollHandle(loop, fd);
+    }
+
+    @Override
+    public PollHandle newPollHandle(final long winsock) {
+        return new PollHandle(loop, winsock);
+    }
+
+    @Override
     public ProcessHandle newProcessHandle() {
         return new ProcessHandle(loop);
     }

@@ -51,6 +51,10 @@ public interface HandleFactory {
     PipeHandle newPipeHandle(long pointer,
                              boolean ipc);
 
+    PollHandle newPollHandle(int fd);
+
+    PollHandle newPollHandle(long winsock);
+
     ProcessHandle newProcessHandle();
 
     SignalHandle newSignalHandle();

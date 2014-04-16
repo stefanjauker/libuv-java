@@ -35,6 +35,7 @@
             <class name="com.oracle.libuv.handles.IdleHandle"/>
             <class name="com.oracle.libuv.handles.LoopHandle"/>
             <class name="com.oracle.libuv.handles.PipeHandle"/>
+            <class name="com.oracle.libuv.handles.PollHandle"/>
             <class name="com.oracle.libuv.handles.ProcessHandle"/>
             <class name="com.oracle.libuv.handles.SignalHandle"/>
             <class name="com.oracle.libuv.handles.StreamHandle"/>

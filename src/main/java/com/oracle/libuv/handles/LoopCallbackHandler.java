@@ -46,6 +46,7 @@ import com.oracle.libuv.cb.FileStatsCallback;
 import com.oracle.libuv.cb.FileUTimeCallback;
 import com.oracle.libuv.cb.FileWriteCallback;
 import com.oracle.libuv.cb.IdleCallback;
+import com.oracle.libuv.cb.PollCallback;
 import com.oracle.libuv.cb.ProcessCloseCallback;
 import com.oracle.libuv.cb.ProcessExitCallback;
 import com.oracle.libuv.cb.SignalCallback;
@@ -82,6 +83,15 @@ public final class LoopCallbackHandler implements CallbackHandler {
     public void handleCheckCallback(final CheckCallback cb, final int status) {
         try {
             cb.onCheck(status);
+        } catch (final Exception ex) {
+            exceptionHandler.handle(ex);
+        }
+    }
+
+    @Override
+    public void handlePollCallback(final PollCallback cb, final int status, final int events) {
+        try {
+            cb.onPoll(status, events);
         } catch (final Exception ex) {
             exceptionHandler.handle(ex);
         }

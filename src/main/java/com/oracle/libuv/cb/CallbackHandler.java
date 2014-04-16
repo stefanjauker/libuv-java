@@ -34,6 +34,7 @@ public interface CallbackHandler {
     public void handleAsyncCallback(AsyncCallback cb, int status);
     public void handleCheckCallback(CheckCallback cb, int status);
     public void handleIdleCallback(IdleCallback cb, int status);
+    public void handlePollCallback(PollCallback cb, int status, int events);
     public void handleSignalCallback(SignalCallback cb, int signum);
     public void handleStreamReadCallback(StreamReadCallback cb, ByteBuffer data);
     public void handleStreamRead2Callback(StreamRead2Callback cb, ByteBuffer data, long handle, int type);
