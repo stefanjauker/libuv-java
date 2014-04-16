@@ -63,6 +63,10 @@ public interface HandleFactory {
 
     TCPHandle newTCPHandle(long pointer);
 
+    TCPHandle openTCPHandle(int fd);
+
+    TCPHandle openTCPHandle(long winsock);
+
     TimerHandle newTimerHandle();
 
     TTYHandle newTTYHandle(int fd,
@@ -71,6 +75,10 @@ public interface HandleFactory {
     UDPHandle newUDPHandle();
 
     UDPHandle newUDPHandle(long pointer);
+
+    UDPHandle openUDPHandle(int fd);
+
+    UDPHandle openUDPHandle(long winsock);
 
     FileEventHandle newFileEventHandle();
 

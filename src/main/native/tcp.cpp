@@ -48,7 +48,7 @@ static void _tcp_connect_cb(uv_connect_t* req, int status) {
  * Method:    _new
  * Signature: (J)J
  */
-JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_TCPHandle__1new
+JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_TCPHandle__1new__J
   (JNIEnv *env, jclass cls, jlong loop) {
 
   assert(loop);
@@ -62,6 +62,67 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_TCPHandle__1new
   assert(tcp);
   tcp->data = new StreamCallbacks();
   return reinterpret_cast<jlong>(tcp);
+}
+
+/*
+ * Class:     com_oracle_libuv_handles_TCPHandle
+ * Method:    _new
+ * Signature: (JI)J
+ */
+JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_TCPHandle__1new__JI
+  (JNIEnv *env, jclass cls, jlong loop, jint fd) {
+
+#ifdef _WIN32
+  return (jlong) NULL;
+#else
+  assert(loop);
+  uv_tcp_t* tcp = new uv_tcp_t();
+  uv_loop_t* lp = reinterpret_cast<uv_loop_t*>(loop);
+  int r = uv_tcp_init(lp, tcp);
+  if (r) {
+    ThrowException(env, lp, "uv_tcp_init");
+    return (jlong) NULL;
+  }
+  r = uv_tcp_open(tcp, (uv_os_sock_t) fd);
+  if (r) {
+    ThrowException(env, lp, "uv_tcp_open");
+    delete tcp;
+    return (jlong) NULL;
+  }
+  assert(tcp);
+  tcp->data = new StreamCallbacks();
+  return reinterpret_cast<jlong>(tcp);
+#endif
+}
+
+/*
+ * Class:     com_oracle_libuv_handles_TCPHandle
+ * Method:    _new
+ * Signature: (J)J
+ */
+JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_TCPHandle__1new__JJ
+  (JNIEnv *env, jclass cls, jlong loop, jlong winsock) {
+
+#ifdef _WIN32
+  assert(loop);
+  uv_tcp_t* tcp = new uv_tcp_t();
+  uv_loop_t* lp = reinterpret_cast<uv_loop_t*>(loop);
+  int r = uv_tcp_init(lp, tcp);
+  if (r) {
+    ThrowException(env, lp, "uv_tcp_init");
+    return (jlong) NULL;
+  }
+  r = uv_tcp_open(tcp, (uv_os_sock_t) winsock);
+  if (r) {
+    ThrowException(env, lp, "uv_tcp_open");
+    return (jlong) NULL;
+  }
+  assert(tcp);
+  tcp->data = new StreamCallbacks();
+  return reinterpret_cast<jlong>(tcp);
+#else
+  return (jlong) NULL;
+#endif
 }
 
 /*

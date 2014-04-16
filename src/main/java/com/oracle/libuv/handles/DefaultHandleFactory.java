@@ -114,7 +114,17 @@ public class DefaultHandleFactory implements HandleFactory {
 
     @Override
     public TCPHandle newTCPHandle(final long pointer) {
-        return new TCPHandle(loop, pointer);
+        return new TCPHandle(loop, pointer, true);
+    }
+
+    @Override
+    public TCPHandle openTCPHandle(final int fd) {
+        return new TCPHandle(loop, fd);
+    }
+
+    @Override
+    public TCPHandle openTCPHandle(final long winsock) {
+        return new TCPHandle(loop, winsock);
     }
 
     @Override
@@ -135,7 +145,17 @@ public class DefaultHandleFactory implements HandleFactory {
 
     @Override
     public UDPHandle newUDPHandle(final long pointer) {
-        return new UDPHandle(loop, pointer);
+        return new UDPHandle(loop, pointer, true);
+    }
+
+    @Override
+    public UDPHandle openUDPHandle(final int fd) {
+        return new UDPHandle(loop, fd);
+    }
+
+    @Override
+    public UDPHandle openUDPHandle(final long winsock) {
+        return new UDPHandle(loop, winsock);
     }
 
     @Override
