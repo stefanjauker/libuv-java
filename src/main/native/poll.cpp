@@ -96,6 +96,14 @@ static void _poll_cb(uv_poll_t* handle, int status, int events) {
   cb->on_poll(status, events);
 }
 
+static void _close_cb(uv_handle_t* handle) {
+  assert(handle);
+  assert(handle->data);
+  PollCallbacks* cb = reinterpret_cast<PollCallbacks*>(handle->data);
+  delete cb;
+  delete handle;
+}
+
 /*
  * Class:     com_oracle_libuv_handles_PollHandle
  * Method:    _new
@@ -194,4 +202,17 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_PollHandle__1stop
     ThrowException(env, handle->loop, "uv_poll_stop");
   }
   return r;
+}
+
+/*
+ * Class:     com_oracle_libuv_handles_PollHandle
+ * Method:    _close
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_com_oracle_libuv_handles_PollHandle__1close
+  (JNIEnv *env, jobject that, jlong poll) {
+
+  assert(poll);
+  uv_handle_t* handle = reinterpret_cast<uv_handle_t*>(poll);
+  uv_close(handle, _close_cb);
 }

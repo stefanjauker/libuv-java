@@ -75,7 +75,7 @@ public class PollHandle extends Handle {
 
     public void close() {
         if (closed.compareAndSet(false, true)) {
-            stop();
+            _close(pointer);
         }
     }
 
@@ -100,5 +100,7 @@ public class PollHandle extends Handle {
     private native int _start(final long ptr, final int events);
 
     private native int _stop(final long ptr);
+
+    private native void _close(final long ptr);
 
 }
