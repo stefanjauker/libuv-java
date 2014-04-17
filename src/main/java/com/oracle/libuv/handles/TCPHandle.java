@@ -39,12 +39,8 @@ public class TCPHandle extends StreamHandle {
         super(_new(loop.pointer()), loop);
     }
 
-    protected TCPHandle(final LoopHandle loop, final int fd) {
-        super(_new(loop.pointer(), fd), loop);
-    }
-
-    protected TCPHandle(final LoopHandle loop, final long winsock) {
-        super(_new(loop.pointer(), winsock), loop);
+    protected TCPHandle(final LoopHandle loop, final long socket) {
+        super(_new(loop.pointer(), socket), loop);
     }
 
     protected TCPHandle(final LoopHandle loop, final long pointer, boolean dummy) {
@@ -130,7 +126,7 @@ public class TCPHandle extends StreamHandle {
 
     private static native long _new(final long loop, final int fd);
 
-    private static native long _new(final long loop, final long winsock);
+    private static native long _new(final long loop, final long socket);
 
     private native int _bind(final long ptr, final String address, final int port);
 

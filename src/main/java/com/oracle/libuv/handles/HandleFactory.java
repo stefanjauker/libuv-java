@@ -53,7 +53,7 @@ public interface HandleFactory {
 
     PollHandle newPollHandle(int fd);
 
-    PollHandle newPollHandle(long winsock);
+    PollHandle newPollHandle(long socket);
 
     ProcessHandle newProcessHandle();
 
@@ -63,9 +63,7 @@ public interface HandleFactory {
 
     TCPHandle newTCPHandle(long pointer);
 
-    TCPHandle openTCPHandle(int fd);
-
-    TCPHandle openTCPHandle(long winsock);
+    TCPHandle openTCPHandle(long socket);
 
     TimerHandle newTimerHandle();
 
@@ -76,9 +74,7 @@ public interface HandleFactory {
 
     UDPHandle newUDPHandle(long pointer);
 
-    UDPHandle openUDPHandle(int fd);
-
-    UDPHandle openUDPHandle(long winsock);
+    UDPHandle openUDPHandle(long socket);
 
     FileEventHandle newFileEventHandle();
 

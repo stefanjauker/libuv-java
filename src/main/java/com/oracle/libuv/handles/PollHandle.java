@@ -39,17 +39,8 @@ public class PollHandle extends Handle {
         _static_initialize();
     }
 
-    public enum Event {
-        // must match values in uv.h
-        READABLE(1),
-        WRITABLE(2);
-
-        final int value;
-
-        Event(final int value) {
-            this.value = value;
-        }
-    }
+    public static final int READABLE = 1; // must match UV_READABLE in uv.h
+    public static final int WRITABLE = 2; // must match UV_WRITABLE in uv.h
 
     public void setPollCallback(final PollCallback callback) {
         onPoll = callback;
@@ -60,8 +51,8 @@ public class PollHandle extends Handle {
         _initialize(pointer);
     }
 
-    protected PollHandle(final LoopHandle loop, final long winsock) {
-        super(_new(loop.pointer(), winsock), loop);
+    protected PollHandle(final LoopHandle loop, final long socket) {
+        super(_new(loop.pointer(), socket), loop);
         _initialize(pointer);
     }
 
@@ -91,7 +82,7 @@ public class PollHandle extends Handle {
 
     private static native long _new(final long loop, final int fd);
 
-    private static native long _new(final long loop, final long winsock);
+    private static native long _new(final long loop, final long socket);
 
     private static native void _static_initialize();
 

@@ -130,12 +130,12 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_PollHandle__1new__JI
  * Signature: (JJ)J
  */
 JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_PollHandle__1new__JJ
-  (JNIEnv *env, jclass cls, jlong loop, jlong winsock) {
+  (JNIEnv *env, jclass cls, jlong loop, jlong socket) {
 
   assert(loop);
   uv_loop_t* lp = reinterpret_cast<uv_loop_t*>(loop);
   uv_poll_t* poll = new uv_poll_t();
-  int r = uv_poll_init_socket(lp, poll, (uv_os_sock_t) winsock);
+  int r = uv_poll_init_socket(lp, poll, (uv_os_sock_t) socket);
   if (r) {
     ThrowException(env, poll->loop, "uv_poll_init_socket");
   } else {
@@ -182,7 +182,7 @@ JNIEXPORT jint JNICALL Java_com_oracle_libuv_handles_PollHandle__1start
   uv_poll_t* handle = reinterpret_cast<uv_poll_t*>(poll);
   int r = uv_poll_start(handle, events, _poll_cb);
   if (r) {
-    ThrowException(env, handle->loop, "uv_poll_send");
+    ThrowException(env, handle->loop, "uv_poll_start");
   }
   return r;
 }

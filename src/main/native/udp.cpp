@@ -167,42 +167,11 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_UDPHandle__1new__J
 /*
  * Class:     com_oracle_libuv_handles_UDPHandle
  * Method:    _new
- * Signature: (JI)J
- */
-JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_UDPHandle__1new__JI
-  (JNIEnv *env, jclass cls, jlong loop, jint fd) {
-
-#ifdef _WIN32
-  return (jlong) NULL;
-#else
-  assert(loop);
-  uv_loop_t* lp = reinterpret_cast<uv_loop_t*>(loop);
-  uv_udp_t* udp = new uv_udp_t();
-  int r = uv_udp_init(lp, udp);
-  if (r) {
-    ThrowException(env, udp->loop, "uv_udp_init");
-    return (jlong) NULL;
-  }
-  r = uv_udp_open(udp, (uv_os_sock_t) fd);
-  if (r) {
-    ThrowException(env, udp->loop, "uv_udp_open");
-    delete udp;
-    return (jlong) NULL;
-  }
-  udp->data = new UDPCallbacks();
-  return reinterpret_cast<jlong>(udp);
-#endif
-}
-
-/*
- * Class:     com_oracle_libuv_handles_UDPHandle
- * Method:    _new
  * Signature: (JJ)J
  */
 JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_UDPHandle__1new__JJ
-  (JNIEnv *env, jclass cls, jlong loop, jlong winsock) {
+  (JNIEnv *env, jclass cls, jlong loop, jlong socket) {
 
-#ifdef _WIN32
   assert(loop);
   uv_loop_t* lp = reinterpret_cast<uv_loop_t*>(loop);
   uv_udp_t* udp = new uv_udp_t();
@@ -211,7 +180,7 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_UDPHandle__1new__JJ
     ThrowException(env, udp->loop, "uv_udp_init");
     return (jlong) NULL;
   }
-  r = uv_udp_open(udp, (uv_os_sock_t) winsock);
+  r = uv_udp_open(udp, (uv_os_sock_t) socket);
   if (r) {
     ThrowException(env, udp->loop, "uv_udp_open");
     delete udp;
@@ -219,9 +188,6 @@ JNIEXPORT jlong JNICALL Java_com_oracle_libuv_handles_UDPHandle__1new__JJ
   }
   udp->data = new UDPCallbacks();
   return reinterpret_cast<jlong>(udp);
-#else
-  return (jlong) NULL;
-#endif
 }
 
 /*

@@ -77,14 +77,8 @@ public class UDPHandle extends Handle {
         _initialize(pointer);
     }
 
-    protected UDPHandle(final LoopHandle loop, final int fd) {
-        super(_new(loop.pointer(), fd), loop);
-        this.closed = false;
-        _initialize(pointer);
-    }
-
-    protected UDPHandle(final LoopHandle loop, final long winsock) {
-        super(_new(loop.pointer(), winsock), loop);
+    protected UDPHandle(final LoopHandle loop, final long socket) {
+        super(_new(loop.pointer(), socket), loop);
         this.closed = false;
         _initialize(pointer);
     }
@@ -274,7 +268,7 @@ public class UDPHandle extends Handle {
 
     private static native long _new(final long loop, final int fd);
 
-    private static native long _new(final long loop, final long winsock);
+    private static native long _new(final long loop, final long socket);
 
     private static native void _static_initialize();
 

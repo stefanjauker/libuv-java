@@ -32,7 +32,7 @@ import com.oracle.libuv.cb.ContextProvider;
 
 public class DefaultHandleFactory implements HandleFactory {
 
-    private final LoopHandle loop;
+    protected final LoopHandle loop;
 
     public DefaultHandleFactory() {
         this.loop = new LoopHandle();
@@ -93,8 +93,8 @@ public class DefaultHandleFactory implements HandleFactory {
     }
 
     @Override
-    public PollHandle newPollHandle(final long winsock) {
-        return new PollHandle(loop, winsock);
+    public PollHandle newPollHandle(final long socket) {
+        return new PollHandle(loop, socket);
     }
 
     @Override
@@ -118,13 +118,8 @@ public class DefaultHandleFactory implements HandleFactory {
     }
 
     @Override
-    public TCPHandle openTCPHandle(final int fd) {
-        return new TCPHandle(loop, fd);
-    }
-
-    @Override
-    public TCPHandle openTCPHandle(final long winsock) {
-        return new TCPHandle(loop, winsock);
+    public TCPHandle openTCPHandle(final long socket) {
+        return new TCPHandle(loop, socket);
     }
 
     @Override
@@ -149,13 +144,8 @@ public class DefaultHandleFactory implements HandleFactory {
     }
 
     @Override
-    public UDPHandle openUDPHandle(final int fd) {
-        return new UDPHandle(loop, fd);
-    }
-
-    @Override
-    public UDPHandle openUDPHandle(final long winsock) {
-        return new UDPHandle(loop, winsock);
+    public UDPHandle openUDPHandle(final long socket) {
+        return new UDPHandle(loop, socket);
     }
 
     @Override
